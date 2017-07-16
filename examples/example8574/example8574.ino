@@ -19,9 +19,12 @@
 // Many other IO expanders could easily be added using the same interface.
 //
 
+
+// create both an Arduino and an IO expander based IO abstraction
 BasicIoAbstraction* ioExpander = ioFrom8754(0x20);
 BasicIoAbstraction* arduinoPins = ioUsingArduino();
-uint8_t lastGreyCodeA = 0;
+
+// remember the last state of the IO expander switch so we can log any changes later
 uint8_t lastSwitchIoExp = 0;
 
 void setup() {

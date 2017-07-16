@@ -5,14 +5,15 @@
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
-
 BasicIoAbstraction
-PCF8754IoAbstraction
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-
+writeValue
+readValue
+pinDirection
+runLoop
 
 #######################################
 # Instances (KEYWORD2)
