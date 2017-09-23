@@ -17,9 +17,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exampleDirect", "..\example
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestShiftIn", "..\..\..\..\TestShiftIn\TestShiftIn.vcxproj", "{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiquidCrystal", "..\..\..\LiquidCrystal\LiquidCrystal.vcxitems", "{6C5190ED-DF35-4001-A371-2288F4EFD891}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloWorld", "..\..\..\LiquidCrystal\examples\HelloWorld\HelloWorld.vcxproj", "{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloShiftReg", "..\..\..\LiquidCrystal\examples\HelloShiftReg\HelloShiftReg.vcxproj", "{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloI2c", "..\..\..\LiquidCrystal\examples\HelloI2c\HelloI2c.vcxproj", "{4003E1AB-8862-461E-9B1C-BDBE91EA672C}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\BasicIoAbstraction.vcxitems*{ab35d56c-5e9a-499e-b1a2-7922193c1aea}*SharedItemsImports = 4
+		..\..\..\LiquidCrystal\LiquidCrystal.vcxitems*{6c5190ed-df35-4001-a371-2288f4efd891}*SharedItemsImports = 9
 		..\..\BasicIoAbstraction.vcxitems*{8fb43527-a13f-4298-95c3-4ba1ba36c2aa}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +60,18 @@ Global
 		{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}.Debug|x86.Build.0 = Debug|Win32
 		{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}.Release|x86.ActiveCfg = Release|Win32
 		{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}.Release|x86.Build.0 = Release|Win32
+		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Debug|x86.ActiveCfg = Debug|Win32
+		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Debug|x86.Build.0 = Debug|Win32
+		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Release|x86.ActiveCfg = Release|Win32
+		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Release|x86.Build.0 = Release|Win32
+		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Debug|x86.ActiveCfg = Debug|Win32
+		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Debug|x86.Build.0 = Debug|Win32
+		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Release|x86.ActiveCfg = Release|Win32
+		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Release|x86.Build.0 = Release|Win32
+		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Debug|x86.ActiveCfg = Debug|Win32
+		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Debug|x86.Build.0 = Debug|Win32
+		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Release|x86.ActiveCfg = Release|Win32
+		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

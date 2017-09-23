@@ -147,7 +147,6 @@ void ShiftRegisterIoAbstraction::runLoop() {
 }
 
 BasicIoAbstraction* ioFrom8754(uint8_t addr) { 
-	Wire.begin();
 	return new PCF8574IoAbstraction(addr); 
 }
 
