@@ -32,6 +32,9 @@ void PCF8574IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 	if (mode == INPUT) {
 		writeValue(pin, HIGH);
 	}
+	else {
+		writeValue(pin, LOW);
+	}
 	needsWrite = true;
 }
 
@@ -95,7 +98,7 @@ ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uin
 		pinMode(writeLatchPin, OUTPUT);
 		pinMode(writeDataPin, OUTPUT);
 		pinMode(writeClockPin, OUTPUT);
-		digitalWrite(writeLatchPin, HIGH);
+		digitalWrite(writeLatchPin, LOW);
 	}
 
 	if (readLatchPin != 0xff) {
@@ -144,6 +147,7 @@ void ShiftRegisterIoAbstraction::runLoop() {
 }
 
 BasicIoAbstraction* ioFrom8754(uint8_t addr) { 
+	Wire.begin();
 	return new PCF8574IoAbstraction(addr); 
 }
 

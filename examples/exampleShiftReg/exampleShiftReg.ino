@@ -1,3 +1,4 @@
+#include <LiquidCrystal.h>
 #include <BasicIoAbstraction.h>
 
 #define READ_CLOCK_PIN 28
