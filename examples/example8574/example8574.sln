@@ -5,11 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "example8574", "example8574.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BasicIoAbstraction", "..\..\BasicIoAbstraction.vcxitems", "{8FB43527-A13F-4298-95C3-4BA1BA36C2AA}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dummy", "..\dummy\dummy.vcxproj", "{AB35D56C-5E9A-499E-B1A2-7922193C1AEA}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "preamp2310", "..\..\..\..\..\..\..\..\Dev\electronics\preamp2310\preamp2310\preamp2310.vcxproj", "{BEC83BF4-3205-4123-AF3E-01EB17EE3D3A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exampleShiftReg", "..\exampleShiftReg\exampleShiftReg.vcxproj", "{F39F5FF8-71C6-4DEF-8737-5FF311A3644D}"
 EndProject
@@ -19,16 +15,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestShiftIn", "..\..\..\..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiquidCrystal", "..\..\..\LiquidCrystal\LiquidCrystal.vcxitems", "{6C5190ED-DF35-4001-A371-2288F4EFD891}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloWorld", "..\..\..\LiquidCrystal\examples\HelloWorld\HelloWorld.vcxproj", "{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloShiftReg", "..\..\..\LiquidCrystal\examples\HelloShiftReg\HelloShiftReg.vcxproj", "{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloI2c", "..\..\..\LiquidCrystal\examples\HelloI2c\HelloI2c.vcxproj", "{4003E1AB-8862-461E-9B1C-BDBE91EA672C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BasicIoAbstraction", "..\..\BasicIoAbstraction.vcxitems", "{8FB43527-A13F-4298-95C3-4BA1BA36C2AA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "taskManagement", "..\taskManagement\taskManagement.vcxproj", "{07494B53-953B-4950-8187-BE04C0EA7A81}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\BasicIoAbstraction.vcxitems*{ab35d56c-5e9a-499e-b1a2-7922193c1aea}*SharedItemsImports = 4
+		..\..\..\LiquidCrystal\LiquidCrystal.vcxitems*{ab35d56c-5e9a-499e-b1a2-7922193c1aea}*SharedItemsImports = 4
 		..\..\..\LiquidCrystal\LiquidCrystal.vcxitems*{6c5190ed-df35-4001-a371-2288f4efd891}*SharedItemsImports = 9
+		..\..\BasicIoAbstraction.vcxitems*{07494b53-953b-4950-8187-be04c0ea7a81}*SharedItemsImports = 4
+		..\..\..\LiquidCrystal\LiquidCrystal.vcxitems*{07494b53-953b-4950-8187-be04c0ea7a81}*SharedItemsImports = 4
+		..\..\BasicIoAbstraction.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 		..\..\BasicIoAbstraction.vcxitems*{8fb43527-a13f-4298-95c3-4ba1ba36c2aa}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,10 +46,6 @@ Global
 		{AB35D56C-5E9A-499E-B1A2-7922193C1AEA}.Debug|x86.Build.0 = Debug|Win32
 		{AB35D56C-5E9A-499E-B1A2-7922193C1AEA}.Release|x86.ActiveCfg = Release|Win32
 		{AB35D56C-5E9A-499E-B1A2-7922193C1AEA}.Release|x86.Build.0 = Release|Win32
-		{BEC83BF4-3205-4123-AF3E-01EB17EE3D3A}.Debug|x86.ActiveCfg = Debug|Win32
-		{BEC83BF4-3205-4123-AF3E-01EB17EE3D3A}.Debug|x86.Build.0 = Debug|Win32
-		{BEC83BF4-3205-4123-AF3E-01EB17EE3D3A}.Release|x86.ActiveCfg = Release|Win32
-		{BEC83BF4-3205-4123-AF3E-01EB17EE3D3A}.Release|x86.Build.0 = Release|Win32
 		{F39F5FF8-71C6-4DEF-8737-5FF311A3644D}.Debug|x86.ActiveCfg = Debug|Win32
 		{F39F5FF8-71C6-4DEF-8737-5FF311A3644D}.Debug|x86.Build.0 = Debug|Win32
 		{F39F5FF8-71C6-4DEF-8737-5FF311A3644D}.Release|x86.ActiveCfg = Release|Win32
@@ -60,10 +58,6 @@ Global
 		{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}.Debug|x86.Build.0 = Debug|Win32
 		{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}.Release|x86.ActiveCfg = Release|Win32
 		{6D59ED05-9C03-423B-BE01-B86F4B18B5AE}.Release|x86.Build.0 = Release|Win32
-		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Debug|x86.ActiveCfg = Debug|Win32
-		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Debug|x86.Build.0 = Debug|Win32
-		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Release|x86.ActiveCfg = Release|Win32
-		{4E4A77FD-DE6D-4E27-9AD1-873C1A4D5CE9}.Release|x86.Build.0 = Release|Win32
 		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Debug|x86.ActiveCfg = Debug|Win32
 		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Debug|x86.Build.0 = Debug|Win32
 		{3A53432A-C579-4124-BEE2-DE9ACDD8EDE9}.Release|x86.ActiveCfg = Release|Win32
@@ -72,6 +66,10 @@ Global
 		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Debug|x86.Build.0 = Debug|Win32
 		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Release|x86.ActiveCfg = Release|Win32
 		{4003E1AB-8862-461E-9B1C-BDBE91EA672C}.Release|x86.Build.0 = Release|Win32
+		{07494B53-953B-4950-8187-BE04C0EA7A81}.Debug|x86.ActiveCfg = Debug|Win32
+		{07494B53-953B-4950-8187-BE04C0EA7A81}.Debug|x86.Build.0 = Debug|Win32
+		{07494B53-953B-4950-8187-BE04C0EA7A81}.Release|x86.ActiveCfg = Release|Win32
+		{07494B53-953B-4950-8187-BE04C0EA7A81}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
