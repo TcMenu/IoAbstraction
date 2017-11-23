@@ -1,11 +1,14 @@
 /*
 TaskManagement Example for BasicIoAbstraction library
 
-TaskManager is designed to replace the standard delay().. do something pattern in Arduino code.
-When using this library, we'd express waits differently, more in line with in 10 seconds turn
-on the led. To do this we use a scheduler that controls when tasks are done. For each thing
+TaskManager is designed to replace the standard delay() then do something pattern in Arduino code.
+When using this library, we express waits differently, more in line with in 10 seconds turn
+on the led. To do this we use a scheduler that controls when tasks are done. For each task
 that we schedule, we provide a function that will be called upon that schedule. This example
-shows all the uses of the scheduler, for a simpler example, see the scheduledBlink example.
+shows all the uses of the scheduler, for a simpler example, see the timedBlink example.
+
+To test the interrupt support, wire a switch to pin 2 with pull up/down. Each change of state
+will cause an interrupt.
 
 Written by Dave Cherry of thecoderscorner.com in 2017
 Licenced with an Apache licnese.
@@ -13,11 +16,13 @@ Licenced with an Apache licnese.
 */
 
 #include <Wire.h>
-#include <TaskManager.h>
+#include <BasicIoAbstraction.h>
 
 TaskManager taskManager;
 
 char slotString[10] = { 0 };
+
+int taskId = -1;
 
 void setup() {
 	pinMode(2, INPUT);
@@ -25,17 +30,34 @@ void setup() {
 	Serial.begin(9600);
 	Serial.println("Starting task manager");
 	taskManager.scheduleOnce(10000, tenSecondsUp);
-	taskManager.scheduleFixedRate(1000, oneSecondPulse);
-	taskManager.scheduleFixedRate(5000, [] { log(taskManager.checkAvailableSlots(slotString)); });
+	taskId = taskManager.scheduleFixedRate(1000, oneSecondPulse);
+	taskManager.scheduleOnce(30000, [] {
+		taskManager.cancelTask(taskId); 
+	});
+	taskManager.scheduleFixedRate(5, [] { 
+		log(taskManager.checkAvailableSlots(slotString)); 
+	}, TIME_SECONDS);
+	taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
 	taskManager.setInterruptCallback (onInterrupt);
 	taskManager.addInterrupt(2, CHANGE);
 }
 
+
 void onInterrupt(uint8_t bits) {	
+	// notice it is safe to call Serial and log here, we are not in an interrupt handler.
 	log("Interrupt triggered");
 	Serial.print("  Interrupt was ");
 	Serial.println(bits);
 }
+
+int microCount = 0;
+void onMicrosJob() {
+	microCount++;
+	if ((microCount % 1000) == 1) {
+		log("Micros job increased by 1000");
+	}
+}
+
 
 void oneSecondPulse() {
 	log("One second pulse");

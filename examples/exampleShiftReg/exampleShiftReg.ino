@@ -10,7 +10,7 @@
 #define WRITE_DATA_PIN 23
 #define WRITE_LATCH_PIN 24
 
-BasicIoAbstraction* shiftRegister = inputOutputFromShiftRegister(READ_CLOCK_PIN, READ_DATA_PIN, READ_LATCH_PIN, READ_CLK_ENA_PIN, WRITE_CLOCK_PIN, WRITE_DATA_PIN, WRITE_LATCH_PIN);
+IoAbstractionRef shiftRegister = inputOutputFromShiftRegister(READ_CLOCK_PIN, READ_DATA_PIN, READ_LATCH_PIN, READ_CLK_ENA_PIN, WRITE_CLOCK_PIN, WRITE_DATA_PIN, WRITE_LATCH_PIN);
 
 void setup() {
 	// although not technically needed for the shift register we should always call pinDirection
@@ -19,23 +19,21 @@ void setup() {
 	// 0-7 are always input and 24 onwards are always output with the shift register abstraction
 	// this allows for a future improvement where more than one register could be easily supported.
 	for (int i = 24; i < 32; ++i) {
-		shiftRegister->pinDirection(i, OUTPUT);
+		ioDevicePinMode(shiftRegister, i, OUTPUT);
 	}
 	for (int i = 0; i < 8; ++i) {
-		shiftRegister->pinDirection(i, INPUT);
+		ioDevicePinMode(shiftRegister, i, INPUT);
 	}
-	
-
 }
 
 uint8_t counter = 0;
 
 void loop() {
 	delay(1);
-	shiftRegister->runLoop();
-	shiftRegister->writeValue(24, shiftRegister->readValue(1));
-	shiftRegister->writeValue(25, shiftRegister->readValue(2));
-	shiftRegister->writeValue(26, shiftRegister->readValue(3));
+	ioDeviceSync(shiftRegister);
+	ioDeviceDigitalWrite(shiftRegister, 24, ioDeviceDigitalRead(shiftRegister, 1));
+	ioDeviceDigitalWrite(shiftRegister, 25, ioDeviceDigitalRead(shiftRegister, 2));
+	ioDeviceDigitalWrite(shiftRegister, 26, ioDeviceDigitalRead(shiftRegister, 3));
 	counter++;
-	shiftRegister->writeValue(27, (counter > 128));
+	ioDeviceDigitalWrite(shiftRegister, 27, (counter > 128));
 }

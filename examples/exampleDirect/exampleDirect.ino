@@ -1,16 +1,16 @@
 #include <BasicIoAbstraction.h>
 
-BasicIoAbstraction* arduinoPins = ioUsingArduino();
+IoAbstractionRef arduinoPins = ioUsingArduino();
 
 void setup() {
 	// and also on arduino pins
-	arduinoPins->pinDirection(30, INPUT);
-	arduinoPins->pinDirection(31, OUTPUT);
+	ioDevicePinMode(arduinoPins, 30, INPUT);
+	ioDevicePinMode(arduinoPins, 31, OUTPUT);
 }
 
 void loop() {
 	// read the arduino, write to IO expander.
-	uint8_t switchValue = arduinoPins->readValue(30);
-	arduinoPins->digitalWrite(31, switchValue);
-	arduinoPins->runLoop();
+	uint8_t switchValue = ioDeviceDigitalRead(arduinoPins, 30);
+	ioDeviceDigitalWrite(arduinoPins, 31, switchValue);
+	ioDeviceSync(arduinoPins);
 }
