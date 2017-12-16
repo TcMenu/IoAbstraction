@@ -25,13 +25,6 @@ This library provides a callback interface for switch / encoder based inputs
 
 #define NO_REPEAT 0xff
 
-#define ROTARY_PRECISION_65355 0
-#define ROTARY_PRECISION_32768 1
-#define ROTARY_PRECISION_16348 2
-#define ROTARY_PRECISION_4096 4
-#define ROTARY_PRECISION_1024 6
-#define ROTARY_PRECISION_256 8
-
 enum KeyPressState : byte {
 	NOT_PRESSED,
 	DEBOUNCING1,

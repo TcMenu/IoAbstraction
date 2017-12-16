@@ -6,13 +6,32 @@
 # Datatypes (KEYWORD1)
 #######################################
 BasicIoAbstraction
+TaskManager
+IoAbstractionRef
+SwitchInput
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-writeValue
-readValue
-pinDirection
+ioDevicePinMode
+ioDeviceDigitalRead
+ioDeviceDigitalWrite
+ioDeviceSync
+ioUsingArduino
+ioFrom8754
+inputOutputFromShiftRegister
+inputOnlyFromShiftRegister
+outputOnlyFromShiftRegister
+addSwitch
+initialise
+initialiseEncoder
+changeEncoderPrecision
+encoderChanged
+scheduleOnce
+scheduleFixedRate
+addInterrupt
+setInterruptCallback
+cancelTask
 runLoop
 
 #######################################
@@ -22,4 +41,7 @@ runLoop
 #######################################
 # Constants (LITERAL1)
 #######################################
-
+TIME_MICROS
+TIME_MILLIS
+TIME_SECONDS
+NO_REPEAT

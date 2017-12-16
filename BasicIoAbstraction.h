@@ -101,7 +101,7 @@ IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t readClkE
  */
 IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin);
 
-#include <TaskManager.h>
-#include <SwitchInput.h>
+#include "TaskManager.h"
+#include "SwitchInput.h"
 
 #endif
