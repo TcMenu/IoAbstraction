@@ -94,7 +94,7 @@ public:
 	
 	void addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
 
-	void initialiseEncoder(uint8_t pinA, uint8_t pinB, uint8_t precision, EncoderCallbackFn callback);
+	void initialiseEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
 	void encoderChanged();
 

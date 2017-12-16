@@ -53,8 +53,8 @@ void onInterrupt(uint8_t bits) {
 int microCount = 0;
 void onMicrosJob() {
 	microCount++;
-	if ((microCount % 1000) == 1) {
-		log("Micros job increased by 1000");
+	if ((microCount % 100) == 1) {
+		log("Micros job increased by 100");
 	}
 }
 

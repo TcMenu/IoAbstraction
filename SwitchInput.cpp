@@ -78,8 +78,8 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 void RotaryEncoder::encoderChanged(IoAbstractionRef ioDev) {
 	ioDeviceSync(ioDev);
 	if (ioDeviceDigitalRead(ioDev, pinA) != LOW) {
-		if (ioDeviceDigitalRead(ioDev, pinB) != LOW) {
-			currentReading = max(--currentReading, 0);
+		if (ioDeviceDigitalRead(ioDev, pinB) == LOW) {
+			currentReading = (currentReading != 0) ? --currentReading : 0;
 		}
 		else {
 			currentReading = min(++currentReading, maximumValue);
@@ -108,7 +108,7 @@ void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat =
 	ioDevice->pinDirection(pin, INPUT);
 }
 
-void SwitchInput::initialiseEncoder(uint8_t pinA, uint8_t pinB, uint8_t precision, EncoderCallbackFn callback) {
+void SwitchInput::initialiseEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
 
 	ioDevicePinMode(ioDevice, pinA, INPUT);
 	ioDevicePinMode(ioDevice, pinB, INPUT);
