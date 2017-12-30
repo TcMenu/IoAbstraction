@@ -21,5 +21,8 @@ The first version of switch input is ready. It supports pull down switches only 
 # More detail
 
 There's more detail here:
+
+[http://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/]
+
 [http://www.thecoderscorner.com/electronics/microcontrollers/switches-inputs/basic-io-abstraction-library-pins-or-8574/]
-and
+
