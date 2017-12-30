@@ -9,7 +9,7 @@
 // would not work for IO expanders.
 //
 // There is another sketch that shows the library working with serial shift registers too.
-//
+// See: http://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/i2c8574-example-ioAbstraction-library/
 
 
 // create both an Arduino and an IO expander based IO abstraction
@@ -27,7 +27,7 @@ void setup() {
 
 	// here we set the direction of pins on the IO expander
 	ioDevicePinMode(ioExpander, 0, INPUT);
-	ioDevicePinMode(ioExpander, 6, OUTPUT);
+	ioDevicePinMode(ioExpander, 1, OUTPUT);
 }
 
 void loop() {

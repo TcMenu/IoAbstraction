@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "taskManagement", "..\taskMa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timedBlink", "..\timedBlink\timedBlink.vcxproj", "{6507A43A-FBFE-464F-9C78-968E8C4008E4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "encoderSwitch", "..\encoderSwitch\encoderSwitch.vcxproj", "{46671493-2599-4AA8-AD44-2E00324CCAE3}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\..\BasicIoAbstraction.vcxitems*{ab35d56c-5e9a-499e-b1a2-7922193c1aea}*SharedItemsImports = 4
@@ -72,6 +74,10 @@ Global
 		{6507A43A-FBFE-464F-9C78-968E8C4008E4}.Debug|x86.Build.0 = Debug|Win32
 		{6507A43A-FBFE-464F-9C78-968E8C4008E4}.Release|x86.ActiveCfg = Release|Win32
 		{6507A43A-FBFE-464F-9C78-968E8C4008E4}.Release|x86.Build.0 = Release|Win32
+		{46671493-2599-4AA8-AD44-2E00324CCAE3}.Debug|x86.ActiveCfg = Debug|Win32
+		{46671493-2599-4AA8-AD44-2E00324CCAE3}.Debug|x86.Build.0 = Debug|Win32
+		{46671493-2599-4AA8-AD44-2E00324CCAE3}.Release|x86.ActiveCfg = Release|Win32
+		{46671493-2599-4AA8-AD44-2E00324CCAE3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
