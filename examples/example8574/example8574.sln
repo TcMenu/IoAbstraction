@@ -33,6 +33,7 @@ Global
 		..\..\BasicIoAbstraction.vcxitems*{6507a43a-fbfe-464f-9c78-968e8c4008e4}*SharedItemsImports = 4
 		..\..\BasicIoAbstraction.vcxitems*{07494b53-953b-4950-8187-be04c0ea7a81}*SharedItemsImports = 4
 		..\..\..\LiquidCrystal\LiquidCrystal.vcxitems*{07494b53-953b-4950-8187-be04c0ea7a81}*SharedItemsImports = 4
+		..\..\BasicIoAbstraction.vcxitems*{46671493-2599-4aa8-ad44-2e00324ccae3}*SharedItemsImports = 4
 		..\..\BasicIoAbstraction.vcxitems*{b861a72b-4830-4da5-b62e-a4a681c070d9}*SharedItemsImports = 4
 		..\..\BasicIoAbstraction.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 		..\..\BasicIoAbstraction.vcxitems*{8fb43527-a13f-4298-95c3-4ba1ba36c2aa}*SharedItemsImports = 9

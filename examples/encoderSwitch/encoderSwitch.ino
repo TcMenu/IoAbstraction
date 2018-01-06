@@ -6,16 +6,10 @@
  Switch input is designed to work with the task manager class which
  makes scheduling tasks trivial.
 
- 
 */
 
 #include<BasicIoAbstraction.h>
 #include<Wire.h>
-
-// We need a task manager and a switch conroller for this. The task manager takes care of scheduling
-// and the switch input takes care of debouncing, doing callbacks and decoding.
-TaskManager taskManager;
-SwitchInput switches;
 
 // The pin onto which we connected the rotary encoders switch
 const int spinwheelClickPin = 24;
@@ -54,14 +48,6 @@ void onEncoderChange(int newValue) {
   Serial.println(newValue);
 }
 
-//
-// We register an interrupt handler to manage changes to the rotary encoder.
-//
-void encoderInterrupt(uint8_t pin) {
-  // switch input provides a ready written function to handle rotary encoder interrupts.
-  onEncoderInterrupt();
-}
-
 void setup() {
 
   Serial.begin(9600);
@@ -76,16 +62,9 @@ void setup() {
   switches.addSwitch(repeatButtonPin, onRepeatButtonClicked, 25);
 
   // now we set up the rotary encoder, first we give the A pin and the B pin.
-  // the precision works as a division, 1 results in 65355 possible values, 2 is 32678, 8 would be 256, etc.
-  // last provide a function that is called when there is a material change in the encoder.
+  // we give the encoder a max value of 128, always minumum of 0.
   switches.initialiseEncoder(encoderAPin, encoderBPin, onEncoderChange);
   switches.changeEncoderPrecision(maximumEncoderValue, 100);
-
-  // rotary encoders need to be checked constantly, the only realistic way to use on is with an interrupt
-  // handler to pick up changes, fortunately, task manager makes this trivial. We provide our callback
-  // and ask taskmanager to interrupt on a change in pinA.
-  taskManager.setInterruptCallback(encoderInterrupt);
-  taskManager.addInterrupt(encoderAPin, CHANGE);
 }
 
 void loop() {

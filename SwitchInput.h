@@ -59,6 +59,7 @@ class RotaryEncoder {
 private:
 	uint8_t pinA;
 	uint8_t pinB;
+	
 	uint16_t maximumValue;
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
@@ -70,10 +71,8 @@ public:
 	int getCurrentReading() { return currentReading; }
 	void setCurrentReading(int reading) { currentReading = reading; }
 	bool isInitialised() { pinA != 0xff; }
-	void encoderChanged(IoAbstractionRef ioDevice);
+	void encoderChanged();
 };
-
-void onEncoderInterrupt();
 
 class SwitchInput {
 private:
@@ -89,12 +88,12 @@ public:
 
 	void initialiseEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
-	void encoderChanged();
 
 	void runLoop();
 private:
-	static SwitchInput* __swInInstance;
-	friend void onEncoderInterrupt();
+	friend void onEncoderInterrupt(uint8_t);
 };
+
+extern SwitchInput switches;
 
 #endif

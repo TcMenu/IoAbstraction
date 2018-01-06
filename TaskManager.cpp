@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "TaskManager.h"
 
+TaskManager taskManager;
 
 TimerTask::TimerTask() {
 	clear();
@@ -15,7 +16,7 @@ void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 }
 
 bool TimerTask::isReady(unsigned long now) {
-	if (!isInUse()) return false;
+	if (!isInUse() || isRunning()) return false;
 
 	// TODO handle clock wrapping??
 
@@ -33,25 +34,19 @@ bool TimerTask::isReady(unsigned long now) {
 
 void TimerTask::execute() {
 	if (callback == NULL) return; // failsafe, always exit with null callback.
+	
 
-	callback();
-
-	// handle the two cases, repeating tasks - reschedule, or free up.
+	// handle repeating tasks - reschedule.
 	if (isRepeating()) {
+		markRunning();
+		callback();
 		this->scheduledAt = (executionInfo & TASK_MICROS) ? micros() : millis();
+		clearRunning();
 	}
 	else {
+		TimerFn savedCallback = callback;
 		clear();
-	}
-}
-
-int TimerTask::getTimerValue() {
-	int tv = executionInfo & TIMER_MASK;
-	if (tv <= 1000) {
-		return tv;
-	}
-	else {
-		return tv = (tv - 1000) << 3;
+		savedCallback();
 	}
 }
 
@@ -60,12 +55,9 @@ void TimerTask::clear() {
 	callback = NULL;
 }
 
-
-TaskManager* TaskManager::__taskMgrInstance;
-
 void TaskManager::markInterrupted(uint8_t interruptNo) {
-	__taskMgrInstance->lastInterruptTrigger = interruptNo;
-	__taskMgrInstance->interrupted = true;
+	taskManager.lastInterruptTrigger = interruptNo;
+	taskManager.interrupted = true;
 }
 
 TaskManager::TaskManager(uint8_t taskSlots = DEFAULT_TASK_SIZE) {
@@ -84,7 +76,7 @@ int TaskManager::findFreeTask() {
 }
 
 inline int toTimerValue(int v, TimerUnit unit) {
-	if (unit == TIME_MILLIS && v > 4096) {
+	if (unit == TIME_MILLIS && v > TIMER_MASK) {
 		unit = TIME_SECONDS;
 		v = v / 1000;
 	}
@@ -118,9 +110,18 @@ char* TaskManager::checkAvailableSlots(char* data) {
 	uint8_t i;
 	for (i = 0; i < numberOfSlots; ++i) {
 		data[i] = tasks[i].isRepeating() ? 'R' : (tasks[i].isInUse() ? 'U' : 'F');
+		if (tasks[i].isRunning()) data[i] = tolower(data[i]);
 	}
 	data[i] = 0;
 	return data;
+}
+
+void TaskManager::yieldForMicros(uint16_t microsToWait) {
+	long microsEnd = micros() + microsToWait;
+
+	while(micros() < microsEnd) {
+		runLoop();
+	}
 }
 
 void TaskManager::runLoop() {
@@ -142,27 +143,26 @@ void TaskManager::runLoop() {
 typedef void ArdunioIntFn(void);
 
 void interruptHandler1() {
-	TaskManager::__taskMgrInstance->markInterrupted(1);
+	taskManager.markInterrupted(1);
 }
 void interruptHandler2() {
-	TaskManager::__taskMgrInstance->markInterrupted(2);
+	taskManager.markInterrupted(2);
 }
 void interruptHandler3() {
-	TaskManager::__taskMgrInstance->markInterrupted(3);
+	taskManager.markInterrupted(3);
 }
 void interruptHandler5() {
-	TaskManager::__taskMgrInstance->markInterrupted(5);
+	taskManager.markInterrupted(5);
 }
 void interruptHandler18() {
-	TaskManager::__taskMgrInstance->markInterrupted(18);
+	taskManager.markInterrupted(18);
 }
 void interruptHandlerOther() {
-	TaskManager::__taskMgrInstance->markInterrupted(0xff);
+	taskManager.markInterrupted(0xff);
 }
 
 void TaskManager::addInterrupt(uint8_t pin, uint8_t mode) {
 	if (interruptCallback == NULL) return;
-	TaskManager::__taskMgrInstance = this;
 	int interruptNo = digitalPinToInterrupt(pin);
 
 	switch (pin) {

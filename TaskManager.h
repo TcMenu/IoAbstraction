@@ -9,7 +9,8 @@ typedef void (*InterruptFn)(uint8_t);
 #define TASK_MILLIS     0x2000
 #define TASK_SECONDS    0x1000
 #define TASK_MICROS     0x0000
-#define TIMER_MASK      0x0fff
+#define TASK_RUNNING    0x0800
+#define TIMER_MASK      0x07ff
 
 #define DEFAULT_TASK_SIZE 6
 
@@ -30,7 +31,9 @@ public:
 	bool isInUse() { return (executionInfo & TASK_IN_USE) != 0; }
 	bool isRepeating() { return (executionInfo & TASK_REPEATING) != 0; }
 	void clear();
-	int getTimerValue();
+	void markRunning() { executionInfo |= TASK_RUNNING; }
+	void clearRunning() { executionInfo &= ~TASK_RUNNING; }
+	bool isRunning() { return (executionInfo & TASK_RUNNING) != 0; }
 };
 
 class TaskManager {
@@ -48,15 +51,19 @@ public:
 	void addInterrupt(uint8_t pin, uint8_t mode);
 	void setInterruptCallback(InterruptFn handler);
 	void cancelTask(uint8_t task);
+
+	void yieldForMicros(uint16_t micros);
+
 	char* checkAvailableSlots(char* slotData);
 
 	// this should be pretty much the only code in loop()
 	void runLoop();
 
 	static void markInterrupted(uint8_t interruptNo);
-	static TaskManager* __taskMgrInstance;
 private:
 	int findFreeTask();
 };
+
+extern TaskManager taskManager;
 
 #endif

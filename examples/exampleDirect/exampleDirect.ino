@@ -1,11 +1,16 @@
+// This is the simplest possible example of using IO Abstraction
+// To directly access arduino pins. Just connect a PULL UP/DOWN 
+// switch to the input pin and it will be mirrored to the LED.
+// By default the output uses the inbuilt LED.
+
 #include <BasicIoAbstraction.h>
 
 IoAbstractionRef arduinoPins = ioUsingArduino();
 
 void setup() {
 	// and also on arduino pins
-	ioDevicePinMode(arduinoPins, 30, INPUT);
-	ioDevicePinMode(arduinoPins, 31, OUTPUT);
+	ioDevicePinMode(arduinoPins, 10, INPUT);
+	ioDevicePinMode(arduinoPins, 13, OUTPUT);
 }
 
 void loop() {

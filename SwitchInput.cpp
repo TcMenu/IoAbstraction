@@ -2,8 +2,7 @@
 #include <Arduino.h>
 #include "SwitchInput.h"
 
-SwitchInput* SwitchInput::__swInInstance;
-
+SwitchInput switches;
 
 KeyboardItem::KeyboardItem() {
 	this->repeatInterval = NO_REPEAT;
@@ -75,17 +74,16 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 }
 
 
-void RotaryEncoder::encoderChanged(IoAbstractionRef ioDev) {
-	if (digitalRead(pinA) != LOW) {
-		if (digitalRead(pinB) == LOW) {
-			currentReading = (currentReading != 0) ? --currentReading : 0;
-		}
-		else {
-			currentReading = min(++currentReading, maximumValue);
-		}		
-
-		callback(currentReading);
+void RotaryEncoder::encoderChanged() {
+	// at the moment the B pin must also be on port A.
+	if (digitalRead(pinB) == LOW) {
+		currentReading = (currentReading != 0) ? --currentReading : 0;
 	}
+	else {
+		currentReading = min(++currentReading, maximumValue);
+	}		
+
+	callback(currentReading);
 }
 
 SwitchInput::SwitchInput() {
@@ -95,9 +93,8 @@ SwitchInput::SwitchInput() {
 void SwitchInput::initialise(TaskManager& taskManager, IoAbstractionRef ioDevice) {
 	this->ioDevice = ioDevice;
 
-	__swInInstance = this;
 	taskManager.scheduleFixedRate(20, [] {
-		SwitchInput::__swInInstance->runLoop();
+		switches.runLoop();
 	});
 
 }
@@ -107,12 +104,19 @@ void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat =
 	ioDevice->pinDirection(pin, INPUT);
 }
 
+void onEncoderInterrupt(uint8_t pin) {
+	switches.encoder.encoderChanged();
+}
+
 void SwitchInput::initialiseEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
 
 	pinMode(pinA, INPUT);
 	pinMode(pinB, INPUT);
 
 	encoder.initialise(pinA, pinB, callback);
+
+	taskManager.setInterruptCallback(onEncoderInterrupt);
+	taskManager.addInterrupt(pinA, FALLING);
 }
 
 void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentValue) {
@@ -125,12 +129,3 @@ void SwitchInput::runLoop() {
 		keys[i].checkAndTrigger(ioDevice->readValue(keys[i].getPin()));
 	}
 }
-
-void SwitchInput::encoderChanged() {
-	encoder.encoderChanged(ioDevice);
-}
-
-void onEncoderInterrupt() {
-	SwitchInput::__swInInstance->encoderChanged();
-}
-

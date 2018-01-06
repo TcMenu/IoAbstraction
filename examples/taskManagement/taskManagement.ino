@@ -18,8 +18,6 @@ Licenced with an Apache licnese.
 #include <Wire.h>
 #include <BasicIoAbstraction.h>
 
-TaskManager taskManager;
-
 char slotString[10] = { 0 };
 
 int taskId = -1;
@@ -31,6 +29,11 @@ void setup() {
 	Serial.println("Starting task manager");
 	taskManager.scheduleOnce(10000, tenSecondsUp);
 	taskId = taskManager.scheduleFixedRate(1000, oneSecondPulse);
+	
+	log("Waiting 32 milli second with yield in setup");
+	taskManager.yieldForMicros(32000);
+	log("Waited 32 milli second with yield in setup");
+
 	taskManager.scheduleOnce(30000, [] {
 		taskManager.cancelTask(taskId); 
 	});
@@ -40,6 +43,8 @@ void setup() {
 	taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
 	taskManager.setInterruptCallback (onInterrupt);
 	taskManager.addInterrupt(2, CHANGE);
+
+	taskManager.scheduleFixedRate(10, [] { taskManager.yieldForMicros(10000); });
 }
 
 
