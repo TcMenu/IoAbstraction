@@ -90,7 +90,7 @@ SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
 }
 
-void SwitchInput::initialise(TaskManager& taskManager, IoAbstractionRef ioDevice) {
+void SwitchInput::initialise(IoAbstractionRef ioDevice) {
 	this->ioDevice = ioDevice;
 
 	taskManager.scheduleFixedRate(20, [] {

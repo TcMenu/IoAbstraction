@@ -82,7 +82,7 @@ private:
 	IoAbstractionRef ioDevice;
 public:
 	SwitchInput();
-	void initialise(TaskManager& taskManager, IoAbstractionRef ioDevice);
+	void initialise(IoAbstractionRef ioDevice);
 	
 	void addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
 
