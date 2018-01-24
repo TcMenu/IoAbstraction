@@ -20,12 +20,8 @@ const int ledPin = LED_BUILTIN;
 // the state of the pin, we will toggle it.
 int ledOn = LOW;
 
-// create a task manager to look after our tasks
-TaskManager taskManager;
-
 // create an IO abstraction, so later we could put the led on a shift register or i2c.
 IoAbstractionRef ioDevice = ioUsingArduino(); 
-
 
 void setup() {
 	// set the pin we are to use as output using the io abstraction
