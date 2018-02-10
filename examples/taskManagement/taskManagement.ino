@@ -16,7 +16,7 @@ Licenced with an Apache licnese.
 */
 
 #include <Wire.h>
-#include <BasicIoAbstraction.h>
+#include <IoAbstraction.h>
 
 char slotString[10] = { 0 };
 

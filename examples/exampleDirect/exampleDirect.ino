@@ -3,7 +3,7 @@
 // switch to the input pin and it will be mirrored to the LED.
 // By default the output uses the inbuilt LED.
 
-#include <BasicIoAbstraction.h>
+#include <IoAbstraction.h>
 
 IoAbstractionRef arduinoPins = ioUsingArduino();
 

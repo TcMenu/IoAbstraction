@@ -8,7 +8,7 @@ This library provides a callback interface for switch / encoder based inputs
 #ifndef _SWITCHINPUT_H
 #define _SWITCHINPUT_H
 
-#include <BasicIoAbstraction.h>
+#include <IoAbstraction.h>
 #include <TaskManager.h>
 
 #ifndef HOLD_THRESHOLD

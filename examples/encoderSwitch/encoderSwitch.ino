@@ -8,7 +8,7 @@
 
 */
 
-#include<BasicIoAbstraction.h>
+#include<IoAbstraction.h>
 #include<Wire.h>
 
 // The pin onto which we connected the rotary encoders switch

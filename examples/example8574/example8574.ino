@@ -1,4 +1,6 @@
-#include <BasicIoAbstraction.h>
+#include <TaskManager.h>
+#include <SwitchInput.h>
+#include <IoAbstraction.h>
 #include <Wire.h>
 
 //
