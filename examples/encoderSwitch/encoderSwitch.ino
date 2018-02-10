@@ -6,6 +6,8 @@
  Switch input is designed to work with the task manager class which
  makes scheduling tasks trivial.
 
+ Circuit / detail: http://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/arduino-switches-handled-as-events/
+
 */
 
 #include<IoAbstraction.h>
