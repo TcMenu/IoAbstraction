@@ -1,4 +1,4 @@
-# BasicIoAbstraction
+# IoAbstraction
 
 This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below covers each of the main cases in more detail.
 
