@@ -1,24 +1,71 @@
-# BasicIoAbstraction
+# IoAbstraction
 
-This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below covers each of the main cases in more detail.
+This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation.
 
-# TaskManager
+## Installation
+
+To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries directory`, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
+
+## TaskManager
 
 Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or the executor framework in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
 
-At the moment the two schedule calls are accurate to 1ms up to 1 second, and accurate to 8ms up to about 55 seconds.
+A simple example:
 
-# BasicIoAbstraction
+In the setup method, add an event that gets fired once in the future:
 
-Abstracts the use of either arduino pins or IO expanders, such that a library or other code can work very easily with shift registers, i2c IO or arduino pins. 
+```
+	taskManager.scheduleOnce(100, [] {
+		// some work to be done.
+	});
+```
+Then in the loop method you need to call: 
 
-If you are building a library and want it to work with either Arduino pins or an IO expander for IO, then this library is probably a good starting point.
+  	taskManager.runLoop();
 
-# SwitchInput
+## IoAbstraction
 
-The first version of switch input is ready. It supports pull down switches only at the moment. This class provides an event based approach to handling switches and rotary encoders. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise.
+Lets you choose to use Arduino pins, shift register Input/Output, 8574 i2c IO Expanders in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
 
-# More detail
+A simple example:
+
+At the global level (outside of any function) we create an i2c expander on address 0x20:
+
+  	IoAbstractionRef ioExpander = ioFrom8754(0x20);
+
+In setup we set it's first IO pin to input and start the Wire library:
+	
+  	Wire.begin();  
+ 	ioDevicePinMode(ioExpander, 0, INPUT);
+  
+And then later we red from it (the only limitation is we must call runLoop to synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
+
+  	ioDeviceSync(ioExpander);
+  	int valueRead = ioDeviceDigitalRead(ioExpander, 0);
+
+## SwitchInput
+
+This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this library also uses the above on task manager.
+
+Here's a simple example example using a switch:
+
+In setup we initialise it telling it to use arduino pins for IO, we could use shift registers or an i2c expander, and we also add a switch along with the event that should be:
+
+	switches.initialise(ioUsingArduino());
+	switches.addSwitch(spinwheelClickPin, onClicked, NO_REPEAT); // NO_REPEAT is optional, sets the repeat interval in 100s of second.
+
+Then we create a function for onClicked, this will be called when the button is pressed:
+
+	void onClicked(uint8_t pin, bool heldDown) {
+		// pin: the pin that was pressed
+    		// heldDown: if the button has been held down
+  	}
+  
+Lastly, in loop you must not do anything long running, instead using the task management library. You must call:
+
+	taskManager.runLoop();
+
+## More detail
 
 There's more detail here:
 
