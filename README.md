@@ -2,7 +2,11 @@
 
 This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation.
 
-# TaskManager
+## Installation
+
+To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries directory`, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
+
+## TaskManager
 
 Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or the executor framework in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
 
@@ -19,7 +23,7 @@ Then in the loop method you need to call:
 
   	taskManager.runLoop();
 
-# IoAbstraction
+## IoAbstraction
 
 Lets you choose to use Arduino pins, shift register Input/Output, 8574 i2c IO Expanders in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
 
@@ -39,7 +43,7 @@ And then later we red from it (the only limitation is we must call runLoop to sy
   	ioDeviceSync(ioExpander);
   	int valueRead = ioDeviceDigitalRead(ioExpander, 0);
 
-# SwitchInput
+## SwitchInput
 
 This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this library also uses the above on task manager.
 
@@ -61,7 +65,7 @@ Lastly, in loop you must not do anything long running, instead using the task ma
 
 	taskManager.runLoop();
 
-# More detail
+## More detail
 
 There's more detail here:
 
