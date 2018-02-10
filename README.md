@@ -7,12 +7,15 @@ This library provides several useful extensions that make programming Arduino fo
 Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or the executor framework in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
 
 A simple example:
+
+In the setup method, add an event that gets fired once in the future:
+
 ```
 	taskManager.scheduleOnce(100, [] {
 		// some work to be done.
 	});
 ```
-Just make sure that the loop method calls 
+Then in the loop method you need to call: 
 
   	taskManager.runLoop();
 
@@ -24,17 +27,17 @@ A simple example:
 
 At the global level (outside of any function) we create an i2c expander on address 0x20:
 
-  IoAbstractionRef ioExpander = ioFrom8754(0x20);
+  	IoAbstractionRef ioExpander = ioFrom8754(0x20);
 
 In setup we set it's first IO pin to input and start the Wire library:
 	
-  Wire.begin();  
-  ioDevicePinMode(ioExpander, 0, INPUT);
+  	Wire.begin();  
+ 	ioDevicePinMode(ioExpander, 0, INPUT);
   
 And then later we red from it (the only limitation is we must call runLoop to synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
 
-  ioDeviceSync(ioExpander);
-  int valueRead = ioDeviceDigitalRead(ioExpander, 0);
+  	ioDeviceSync(ioExpander);
+  	int valueRead = ioDeviceDigitalRead(ioExpander, 0);
 
 # SwitchInput
 
@@ -44,19 +47,19 @@ Here's a simple example example using a switch:
 
 In setup we initialise it telling it to use arduino pins for IO, we could use shift registers or an i2c expander, and we also add a switch along with the event that should be:
 
-  switches.initialise(ioUsingArduino());
-  switches.addSwitch(spinwheelClickPin, onClicked, NO_REPEAT); // NO_REPEAT is optional, sets the repeat interval in 100s of second.
+	switches.initialise(ioUsingArduino());
+	switches.addSwitch(spinwheelClickPin, onClicked, NO_REPEAT); // NO_REPEAT is optional, sets the repeat interval in 100s of second.
 
 Then we create a function for onClicked, this will be called when the button is pressed:
 
-  void onClicked(uint8_t pin, bool heldDown) {
-    // pin: the pin that was pressed
-    // heldDown: if the button has been held down
-  }
+	void onClicked(uint8_t pin, bool heldDown) {
+		// pin: the pin that was pressed
+    		// heldDown: if the button has been held down
+  	}
   
 Lastly, in loop you must not do anything long running, instead using the task management library. You must call:
 
-  taskManager.runLoop();
+	taskManager.runLoop();
 
 # More detail
 
