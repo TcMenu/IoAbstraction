@@ -1,12 +1,10 @@
-# IoAbstraction
-
 This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation.
 
 ## Installation
 
 To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries directory`, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
 
-## TaskManager
+## TaskManager - simple, event based programming for Arduino 
 
 Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or the executor framework in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
 
@@ -23,7 +21,7 @@ Then in the loop method you need to call:
 
   	taskManager.runLoop();
 
-## IoAbstraction
+## IoAbstraction - easily interchange between pins, PCF8574 IO and shift registers.
 
 Lets you choose to use Arduino pins, shift register Input/Output, 8574 i2c IO Expanders in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
 
