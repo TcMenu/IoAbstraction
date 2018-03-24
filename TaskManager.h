@@ -23,22 +23,27 @@ private:
 	uint16_t executionInfo;
 	uint32_t scheduledAt;
 	TimerFn callback;
+	TimerTask* next;
 public:
 	TimerTask();
-	bool isReady(unsigned long now);
+	bool isReady();
+	unsigned long microsFromNow();
 	void initialise(uint16_t executionInfo, TimerFn execCallback);
-	void execute();
+	inline void execute();
 	bool isInUse() { return (executionInfo & TASK_IN_USE) != 0; }
 	bool isRepeating() { return (executionInfo & TASK_REPEATING) != 0; }
 	void clear();
 	void markRunning() { executionInfo |= TASK_RUNNING; }
 	void clearRunning() { executionInfo &= ~TASK_RUNNING; }
 	bool isRunning() { return (executionInfo & TASK_RUNNING) != 0; }
+	TimerTask* getNext() { return next; }
+	void setNext(TimerTask* next) { this->next = next; }
 };
 
 class TaskManager {
 private:
 	TimerTask *tasks;
+	TimerTask *first;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
 	volatile uint8_t lastInterruptTrigger;
@@ -62,6 +67,8 @@ public:
 	static void markInterrupted(uint8_t interruptNo);
 private:
 	int findFreeTask();
+	void removeFromQueue(TimerTask* task);
+	void putItemIntoQueue(TimerTask* tm);
 };
 
 extern TaskManager taskManager;

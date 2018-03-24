@@ -17,8 +17,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "taskManagement", "..\taskMa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timedBlink", "..\timedBlink\timedBlink.vcxproj", "{D01620AD-054B-4021-AFB8-B8B7634F3746}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TaskMgrTest", "..\..\..\..\TaskMgrTest\TaskMgrTest.vcxproj", "{12D02E7C-B93D-4479-8435-52C88D16F784}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\IoAbstraction.vcxitems*{12d02e7c-b93d-4479-8435-52c88d16f784}*SharedItemsImports = 4
 		..\..\IoAbstraction.vcxitems*{2367e01b-29a9-4ef4-a75b-723b73af1a5b}*SharedItemsImports = 4
 		..\..\IoAbstraction.vcxitems*{621fceb6-5c1f-431c-92da-b7fe2faa7b51}*SharedItemsImports = 4
 		..\..\IoAbstraction.vcxitems*{74543b8e-d4b5-4c67-a5f4-f94e246a4dd8}*SharedItemsImports = 4
@@ -56,6 +59,10 @@ Global
 		{D01620AD-054B-4021-AFB8-B8B7634F3746}.Debug|x86.Build.0 = Debug|Win32
 		{D01620AD-054B-4021-AFB8-B8B7634F3746}.Release|x86.ActiveCfg = Release|Win32
 		{D01620AD-054B-4021-AFB8-B8B7634F3746}.Release|x86.Build.0 = Release|Win32
+		{12D02E7C-B93D-4479-8435-52C88D16F784}.Debug|x86.ActiveCfg = Debug|Win32
+		{12D02E7C-B93D-4479-8435-52C88D16F784}.Debug|x86.Build.0 = Debug|Win32
+		{12D02E7C-B93D-4479-8435-52C88D16F784}.Release|x86.ActiveCfg = Release|Win32
+		{12D02E7C-B93D-4479-8435-52C88D16F784}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,6 +5,7 @@
 TaskManager taskManager;
 
 TimerTask::TimerTask() {
+	next = NULL;
 	clear();
 }
 
@@ -15,7 +16,7 @@ void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 	this->scheduledAt = (executionInfo & TASK_MICROS) ? micros() : millis();
 }
 
-bool TimerTask::isReady(unsigned long now) {
+bool TimerTask::isReady() {
 	if (!isInUse() || isRunning()) return false;
 
 	// TODO handle clock wrapping??
@@ -32,9 +33,24 @@ bool TimerTask::isReady(unsigned long now) {
 	}
 }
 
-void TimerTask::execute() {
+unsigned long TimerTask::microsFromNow() {
+	unsigned long microsFromNow;
+	if ((executionInfo & TASK_MICROS) != 0) {
+		microsFromNow = (executionInfo & TIMER_MASK) - (micros() - scheduledAt);
+	}
+	else {
+		uint32_t startTm = (executionInfo & TIMER_MASK);
+		if ((executionInfo & TASK_SECONDS) != 0) {
+			startTm *= 1000;
+		}
+		microsFromNow = (startTm - (millis() - scheduledAt)) * 1000;
+	}
+	return microsFromNow;
+}
+
+
+inline void TimerTask::execute() {
 	if (callback == NULL) return; // failsafe, always exit with null callback.
-	
 
 	// handle repeating tasks - reschedule.
 	if (isRepeating()) {
@@ -64,6 +80,7 @@ TaskManager::TaskManager(uint8_t taskSlots = DEFAULT_TASK_SIZE) {
 	this->numberOfSlots = taskSlots;
 	this->tasks = new TimerTask[taskSlots];
 	interrupted = false;
+	first = NULL;
 }
 
 int TaskManager::findFreeTask() {
@@ -88,6 +105,7 @@ uint8_t TaskManager::scheduleOnce(int millis, TimerFn timerFunction, TimerUnit t
 	uint8_t taskId = findFreeTask();
 	if (taskId >= 0) {
 		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE, timerFunction);
+		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
 }
@@ -96,6 +114,7 @@ uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerU
 	uint8_t taskId = findFreeTask();
 	if (taskId >= 0) {
 		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
+		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
 }
@@ -103,6 +122,7 @@ uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerU
 void TaskManager::cancelTask(uint8_t task) {
 	if (task >= 0 && task < numberOfSlots) {
 		tasks[task].clear();
+		removeFromQueue(&tasks[task]);
 	}
 }
 
@@ -125,19 +145,90 @@ void TaskManager::yieldForMicros(uint16_t microsToWait) {
 }
 
 void TaskManager::runLoop() {
-	unsigned long milliStored = millis();
-	for (uint8_t i = 0; i < numberOfSlots; ++i) {
-		if (tasks[i].isReady(milliStored)) {
-			tasks[i].execute();
+	if (interrupted) {
+		interrupted = false;
+		interruptCallback(lastInterruptTrigger);
+	}
+
+	TimerTask* tm = first;
+	while(tm != NULL) {
+		if (tm->isReady()) {
+			removeFromQueue(tm);
+			tm->execute();
+			if (tm->isRepeating()) {
+				putItemIntoQueue(tm);
+			}
+		}
+		else {
+			break;
 		}
 
-		if (interrupted) {
-			interrupted = false;
-			interruptCallback(lastInterruptTrigger);
-		}
+		tm = tm->getNext();
 	}
 
 	// TODO, if not interrupted, and no task for a while sleep and set timer - go into low power.
+}
+
+void TaskManager::putItemIntoQueue(TimerTask* tm) {
+
+	// shortcut, no first yet, so we are at the top!
+	if (first == NULL) {
+		first = tm;
+		tm->setNext(NULL);
+		return;
+	}
+
+	// if we are the new first..
+	if (first->microsFromNow() > tm->microsFromNow()) {
+		tm->setNext(first);
+		first = tm;
+		return;
+	}
+
+	// otherwise we have to find the place in the queue for this item by time
+	TimerTask* current = first->getNext();
+	TimerTask* previous = first;
+
+	while (current != NULL) {
+		if (current->microsFromNow() > tm->microsFromNow()) {
+			previous->setNext(tm);
+			tm->setNext(current);
+			return;
+		}
+		previous = current;
+		current = current->getNext();
+	}
+
+	// we are at the end of the queue
+	previous->setNext(tm);
+	tm->setNext(NULL);
+}
+
+void TaskManager::removeFromQueue(TimerTask* tm) {
+	
+	// shortcut, if we are first, just remove us by getting the next and setting first.
+	if (first == tm) {
+		first = tm->getNext();
+		return;
+	}
+
+	// otherwise, we have a single linked list, so we need to keep previous and current and
+	// then iterate through each item
+	TimerTask* current = first->getNext();
+	TimerTask* previous = first;
+
+	while (current != NULL) {
+
+		// we've found the item, unlink it from the queue and nullify its next.
+		if (current == tm) {
+			previous->setNext(current->getNext());
+			current->setNext(NULL);
+			break;
+		}
+
+		previous = current;
+		current = current->getNext();
+	}
 }
 
 typedef void ArdunioIntFn(void);

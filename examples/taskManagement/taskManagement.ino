@@ -35,6 +35,7 @@ void setup() {
 	log("Waited 32 milli second with yield in setup");
 
 	taskManager.scheduleOnce(30000, [] {
+		log("30 seconds up, stopping 1 second job");
 		taskManager.cancelTask(taskId); 
 	});
 	taskManager.scheduleFixedRate(5, [] { 
@@ -62,7 +63,6 @@ void onMicrosJob() {
 		log("Micros job increased by 100");
 	}
 }
-
 
 void oneSecondPulse() {
 	log("One second pulse");
