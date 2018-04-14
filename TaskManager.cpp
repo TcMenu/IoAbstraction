@@ -22,19 +22,21 @@ bool TimerTask::isReady() {
 	// TODO handle clock wrapping??
 
 	if ((executionInfo & TASK_MICROS) != 0) {
-		return (scheduledAt + (executionInfo & TIMER_MASK)) <= micros();
+		uint16_t delay = (executionInfo & TIMER_MASK);
+		return (micros() - scheduledAt) >= delay;
+	}
+	else if((executionInfo & TASK_SECONDS) != 0) {
+		uint32_t delay = (executionInfo & TIMER_MASK) * 1000L;
+		return (millis() - scheduledAt) >= delay;
 	}
 	else {
-		uint32_t startTm = (executionInfo & TIMER_MASK);
-		if ((executionInfo & TASK_SECONDS) != 0) {
-			startTm *= 1000;
-		}
-		return (scheduledAt + startTm) <= millis();
+		uint16_t delay = (executionInfo & TIMER_MASK);
+		return (millis() - scheduledAt) >= delay;
 	}
 }
 
 unsigned long TimerTask::microsFromNow() {
-	unsigned long microsFromNow;
+	uint32_t microsFromNow;
 	if ((executionInfo & TASK_MICROS) != 0) {
 		microsFromNow = (executionInfo & TIMER_MASK) - (micros() - scheduledAt);
 	}

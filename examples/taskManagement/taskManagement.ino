@@ -17,13 +17,24 @@ Licenced with an Apache licnese.
 
 #include <Wire.h>
 #include <IoAbstraction.h>
+#include <util/atomic.h>
 
 char slotString[10] = { 0 };
 
 int taskId = -1;
 
+void setMillis(unsigned long ms)
+{
+	extern unsigned long timer0_millis;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		timer0_millis = ms;
+	}
+}
+
 void setup() {
 	pinMode(2, INPUT);
+
+	setMillis(-9000);
 
 	Serial.begin(9600);
 	Serial.println("Starting task manager");
