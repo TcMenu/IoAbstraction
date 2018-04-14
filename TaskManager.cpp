@@ -38,7 +38,8 @@ bool TimerTask::isReady() {
 unsigned long TimerTask::microsFromNow() {
 	uint32_t microsFromNow;
 	if ((executionInfo & TASK_MICROS) != 0) {
-		microsFromNow = (executionInfo & TIMER_MASK) - (micros() - scheduledAt);
+		uint16_t delay = (executionInfo & TIMER_MASK);
+		microsFromNow =  delay - (micros() - scheduledAt);
 	}
 	else {
 		uint32_t startTm = (executionInfo & TIMER_MASK);
