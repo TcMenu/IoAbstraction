@@ -14,6 +14,7 @@ BasicIoAbstraction library, Apache 2.0 licnense, written by thecoderscorner.com
 
 class BasicIoAbstraction {
 public:
+	virtual ~BasicIoAbstraction() { }
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
@@ -30,6 +31,7 @@ private:
 	bool needsWrite;
 public:
 	PCF8574IoAbstraction(uint8_t addr);
+	virtual ~PCF8574IoAbstraction() { }
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
@@ -55,6 +57,7 @@ private:
 	uint8_t readClockPin, writeClockPin;
 public:
 	ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin);
+	virtual ~ShiftRegisterIoAbstraction() { }
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
