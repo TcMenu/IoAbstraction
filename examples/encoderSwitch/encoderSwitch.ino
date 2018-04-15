@@ -52,7 +52,7 @@ void onEncoderChange(int newValue) {
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   // First we set up the switches library, giving it the task manager and tell it to use arduino pins
   // We could also of chosen IO through an i2c device that supports interrupts.
@@ -65,7 +65,7 @@ void setup() {
 
   // now we set up the rotary encoder, first we give the A pin and the B pin.
   // we give the encoder a max value of 128, always minumum of 0.
-  switches.initialiseEncoder(encoderAPin, encoderBPin, onEncoderChange);
+  setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
   switches.changeEncoderPrecision(maximumEncoderValue, 100);
 }
 
