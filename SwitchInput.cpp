@@ -8,9 +8,11 @@ KeyboardItem::KeyboardItem() {
 	this->repeatInterval = NO_REPEAT;
 	this->pin = -1;
 	this->callback = NULL;
+	this->counter = 0;
+	this->state = NOT_PRESSED;
 }
 
-void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT) {
+void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval) {
 	this->callback = callback;
 	this->pin = pin;
 	this->repeatInterval = repeatInterval;
@@ -52,6 +54,8 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 
 SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
+	this->ioDevice = NULL;
+	this->encoder = NULL;
 }
 
 void SwitchInput::initialise(IoAbstractionRef ioDevice) {
@@ -63,7 +67,7 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice) {
 
 }
 
-void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat = NO_REPEAT) {
+void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
 	ioDevice->pinDirection(pin, INPUT);
 }
@@ -93,6 +97,7 @@ RotaryEncoder::RotaryEncoder(EncoderCallbackFn callback) {
 	this->callback = callback;
 	this->currentReading = 0;
 	this->maximumValue = 0;
+	this->menuDivisor = 0;
 }
 
 void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
@@ -101,84 +106,53 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 	callback(currentReading);
 }
 
+void RotaryEncoder::increment(int8_t incVal) {
+	if (((currentReading) == 0 && (incVal < 0)) || ((currentReading + incVal) > maximumValue)) return;
+	currentReading += incVal; callback(currentReading);
+}
+
 HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) : RotaryEncoder(callback) {
 	this->pinA = pinA;
 	this->pinB = pinB;
-	this->debounceFlags = 0;
+	this->aLast = this->cleanFromB = 0;
+	this->menuDivisor = 2;
 
 	pinMode(pinA, INPUT_PULLUP);
 	pinMode(pinB, INPUT_PULLUP);
 }
 
-void onEncoderInterrupt(uint8_t pin) {
+void onEncoderInterrupt(__attribute__((unused)) uint8_t pin) {
 	((HardwareRotaryEncoder*)switches.encoder)->encoderChanged();
 }
 
-void onDebounceAction() {
-	((HardwareRotaryEncoder*)switches.encoder)->debounceAction();
-}
-
-void HardwareRotaryEncoder::debounceAction() {
-	bool locPinA = (debounceFlags & PINA_FLAG) != 0;
-	if (digitalRead(pinA) != locPinA) {
-		if (debounceFlags & PIN_DEBOUNCE2) {
-			// clear everything down and assume it was an error, still not settled in 3 ms.
-			debounceFlags = 0;
-		}
-		else {
-			debounceFlags &= DEBOUCEFLAGS;
-			debounceFlags |= PIN_DEBOUNCE2;
-			taskManager.scheduleOnce(1, onDebounceAction);
-		}
-	}
-	else {
-		// we need pinB from the time when we started debouncing.
-		bool locPinB = (debounceFlags & PINB_FLAG) != 0;
-		if (locPinB) {
-			currentReading = min(currentReading + 1, maximumValue);
-		}
-		else {
-			currentReading = (currentReading != 0) ? currentReading - 1 : 0;
-		}
-
-		callback(currentReading);
-		debounceFlags = 0;
-	}
-}
-
 void HardwareRotaryEncoder::encoderChanged() {
-	// pin A is high, interrupt is on rising edge
-	if ((debounceFlags & DEBOUCEFLAGS) == 0) {
-		debounceFlags = PINA_FLAG;
-		debounceFlags |= PIN_DEBOUNCE1;
-		if(digitalRead(pinB)) {
-			debounceFlags |= PINB_FLAG;
+	uint8_t a = digitalRead(pinA);
+	uint8_t b = digitalRead(pinB);
+	if(a != aLast) {
+		aLast = a;
+		if(b != cleanFromB) {
+			cleanFromB = b;
+			if(a) {
+				increment(a != b ? -1 : +1);
+			}
 		}
-		taskManager.scheduleOnce(1, onDebounceAction);
 	}
 }
 
 /******** UP DOWN BUTTON ENCODER *******/
 
-void switchEncoderUp(uint8_t key, bool heldDown) {
-	((EncoderUpDownButtons*)switches.encoder)->increment(1);
+void switchEncoderUp(__attribute((unused)) uint8_t key, __attribute((unused)) bool heldDown) {
+	switches.encoder->increment(1);
 }
 
-void switchEncoderDown(uint8_t key, bool heldDown) {
-	((EncoderUpDownButtons*)switches.encoder)->increment(-1);
+void switchEncoderDown(__attribute((unused)) uint8_t key, __attribute((unused)) bool heldDown) {
+	switches.encoder->increment(-1);
 }
 
-EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 5) : RotaryEncoder(callback) {
-	Serial.begin(9600);
+EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed) : RotaryEncoder(callback) {
+	menuDivisor = 1;
 	switches.addSwitch(pinUp, switchEncoderUp, speed);
 	switches.addSwitch(pinDown, switchEncoderDown, speed);
-}
-
-void EncoderUpDownButtons::increment(int8_t incVal) { 
-	if ((currentReading + incVal) < 0) return;
-	if ((currentReading + incVal) > maximumValue) return;
-
-	currentReading += incVal; callback(currentReading);
 }
 
 /******** ENCODER SETUP METHODS ***********/
@@ -191,5 +165,5 @@ void setupUpDownButtonEncoder(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn 
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
 	taskManager.setInterruptCallback(onEncoderInterrupt);
-	taskManager.addInterrupt(pinA, RISING);
+	taskManager.addInterrupt(pinA, CHANGE);
 }

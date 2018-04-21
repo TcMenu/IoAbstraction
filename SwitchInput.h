@@ -60,26 +60,26 @@ protected:
 	uint16_t maximumValue;
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
+	uint8_t menuDivisor;
 public:
 	RotaryEncoder(EncoderCallbackFn callback);
 	void changePrecision(uint16_t maxValue, int currentValue);
 
 	int getCurrentReading() { return currentReading; }
 	void setCurrentReading(int reading) { currentReading = reading; }
+	void increment(int8_t incVal);
+	uint8_t getMenuDivisor() { return menuDivisor; }
 };
 
-// debouncing flags for the hardware encoder.
-#define PINA_FLAG     0x01
-#define PINB_FLAG     0x02
-#define PIN_DEBOUNCE1 0x04
-#define PIN_DEBOUNCE2 0x08
-#define DEBOUCEFLAGS  0x0C
+#define DEBOUNCE_ALAST = 0x01
+#define DEBOUNCE_CLEAN = 0x02
 
 class HardwareRotaryEncoder : public RotaryEncoder {
 private:
 	uint8_t pinA;
 	uint8_t pinB;
-	uint8_t debounceFlags;
+	uint8_t aLast;
+	uint8_t cleanFromB;
 	
 public:
 	HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
@@ -90,7 +90,6 @@ public:
 class EncoderUpDownButtons : public RotaryEncoder {
 public:
 	EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 5);
-	void increment(int8_t incVal);
 };
 
 class SwitchInput {
@@ -107,11 +106,11 @@ public:
 
 	void setEncoder(RotaryEncoder* encoder);
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
+	uint8_t getMenuDivisor() { return encoder->getMenuDivisor(); }
 
 	void runLoop();
 private:
 	friend void onEncoderInterrupt(uint8_t);
-	friend void onDebounceAction();
 	friend void switchEncoderUp(uint8_t, bool);
 	friend void switchEncoderDown(uint8_t, bool);
 };

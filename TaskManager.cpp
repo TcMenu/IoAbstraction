@@ -19,8 +19,6 @@ void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 bool TimerTask::isReady() {
 	if (!isInUse() || isRunning()) return false;
 
-	// TODO handle clock wrapping??
-
 	if ((executionInfo & TASK_MICROS) != 0) {
 		uint16_t delay = (executionInfo & TIMER_MASK);
 		return (micros() - scheduledAt) >= delay;
@@ -79,11 +77,12 @@ void TaskManager::markInterrupted(uint8_t interruptNo) {
 	taskManager.interrupted = true;
 }
 
-TaskManager::TaskManager(uint8_t taskSlots = DEFAULT_TASK_SIZE) {
+TaskManager::TaskManager(uint8_t taskSlots) {
 	this->numberOfSlots = taskSlots;
 	this->tasks = new TimerTask[taskSlots];
 	interrupted = false;
 	first = NULL;
+	interruptCallback = NULL;
 }
 
 int TaskManager::findFreeTask() {
@@ -92,7 +91,7 @@ int TaskManager::findFreeTask() {
 			return i;
 		}
 	}
-	return -1;
+	return TASKMGR_INVALIDID;
 }
 
 inline int toTimerValue(int v, TimerUnit unit) {
@@ -104,18 +103,18 @@ inline int toTimerValue(int v, TimerUnit unit) {
 	return v | (((uint16_t)unit) << 12);
 }
 
-uint8_t TaskManager::scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS) {
+uint8_t TaskManager::scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit) {
 	uint8_t taskId = findFreeTask();
-	if (taskId >= 0) {
+	if (taskId != TASKMGR_INVALIDID) {
 		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE, timerFunction);
 		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
 }
 
-uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS) {
+uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit) {
 	uint8_t taskId = findFreeTask();
-	if (taskId >= 0) {
+	if (taskId != TASKMGR_INVALIDID) {
 		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
 		putItemIntoQueue(&tasks[taskId]);
 	}
@@ -123,7 +122,7 @@ uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerU
 }
 
 void TaskManager::cancelTask(uint8_t task) {
-	if (task >= 0 && task < numberOfSlots) {
+	if (task < numberOfSlots) {
 		tasks[task].clear();
 		removeFromQueue(&tasks[task]);
 	}
@@ -140,7 +139,7 @@ char* TaskManager::checkAvailableSlots(char* data) {
 }
 
 void TaskManager::yieldForMicros(uint16_t microsToWait) {
-	long microsEnd = micros() + microsToWait;
+	unsigned long microsEnd = micros() + microsToWait;
 
 	while(micros() < microsEnd) {
 		runLoop();

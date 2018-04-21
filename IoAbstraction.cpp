@@ -80,6 +80,7 @@ uint8_t PCF8574IoAbstraction::readData() {
 		lastRead = Wire.read();
 	}
 	Wire.endTransmission();
+	return lastRead;
 }
 
 ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
@@ -93,6 +94,7 @@ ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uin
 	this->writeDataPin = writeDataPin;
 	this->readLatchPin = readLatchPin;
 	this->writeLatchPin = writeLatchPin;
+	this->lastRead = 0;
 
 	if (writeDataPin != 0xff) {
 		pinMode(writeLatchPin, OUTPUT);
@@ -110,13 +112,13 @@ ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uin
 	}
 }
 
-void ShiftRegisterIoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
+void ShiftRegisterIoAbstraction::pinDirection(__attribute((unused)) uint8_t pin, __attribute((unused)) uint8_t mode) {
 	// ignored, this implementation has hardwired inputs and outputs - inputs are 0-23, outputs are 24 onwards
 }
 
 void ShiftRegisterIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+	if (pin < 24) return;
 	pin = pin - 24;
-	if (pin < 0) return;
 
 	toWrite = writeBits(pin, value, toWrite);
 	needsWrite = true;

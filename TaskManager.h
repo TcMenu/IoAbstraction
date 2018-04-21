@@ -4,6 +4,8 @@
 typedef void (*TimerFn)();
 typedef void (*InterruptFn)(uint8_t);
 
+#define TASKMGR_INVALIDID 0xff
+
 #define TASK_IN_USE     0x8000
 #define TASK_REPEATING  0x4000
 #define TASK_MILLIS     0x2000
