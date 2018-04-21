@@ -69,7 +69,7 @@ Lastly, in loop you must not do anything long running, instead using the task ma
 
 There's more detail here:
 
-[http://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/]
+[http://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/]
 
 [http://www.thecoderscorner.com/electronics/microcontrollers/switches-inputs/basic-io-abstraction-library-pins-or-8574/]
 
