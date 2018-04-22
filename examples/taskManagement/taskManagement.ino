@@ -23,6 +23,13 @@ char slotString[10] = { 0 };
 
 int taskId = -1;
 
+void log(const char* logLine) {
+	Serial.print(millis());
+	Serial.print(": ");
+	Serial.println(logLine);
+
+}
+
 void setMillis(unsigned long ms)
 {
 	extern unsigned long timer0_millis;
@@ -70,7 +77,7 @@ void onInterrupt(uint8_t bits) {
 int microCount = 0;
 void onMicrosJob() {
 	microCount++;
-	if ((microCount % 100) == 1) {
+	if (abs(microCount % 100) == 1) {
 		log("Micros job increased by 100");
 	}
 }
@@ -92,13 +99,6 @@ void twentySecondsUp() {
 void randomJob() {
 	log("Random job ran");
 	taskManager.scheduleOnce(rand(), randomJob);
-}
-
-void log(char* logLine) {
-	Serial.print(millis());
-	Serial.print(": ");
-	Serial.println(logLine);
-
 }
 
 void loop() {
