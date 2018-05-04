@@ -1,11 +1,13 @@
+/*
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
+ */
+
 #include "IoAbstraction.h"
 #include <Wire.h>
 
 #define LATCH_TIME 5
 
-/*
- BasicIoAbstraction library, Apache 2.0 license, written by thecoderscorner.com
-*/
 
 void BasicIoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 	pinMode(pin, mode);

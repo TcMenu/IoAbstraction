@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
+ */
+
 #ifndef _TIMER_MANAGER_H_
 #define _TIMER_MANAGER_H_
 
