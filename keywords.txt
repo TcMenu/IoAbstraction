@@ -5,34 +5,34 @@
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
-BasicIoAbstraction
-TaskManager
-IoAbstractionRef
-SwitchInput
+BasicIoAbstraction	KEYWORD1
+TaskManager	KEYWORD1
+IoAbstractionRef	KEYWORD1
+SwitchInput	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-ioDevicePinMode
-ioDeviceDigitalRead
-ioDeviceDigitalWrite
-ioDeviceSync
-ioUsingArduino
-ioFrom8754
-inputOutputFromShiftRegister
-inputOnlyFromShiftRegister
-outputOnlyFromShiftRegister
-addSwitch
-initialise
-initialiseEncoder
-changeEncoderPrecision
-encoderChanged
-scheduleOnce
-scheduleFixedRate
-addInterrupt
-setInterruptCallback
-cancelTask
-runLoop
+ioDevicePinMode	KEYWORD2
+ioDeviceDigitalRead	KEYWORD2
+ioDeviceDigitalWrite	KEYWORD2
+ioDeviceSync	KEYWORD2
+ioUsingArduino	KEYWORD2
+ioFrom8754	KEYWORD2
+inputOutputFromShiftRegister	KEYWORD2
+inputOnlyFromShiftRegister	KEYWORD2
+outputOnlyFromShiftRegister	KEYWORD2
+addSwitch	KEYWORD2
+initialise	KEYWORD2
+initialiseEncoder	KEYWORD2
+changeEncoderPrecision	KEYWORD2
+encoderChanged	KEYWORD2
+scheduleOnce	KEYWORD2
+scheduleFixedRate	KEYWORD2
+addInterrupt	KEYWORD2
+setInterruptCallback	KEYWORD2
+cancelTask	KEYWORD2
+runLoop	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
@@ -41,7 +41,7 @@ runLoop
 #######################################
 # Constants (LITERAL1)
 #######################################
-TIME_MICROS
-TIME_MILLIS
-TIME_SECONDS
-NO_REPEAT
+TIME_MICROS	LITERAL1
+TIME_MILLIS	LITERAL1
+TIME_SECONDS	LITERAL1
+NO_REPEAT	LITERAL1
