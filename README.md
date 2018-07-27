@@ -68,15 +68,56 @@ Lastly, in loop you must not do anything long running, instead using the task ma
 ## EEPROM Abstraction
 
 The eeprom abstraction has several implementations, which makes it possible for libraries and code to be transparent from
-AVR or I2C eeprom storage, it even has a No-Op implementation as well.
+AVR or I2C eeprom storage, it even has a No-Op implementation as well. All the implementations shown below are interchangable
+so if like me you switch between 8 and 32 bit boards, just change the EEPROM implementation!
 
-* AvrEeprom - uses the standard AVR EEPROM space.
-* I2cAt24Eeprom - provides a thin wrapper around the AT24CX library for i2c eeprom chips (see note)
-* NoEeprom - does nothing, but fulfills the interface.
+### AvrEeprom
 
-Note: for i2c based eeproms you'll need to install the following library: https://github.com/cyberp/AT24Cx but at the moment, I've got
-some unmerged fix changes and I recommend you use: https://github.com/davetcc/AT24Cx until they are merged.
+This implementation uses the standard AVR EEPROM space for storage - only available on 8bit AVR such as Uno, MEGA.
+
+To create an instance
+
+	AvrEeprom avrEeprom;
+
+### I2cAt24Eeprom
+
+Provides a thin wrapper around the AT24CX library for i2c eeprom chips. Note: for i2c based eeproms you'll need to install the following library: https://github.com/cyberp/AT24Cx but at the moment, I've got some unmerged fix changes and I recommend you use: 
+https://github.com/davetcc/AT24Cx until they are merged.
+
+To create an instance
+
+	// First create an instance of AT24CX class
+	AT24C128 rom(0x00);
+	// then create the eeprom abstraction
+	I2cAt24Eeprom anEeprom(&rom);
  
+ ### NoEeprom - does nothing, but fulfills the interface.
+
+Does nothing but implements the interface - useful sometimes..
+
+To create an instance
+
+	NoEeprom anEeprom;
+
+ 
+### Reading and writing EEPROM values
+
+Writing primitive values
+ 
+	anEeprom.write8(romAddr, byteVal);
+	anEeprom.write16(romAddr, value16);
+	anEeprom.write32(romAddr, value32);
+
+	byte by = anEeprom.read8(romStart);
+	unsigned int i16 = anEeprom.read16(romStart);
+	unsigned long i32 = anEeprom.read32(romStart);
+	
+Writing arrays and strings
+
+	char data[20]; // example array to work with
+	anEeprom.readIntoMemArray((unsigned char*)data, romStart, sizeof data);
+	anEeprom.writeArrayToRom(romStart, (const unsigned char*)data, sizeof data);
+	
 ## More detail
 
 There's more detail here:
