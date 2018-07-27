@@ -78,9 +78,13 @@ For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstr
 		// do something with new value..
 	}
 
-	// firstly, we need to set up the pins that the encoder uses and provide a callback
+	// Example 1, Real encoder, we need to set up the pins that the encoder uses and provide a callback
 	setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
-	// secondly, we set the maximum value (from 0) that the encoder represents
+	
+	// Example 2, Up / down buttons acting like an encoder
+	setupUpDownButtonEncoder(pinUpBtn, pinDownBtn, onEncoderChange);
+	
+	// After initialising, we set the maximum value (from 0) that the encoder represents
 	// along with the current value
 	switches.changeEncoderPrecision(maximumEncoderValue, 100);
 
