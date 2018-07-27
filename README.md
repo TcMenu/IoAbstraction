@@ -65,6 +65,18 @@ Lastly, in loop you must not do anything long running, instead using the task ma
 
 	taskManager.runLoop();
 
+## EEPROM Abstraction
+
+The eeprom abstraction has several implementations, which makes it possible for libraries and code to be transparent from
+AVR or I2C eeprom storage, it even has a No-Op implementation as well.
+
+* AvrEeprom - uses the standard AVR EEPROM space.
+* I2cAt24Eeprom - provides a thin wrapper around the AT24CX library for i2c eeprom chips (see note)
+* NoEeprom - does nothing, but fulfills the interface.
+
+Note: for i2c based eeproms you'll need to install the following library: https://github.com/cyberp/AT24Cx but at the moment, I've got
+some unmerged fix changes and I recommend you use: https://github.com/davetcc/AT24Cx until they are merged.
+ 
 ## More detail
 
 There's more detail here:

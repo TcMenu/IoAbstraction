@@ -6,9 +6,14 @@
 # Datatypes (KEYWORD1)
 #######################################
 BasicIoAbstraction	KEYWORD1
+IoAbstractionRef	KEYWORD1
 TaskManager	KEYWORD1
 IoAbstractionRef	KEYWORD1
 SwitchInput	KEYWORD1
+EepromAbstraction	KEYWORD1
+I2cAt24Eeprom	KEYWORD1
+NoEeprom		KEYWORD1
+AvrEeprom	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -37,6 +42,9 @@ runLoop	KEYWORD2
 #######################################
 # Instances (KEYWORD2)
 #######################################
+
+taskManager
+switches
 
 #######################################
 # Constants (LITERAL1)
