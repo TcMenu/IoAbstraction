@@ -47,6 +47,12 @@ And then later we red from it (the only limitation is we must call runLoop to sy
 
 This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this library also uses the above on task manager.
 
+Before doing anything else, you must add taskManager's run loop to your loop method, and your loop method must not do any long delay calls.
+
+	void loop() {
+		taskManager.runLoop();
+	}
+
 Here's a simple example example using a switch:
 
 In setup we initialise it telling it to use arduino pins for IO, we could use shift registers or an i2c expander, and we also add a switch along with the event that should be:
@@ -60,10 +66,23 @@ Then we create a function for onClicked, this will be called when the button is 
 		// pin: the pin that was pressed
     		// heldDown: if the button has been held down
   	}
-  
-Lastly, in loop you must not do anything long running, instead using the task management library. You must call:
 
-	taskManager.runLoop();
+
+Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary
+encoder, but note that for rotary encoders PIN_A must be an interrupt pin, such as pin 2 on most boards. No debouncing is needed, the library
+will switch on pull up resistors too, but you may need lower resistance pull ups will long wire runs.
+
+For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-switches-handled-as-events/.
+
+	void onEncoderChange(int newValue) {
+		// do something with new value..
+	}
+
+	// firstly, we need to set up the pins that the encoder uses and provide a callback
+	setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
+	// secondly, we set the maximum value (from 0) that the encoder represents
+	// along with the current value
+	switches.changeEncoderPrecision(maximumEncoderValue, 100);
 
 ## EEPROM Abstraction
 
