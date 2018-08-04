@@ -15,7 +15,7 @@
 // you always needs this include.
 #include <EepromAbstraction.h>
 
-const unsigned int romStart = 800;
+const unsigned int romStart = 2000;
 
 // if you are using the I2c based eeprom you need the line below
 #include <EepromAbstractionWire.h>
@@ -28,8 +28,7 @@ const unsigned int romStart = 800;
 // comment / uncomment to select
 //AvrEeprom anEeprom;
 
-// When you want to use an i2c unit use the code below, for I2C roms you also need the AT24CX library which
-// is available here: https://github.com/cyberp/AT24Cx
+// When you wish to use AT24 based i2c EEPROMs (Uses Wire library)
 // comment / uncomment to select
 I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
@@ -39,8 +38,8 @@ void setup() {
 	Serial.begin(9600);
 	while(!Serial);
 
-  // if you are using the i2c eeprom, you must include this line below, not needed otherwise.
-  Wire.begin();
+	// if you are using the i2c eeprom, you must include this line below, not needed otherwise.
+	Wire.begin();
 
 	Serial.println("Eeprom example starting");
 
