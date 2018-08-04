@@ -123,6 +123,15 @@ for the most common devices. Consult the datasheet if unsure.
 
 	I2cAt24Eeprom anEeprom(addressOfRom, pageSize);
  
+Then during setup, you must ensure you call Wire.begin()
+
+	void setup() {
+		Wire.begin();
+		
+		// your other setup code.
+	}
+ 
+ 
  ### NoEeprom - does nothing, but fulfills the interface.
 
 Does nothing but implements the interface - useful sometimes..
