@@ -5,6 +5,8 @@
 
 .DS_Store
 
+.development
+
 # User-specific files
 *.suo
 *.user

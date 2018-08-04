@@ -18,16 +18,29 @@ class EepromAbstraction {
 public:
 	virtual ~EepromAbstraction() {}
 
+	/** read an 8 bit (byte) value at position */
 	virtual uint8_t read8(EepromPosition position) = 0;
+	/** write an 8 bit (byte) value to position */
 	virtual void write8(EepromPosition position, uint8_t val) = 0;
 
+	/** read a 16 bit value at position */
 	virtual uint16_t read16(EepromPosition position) = 0;
+	/** write a 16 bit value to position */
 	virtual void write16(EepromPosition position, uint16_t val) = 0;
 
+	/** read a 32 bit value at position */
 	virtual uint32_t read32(EepromPosition position) = 0;
+	/** write a 32 bit value to position */
 	virtual void write32(EepromPosition position, uint32_t val) = 0;
 
+	/**
+	 * read an array from EEPROM at romSrc into memory at memDest, with a length of len
+	 */
 	virtual void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) = 0;
+
+	/**
+	 * writes an array into EEPROM at romDest from memory memSrc, with a length of len
+	 */
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) = 0;
 };
 

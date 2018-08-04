@@ -15,7 +15,7 @@
 // you always needs this include.
 #include <EepromAbstraction.h>
 
-const unsigned int romStart = 1200;
+const unsigned int romStart = 800;
 
 // if you are using the I2c based eeprom you need the line below
 #include <EepromAbstractionWire.h>
@@ -31,14 +31,16 @@ const unsigned int romStart = 1200;
 // When you want to use an i2c unit use the code below, for I2C roms you also need the AT24CX library which
 // is available here: https://github.com/cyberp/AT24Cx
 // comment / uncomment to select
-AT24C128 rom(0x00);
-I2cAt24Eeprom anEeprom(&rom);
+I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
-char strData[20] = {"hello world"};
+char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
 
 void setup() {
 	Serial.begin(9600);
 	while(!Serial);
+
+  // if you are using the i2c eeprom, you must include this line below, not needed otherwise.
+  Wire.begin();
 
 	Serial.println("Eeprom example starting");
 

@@ -9,25 +9,35 @@
 
 #include <Arduino.h>
 #include "EepromAbstraction.h"
-#include "AT24CX.h"
 #include<Wire.h>
 
-//
-// If you don't want to use task manager to do the yield when waiting for the i2c eeprom, then set
-// then comment out the line below, so it's not defined..
-//
-#define YIELD_USING_TASK_MGR true
+#define PAGESIZE_AT24C32   32
+#define PAGESIZE_AT24C64   32
+#define PAGESIZE_AT24C128  64
+#define PAGESIZE_AT24C256  64
+#define PAGESIZE_AT24C512 128
 
 /**
- * An implementation of eeprom that works with the very well known At24C256 chip over i2c. Construct
- * this class passing in the i2c address on which the chip can be found.
+ * An implementation of eeprom that works with the very well known At24C256 chip over i2c. Before
+ * using this class you must first initialise the Wire library by calling Wire.begin(); If you
+ * do not do this, your code may hang. Further, avoid any call to read or write until at least
+ * the setup() function is called.
  *
- * Requires https://github.com/cyberp/AT24Cx library to work.
+ * It is your responsibility to call Wire.begin because you don't want more than one class
+ * reinitialising the Wire library.
+ *
+ * Thanks to https://github.com/cyberp/AT24Cx for some of the ideas I've used in this library,
+ * although this is implemented differently.
  */
 class I2cAt24Eeprom : public EepromAbstraction {
-	AT24CX* rom;
+	uint8_t eepromAddr;
+	uint8_t pageSize;
 public:
-	I2cAt24Eeprom(AT24CX* rom) { this->rom = rom; }
+	/**
+	 * Create an I2C EEPROM object giving it's address and the page size of the device.
+	 * Page sizes are defined in this header file.
+	 */
+	I2cAt24Eeprom(uint8_t address, uint8_t pageSize);
 	virtual ~I2cAt24Eeprom() {}
 
 	virtual uint8_t read8(EepromPosition position);
@@ -41,6 +51,9 @@ public:
 
 	virtual void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len);
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len);
+private:
+	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
+	void writeByte(EepromPosition position, uint8_t val);
 };
 
 #endif /* _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */
