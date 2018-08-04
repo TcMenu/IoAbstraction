@@ -104,15 +104,22 @@ To create an instance
 
 ### I2cAt24Eeprom
 
-Provides a thin wrapper around the AT24CX library for i2c eeprom chips. Note: for i2c based eeproms you'll need to install the following library: https://github.com/cyberp/AT24Cx but at the moment, I've got some unmerged fix changes and I recommend you use: 
-https://github.com/davetcc/AT24Cx until they are merged.
+A ground up implementation of the i2c eeprom protocol that should be compatible with the vast majority of i2c EEPROM devices.
 
-To create an instance
 
-	// First create an instance of AT24CX class
-	AT24C128 rom(0x00);
-	// then create the eeprom abstraction
-	I2cAt24Eeprom anEeprom(&rom);
+To create an instance we pass the address of the chip (usually between 0x50 and 0x57), and also the page size, below are the page sizes 
+for the most common devices. Consult the datasheet if unsure.
+
+| ROM       | PageSize |
+|-----------|----------|
+| AT24C32   |       32 |
+| AT24C64   |       32 |
+| AT24C128  |       64 |
+| AT24C256  |       64 |
+| AT24C512  |      128 |
+
+
+	I2cAt24Eeprom anEeprom(addressOfRom, pageSize);
  
  ### NoEeprom - does nothing, but fulfills the interface.
 
