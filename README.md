@@ -34,6 +34,10 @@ If you are building a library and want it to work with either Arduino pins, shif
 
 A simple example:
 
+If we want to use the i2c wire based ioFrom8754 we must include the wire header file
+
+	#include <IoAbstractionWire.h>
+
 At the global level (outside of any function) we create an i2c expander on address 0x20:
 
 	IoAbstractionRef ioExpander = ioFrom8754(0x20);
