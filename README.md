@@ -27,17 +27,23 @@ Then in the loop method you need to call:
 
 ## IoAbstraction - easily interchange between pins, PCF8574 IO and shift registers.
 
-Lets you choose to use Arduino pins, shift register Input/Output, 8574 i2c IO Expanders in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
+Lets you choose to use Arduino pins, shift register Input/Output, 8574 i2c IO Expanders in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. There's even an abstraction that can combine together Arduino pins and one or more other expander!
+
+If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
 
 A simple example:
 
 At the global level (outside of any function) we create an i2c expander on address 0x20:
 
-  	IoAbstractionRef ioExpander = ioFrom8754(0x20);
+	IoAbstractionRef ioExpander = ioFrom8754(0x20);
+
+Or for Arduino pins instead..
+	
+	IoAbstractionRef ioUsingArduino();	
 
 In setup we set it's first IO pin to input and start the Wire library:
 	
-  	Wire.begin();  
+	Wire.begin();  
  	ioDevicePinMode(ioExpander, 0, INPUT);
   
 And then later we red from it (the only limitation is we must call runLoop to synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
