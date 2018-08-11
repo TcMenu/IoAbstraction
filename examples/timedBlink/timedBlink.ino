@@ -12,7 +12,6 @@ Under an apache license
 */
 
 #include<IoAbstraction.h>
-#include <Wire.h>
 
 // constant for the pin we will use
 const int ledPin = LED_BUILTIN;

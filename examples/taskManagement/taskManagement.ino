@@ -15,7 +15,6 @@ Licenced with an Apache licnese.
 
 */
 
-#include <Wire.h>
 #include <IoAbstraction.h>
 #include <util/atomic.h>
 

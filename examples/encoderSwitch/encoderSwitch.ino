@@ -56,7 +56,8 @@ void setup() {
 
   // First we set up the switches library, giving it the task manager and tell it to use arduino pins
   // We could also of chosen IO through an i2c device that supports interrupts.
-  switches.initialise(ioUsingArduino());
+  // If you want to use PULL UP instead of PULL DOWN logic, uncomment the additional parameter below
+  switches.initialise(ioUsingArduino() /*, true */);
 
   // now we add the switches, we dont want the spinwheel button to repeat, so leave off the last parameter
   // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.

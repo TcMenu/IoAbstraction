@@ -1,4 +1,5 @@
 #include <IoAbstraction.h>
+#include <IoAbstractionWire.h>
 #include <Wire.h>
 
 //
@@ -41,7 +42,7 @@ void loop() {
 	if (newSwitchIoExp != lastSwitchIoExp) {
 		Serial.print("Switch 0 pressed on IO expander:");
 		Serial.println(newSwitchIoExp);
-		ioDeviceDigitalWrite(ioExpander, 6, newSwitchIoExp);
+		ioDeviceDigitalWrite(ioExpander, 1, newSwitchIoExp);
 	}
 	lastSwitchIoExp = newSwitchIoExp;
 }

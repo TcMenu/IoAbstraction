@@ -7,6 +7,7 @@
 #######################################
 BasicIoAbstraction	KEYWORD1
 IoAbstractionRef	KEYWORD1
+MultiIoAbstraction	KEYWORD1
 TaskManager	KEYWORD1
 IoAbstractionRef	KEYWORD1
 SwitchInput	KEYWORD1

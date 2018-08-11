@@ -61,10 +61,12 @@ SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
 	this->ioDevice = NULL;
 	this->encoder = NULL;
+	this->pinsArePullUp = false;
 }
 
-void SwitchInput::initialise(IoAbstractionRef ioDevice) {
+void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
+	this->pinsArePullUp = usePullUpSwitching;
 
 	taskManager.scheduleFixedRate(20, [] {
 		switches.runLoop();
@@ -90,7 +92,14 @@ void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentVal
 void SwitchInput::runLoop() {
 	ioDevice->runLoop();
 	for (int i = 0; i < numberOfKeys; ++i) {
-		keys[i].checkAndTrigger(ioDevice->readValue(keys[i].getPin()));
+		// get the pins current state
+		uint8_t pinState = ioDevice->readValue(keys[i].getPin());
+		// if the switches are pull up, invert the state.
+		if(pinsArePullUp) {
+			pinState = !pinState;
+		}
+		// and pass to the key handler.
+		keys[i].checkAndTrigger(pinState);
 	}
 }
 

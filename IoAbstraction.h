@@ -22,25 +22,8 @@ public:
 	virtual void runLoop() { ; }
 };
 
-
-// An implementation of BasicIoFacilties that supports the PCF8574 i2c IO chip.
-class PCF8574IoAbstraction : public BasicIoAbstraction {
-private:
-	uint8_t address;
-	uint8_t lastRead;
-	uint8_t toWrite;
-	bool needsWrite;
-public:
-	PCF8574IoAbstraction(uint8_t addr);
-	virtual ~PCF8574IoAbstraction() { }
-	virtual void pinDirection(uint8_t pin, uint8_t mode);
-	virtual void writeValue(uint8_t pin, uint8_t value);
-	virtual uint8_t readValue(uint8_t pin);
-	virtual void runLoop();
-private:
-	void writeData();
-	uint8_t readData();
-};
+// Help with usage of the library without resorting pointers
+typedef BasicIoAbstraction* IoAbstractionRef;
 
 // An implementation of BasicIoFacilities that supports the ubiquitous shift
 // register, using one for input (pins 0-7) and one for output (8-15).
@@ -65,13 +48,36 @@ public:
 	virtual void runLoop();
 };
 
+// this defines the number of IOExpanders can be put into a multi IO expander.
+#define MAX_ALLOWABLE_DELEGATES 8
+
+typedef uint8_t (*ExpanderOpFn)(IoAbstractionRef ref, uint8_t pin, uint8_t val);
+
+// An implementation of the BasicIoAbstraction that provides support for more than one IOExpander
+// in a single abstraction, along with a single set of Arduino pins.
+// Arduino pins will be from 0..arduinoPinsNeeded in the constructor
+// expands will directly follow this, expanders are added using addIoExpander
+class MultiIoAbstraction : public BasicIoAbstraction {
+private:
+	IoAbstractionRef delegates[MAX_ALLOWABLE_DELEGATES];
+	uint8_t limits[MAX_ALLOWABLE_DELEGATES];
+	uint8_t numDelegates;
+public:
+	MultiIoAbstraction(uint8_t arduinoPinsNeeded = 100);
+	virtual ~MultiIoAbstraction();
+	void addIoExpander(IoAbstractionRef expander, uint8_t numOfPinsNeeded);
+
+	virtual void pinDirection(uint8_t pin, uint8_t mode);
+	virtual void writeValue(uint8_t pin, uint8_t value);
+	virtual uint8_t readValue(uint8_t pin);
+	virtual void runLoop();
+private:
+	uint8_t doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn fn);
+};
+
 //
 // helpers to create the various type of IO Facilities 
 //
-
-// Help with usage of the library without resorting pointers
-
-typedef BasicIoAbstraction* IoAbstractionRef;
 
 inline void ioDevicePinMode(IoAbstractionRef ioDev, uint8_t pin, uint8_t dir) { ioDev->pinDirection(pin, dir); }
 inline uint8_t ioDeviceDigitalRead(IoAbstractionRef ioDev, uint8_t pin) { return ioDev->readValue(pin); }
@@ -82,11 +88,6 @@ inline void ioDeviceSync(IoAbstractionRef ioDev) { ioDev->runLoop(); }
  * passes calls to digitalRead and write directly through to arduino pins.
  */
 IoAbstractionRef ioUsingArduino();
-
-/*
- * performs digital read and write function using an 8574 IO expander chip
- */
-IoAbstractionRef ioFrom8754(uint8_t addr);
 
 /*
 * performs both input and output functions using two shift registers, one for reading and one for writing. 
@@ -104,6 +105,8 @@ IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t readClkE
  * performs output only functions using a shift register, the ouyput pins of the shift register show as 8-15.
  */
 IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin);
+
+uint8_t writeBits(uint8_t pin, uint8_t value, uint8_t existingValue);
 
 #include "TaskManager.h"
 #include "SwitchInput.h"

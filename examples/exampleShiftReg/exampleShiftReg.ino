@@ -1,4 +1,3 @@
-#include <Wire.h>
 #include <IoAbstraction.h>
 
 #define READ_CLOCK_PIN 28

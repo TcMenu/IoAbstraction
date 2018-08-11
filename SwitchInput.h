@@ -96,9 +96,10 @@ private:
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
 	IoAbstractionRef ioDevice;
+	bool pinsArePullUp;
 public:
 	SwitchInput();
-	void initialise(IoAbstractionRef ioDevice);
+	void initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching = false);
 	
 	void addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
 

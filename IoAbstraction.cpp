@@ -4,7 +4,6 @@
  */
 
 #include "IoAbstraction.h"
-#include <Wire.h>
 
 #define LATCH_TIME 5
 
@@ -22,24 +21,6 @@ uint8_t BasicIoAbstraction::readValue(uint8_t pin) {
 }
 
 
-
-PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr) {
-	this->address = addr;
-	this->toWrite = 0x00;
-	this->lastRead = 0;
-	this->needsWrite = true;
-}
-
-void PCF8574IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
-	if (mode == INPUT) {
-		writeValue(pin, HIGH);
-	}
-	else {
-		writeValue(pin, LOW);
-	}
-	needsWrite = true;
-}
-
 uint8_t writeBits(uint8_t pin, uint8_t value, uint8_t existingValue) {
 	uint8_t toWrite = existingValue;
 	if (value) {
@@ -52,38 +33,6 @@ uint8_t writeBits(uint8_t pin, uint8_t value, uint8_t existingValue) {
 	return toWrite;
 }
 
-void PCF8574IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
-	toWrite = writeBits(pin, value, toWrite);
-	needsWrite = true;
-}
-
-uint8_t PCF8574IoAbstraction::readValue(uint8_t pin) {
-	return (lastRead & (1 << pin)) ? HIGH : LOW;
-}
-
-void PCF8574IoAbstraction::runLoop(){
-	if (needsWrite) {
-		needsWrite = false;
-		writeData();
-	}
-	readData();
-}
-
-void PCF8574IoAbstraction::writeData() {
-	Wire.beginTransmission(address);
-	Wire.write(toWrite);
-	Wire.endTransmission();
-	needsWrite = false;
-}
-
-uint8_t PCF8574IoAbstraction::readData() {
-	Wire.requestFrom(address, (uint8_t)1);
-	if (Wire.available()) {
-		lastRead = Wire.read();
-	}
-	Wire.endTransmission();
-	return lastRead;
-}
 
 ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
 	needsWrite = true;
@@ -150,10 +99,6 @@ void ShiftRegisterIoAbstraction::runLoop() {
 	}
 }
 
-BasicIoAbstraction* ioFrom8754(uint8_t addr) { 
-	return new PCF8574IoAbstraction(addr); 
-}
-
 BasicIoAbstraction* outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin) {
 	return new ShiftRegisterIoAbstraction(0xff, 0xff, 0xff, 0xff, writeClkPin, dataPin, latchPin);
 }
@@ -168,4 +113,70 @@ BasicIoAbstraction* inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t r
 
 BasicIoAbstraction* ioUsingArduino() { 
 	return new BasicIoAbstraction(); 
+
+}
+
+MultiIoAbstraction::MultiIoAbstraction(uint8_t arduinoPinsNeeded) {
+	limits[0] = arduinoPinsNeeded;
+	delegates[0] = ioUsingArduino();
+	numDelegates = 1;
+}
+
+MultiIoAbstraction::~MultiIoAbstraction() {
+	// delegates added are our responsibility to clean up
+	for(uint8_t i=0; i<numDelegates; ++i) {
+		delete delegates[i];
+	}
+}
+
+void MultiIoAbstraction::addIoExpander(IoAbstractionRef expander, uint8_t numOfPinsNeeded) {
+	limits[numDelegates]= limits[numDelegates - 1] + numOfPinsNeeded;
+	delegates[numDelegates] = expander;
+
+	numDelegates++;
+}
+
+uint8_t MultiIoAbstraction::doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn fn) {
+	uint8_t ret = -1;
+	for(uint8_t i=0; i<numDelegates; ++i) {
+		// when we are on the first expander, the "previous" last pin is 0.
+		uint8_t last = (i==0) ? 0 : limits[i-1];
+
+		// then we find the limit of the expander we are on
+		uint8_t currLimit = limits[i];
+
+		// and check if we have a match!
+		if(pin >= last && pin < currLimit) {
+			ret = fn(delegates[i], pin - last, aVal);
+			break;
+		}
+	}
+	return ret;
+}
+
+void MultiIoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
+	doExpanderOp(pin, mode, [](IoAbstractionRef a, uint8_t p, uint8_t v) {
+		a->pinDirection(p, v);
+		return (uint8_t)0;
+	});
+}
+
+void MultiIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+	doExpanderOp(pin, value, [](IoAbstractionRef a, uint8_t p, uint8_t v) {
+		a->writeValue(p, v);
+		return (uint8_t)0;
+	});
+}
+
+uint8_t MultiIoAbstraction::readValue(uint8_t pin) {
+	return doExpanderOp(pin, 0, [](IoAbstractionRef a, uint8_t p, uint8_t) {
+		uint8_t retn = a->readValue(p);
+		return retn;
+	});
+}
+
+void MultiIoAbstraction::runLoop() {
+	for(uint8_t i=0; i<numDelegates; ++i) {
+		delegates[i]->runLoop();
+	}
 }
