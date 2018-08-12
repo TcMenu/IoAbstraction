@@ -32,7 +32,7 @@ const unsigned int romStart = 2000;
 // comment / uncomment to select
 I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
-char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
+const char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
 
 void setup() {
 	Serial.begin(9600);
@@ -51,18 +51,22 @@ void setup() {
 }
 
 void loop() {
+	char readBuffer[128];
+
 	Serial.print("Reading back byte: ");
 	Serial.println(anEeprom.read8(romStart));
 
 	Serial.print("Reading back word: 0x");
-	Serial.println(itoa(anEeprom.read16(romStart + 1), strData, 16));
+	Serial.println(itoa(anEeprom.read16(romStart + 1), readBuffer, 16));
 
 	Serial.print("Reading back long: 0x");
-	Serial.println(ltoa(anEeprom.read32(romStart + 3), strData, 16));
+	Serial.println(ltoa(anEeprom.read32(romStart + 3), readBuffer, 16));
 
-	Serial.print("Reading back array of 20: ");
-	anEeprom.readIntoMemArray((unsigned char*)strData, romStart + 7, sizeof strData);
+	Serial.print("Reading back array and comparing with source!");
+	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
 	Serial.println(strData);
+	bool same = strcmp(readBuffer, strData) == 0;
+	Serial.println(same ? "ROM identical" : "ROM is different");
 
 	delay(10000);
 }
