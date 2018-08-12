@@ -144,8 +144,9 @@ char* TaskManager::checkAvailableSlots(char* data) {
 }
 
 void TaskManager::yieldForMicros(uint16_t microsToWait) {
+	yield();
+	
 	unsigned long microsEnd = micros() + microsToWait;
-
 	while(micros() < microsEnd) {
 		runLoop();
 	}
