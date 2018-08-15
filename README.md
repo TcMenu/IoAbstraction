@@ -4,8 +4,6 @@ This library provides several useful extensions that make programming Arduino fo
 
 ## Installation
 
-Note that is library depends on [https://github.com/davetcc/AT24Cx] which is a fork of cyberp's AT24Cx with a few fixes, please install this library first.
-
 To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries directory`, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
 
 ## TaskManager - simple, event based programming for Arduino 
@@ -118,7 +116,6 @@ To create an instance
 ### I2cAt24Eeprom
 
 A ground up implementation of the i2c eeprom protocol that should be compatible with the vast majority of i2c EEPROM devices.
-
 
 To create an instance we pass the address of the chip (usually between 0x50 and 0x57), and also the page size, below are the page sizes 
 for the most common devices. Consult the datasheet if unsure.
