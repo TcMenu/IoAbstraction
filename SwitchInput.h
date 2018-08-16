@@ -61,12 +61,14 @@ protected:
 	uint8_t menuDivisor;
 public:
 	RotaryEncoder(EncoderCallbackFn callback);
+	virtual ~RotaryEncoder() {;}
 	void changePrecision(uint16_t maxValue, int currentValue);
 
 	int getCurrentReading() { return currentReading; }
 	void setCurrentReading(int reading) { currentReading = reading; }
 	void increment(int8_t incVal);
 	uint8_t getMenuDivisor() { return menuDivisor; }
+	virtual void encoderChanged() {;}
 };
 
 #define DEBOUNCE_ALAST = 0x01
@@ -81,7 +83,7 @@ private:
 	
 public:
 	HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
-	void encoderChanged();
+	virtual void encoderChanged();
 	void debounceAction();
 };
 
@@ -90,16 +92,20 @@ public:
 	EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 5);
 };
 
+#define SW_FLAG_PULLUP_LOGIC 1
+#define SW_FLAG_INTERRUPT_DRIVEN 2
+
 class SwitchInput {
 private:
 	RotaryEncoder* encoder;
+	IoAbstractionRef ioDevice;
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
-	IoAbstractionRef ioDevice;
-	bool pinsArePullUp;
+	uint8_t swFlags;
 public:
 	SwitchInput();
 	void initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching = false);
+	void initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching = false);
 	
 	void addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
 
@@ -107,11 +113,12 @@ public:
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
 	uint8_t getMenuDivisor() { return encoder->getMenuDivisor(); }
 
-	void runLoop();
-	
+	bool runLoop();
 	IoAbstractionRef getIoAbstraction() { return ioDevice; }
+	bool isPullupLogic() {return (swFlags & SW_FLAG_PULLUP_LOGIC) != 0;}
+	bool isInterruptDriven() {return (swFlags & SW_FLAG_INTERRUPT_DRIVEN) != 0;}
 private:
-	friend void onEncoderInterrupt(uint8_t);
+	friend void onSwitchesInterrupt(uint8_t);
 	friend void switchEncoderUp(uint8_t, bool);
 	friend void switchEncoderDown(uint8_t, bool);
 };

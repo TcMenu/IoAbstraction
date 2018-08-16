@@ -9,6 +9,8 @@
 
 SwitchInput switches;
 
+void registerInterrupt(uint8_t pin);
+
 KeyboardItem::KeyboardItem() {
 	this->repeatInterval = NO_REPEAT;
 	this->pin = -1;
@@ -61,12 +63,20 @@ SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
 	this->ioDevice = NULL;
 	this->encoder = NULL;
-	this->pinsArePullUp = false;
+	this->swFlags = 0;
+}
+
+void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
+	this->ioDevice = ioDevice;
+	this->swFlags = usePullUpSwitching ? SW_FLAG_PULLUP_LOGIC : 0;
+	this->swFlags |= SW_FLAG_INTERRUPT_DRIVEN;
+
+	// do not start any tasks here, we need to register interrupt on the pins instead.
 }
 
 void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
-	this->pinsArePullUp = usePullUpSwitching;
+	this->swFlags = usePullUpSwitching ? SW_FLAG_PULLUP_LOGIC : 0;
 
 	taskManager.scheduleFixedRate(20, [] {
 		switches.runLoop();
@@ -77,6 +87,10 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
 	ioDevice->pinDirection(pin, INPUT);
+
+	if(isInterruptDriven()) {
+		registerInterrupt(pin);
+	}
 }
 
 void SwitchInput::setEncoder(RotaryEncoder* theEncoder) {
@@ -89,18 +103,25 @@ void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentVal
 	}
 }
 
-void SwitchInput::runLoop() {
+bool SwitchInput::runLoop() {
+	bool needAnotherGo = false;
+
 	ioDevice->runLoop();
+
 	for (int i = 0; i < numberOfKeys; ++i) {
 		// get the pins current state
 		uint8_t pinState = ioDevice->readValue(keys[i].getPin());
 		// if the switches are pull up, invert the state.
-		if(pinsArePullUp) {
+		if(isPullupLogic()) {
 			pinState = !pinState;
 		}
 		// and pass to the key handler.
 		keys[i].checkAndTrigger(pinState);
+
+		needAnotherGo |= (keys[i].isDebouncing());
 	}
+
+	return needAnotherGo;
 }
 
 
@@ -135,8 +156,25 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, Encoder
 	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
 }
 
-void onEncoderInterrupt(__attribute__((unused)) uint8_t pin) {
-	((HardwareRotaryEncoder*)switches.encoder)->encoderChanged();
+void checkRunLoopAndRepeat() {
+	// instead of running constantly, we only run when there's a need to, eg something
+	// is still in a debouncing state. Otherwise we wait for an interrupt.
+	if(switches.runLoop()) {
+		taskManager.scheduleOnce(20, [] { 
+			checkRunLoopAndRepeat();
+		});
+	}
+}
+
+void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
+
+	if(switches.isInterruptDriven()) {
+		checkRunLoopAndRepeat();
+	}
+
+	if(switches.encoder) {
+		switches.encoder->encoderChanged();
+	}
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
@@ -177,8 +215,12 @@ void setupUpDownButtonEncoder(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn 
 	switches.setEncoder(enc);
 }
 
+void registerInterrupt(uint8_t pin) {
+	taskManager.setInterruptCallback(onSwitchesInterrupt);
+	taskManager.addInterrupt(switches.getIoAbstraction(), pin, CHANGE);
+}
+
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
-	taskManager.setInterruptCallback(onEncoderInterrupt);
-	taskManager.addInterrupt(switches.getIoAbstraction(), pinA, CHANGE);
+	registerInterrupt(pinA);
 }

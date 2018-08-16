@@ -63,8 +63,10 @@ void PCF8574IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler
 	// if there's an interrupt pin set
 	if(interruptPin == 0xff) return;
 
+	pinMode(interruptPin, INPUT_PULLUP);
+
 	// the 8574 INT is normally high, we need a FALLING state to know interrupt triggered 
-	::attachInterrupt(interruptPin, intHandler, FALLING);
+	::attachInterrupt(digitalPinToInterrupt(interruptPin), intHandler, FALLING);
 }
 
 

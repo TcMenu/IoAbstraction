@@ -21,7 +21,7 @@ uint8_t BasicIoAbstraction::readValue(uint8_t pin) {
 }
 
 void BasicIoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode) {
-	attachInterrupt(pin, interruptHandler, mode);
+	attachInterrupt(digitalPinToInterrupt(pin), interruptHandler, mode);
 }
 
 uint8_t writeBits(uint8_t pin, uint8_t value, uint8_t existingValue) {

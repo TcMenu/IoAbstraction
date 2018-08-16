@@ -296,7 +296,7 @@ void interruptHandlerOther() {
 
 void TaskManager::addInterrupt(IoAbstractionRef ioDevice, uint8_t pin, uint8_t mode) {
 	if (interruptCallback == NULL) return;
-	int interruptNo = digitalPinToInterrupt(pin);
+	int interruptNo = pin;
 
 	switch (pin) {
 	case 1: ioDevice->attachInterrupt(interruptNo, interruptHandler1, mode); break;

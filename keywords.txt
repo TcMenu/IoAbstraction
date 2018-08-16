@@ -22,6 +22,7 @@ AvrEeprom	KEYWORD1
 ioDevicePinMode	KEYWORD2
 ioDeviceDigitalRead	KEYWORD2
 ioDeviceDigitalWrite	KEYWORD2
+ioDeviceAttachInterrupt	KEYWORD2
 ioDeviceSync	KEYWORD2
 ioUsingArduino	KEYWORD2
 ioFrom8754	KEYWORD2
