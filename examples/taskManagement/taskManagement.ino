@@ -16,7 +16,19 @@ Licenced with an Apache licnese.
 */
 
 #include <IoAbstraction.h>
+#ifdef __AVR__
 #include <util/atomic.h>
+
+void setMillis(unsigned long ms)
+{
+  extern unsigned long timer0_millis;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    timer0_millis = ms;
+  }
+}
+#else
+void setMillis(unsigned long) {}
+#endif
 
 char slotString[10] = { 0 };
 
@@ -29,13 +41,6 @@ void log(const char* logLine) {
 
 }
 
-void setMillis(unsigned long ms)
-{
-	extern unsigned long timer0_millis;
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		timer0_millis = ms;
-	}
-}
 
 void setup() {
 	pinMode(2, INPUT);
@@ -60,7 +65,7 @@ void setup() {
 	}, TIME_SECONDS);
 	taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
 	taskManager.setInterruptCallback (onInterrupt);
-	taskManager.addInterrupt(2, CHANGE);
+	taskManager.addInterrupt(ioUsingArduino(), 2, CHANGE);
 
 	taskManager.scheduleFixedRate(10, [] { taskManager.yieldForMicros(10000); });
 }
