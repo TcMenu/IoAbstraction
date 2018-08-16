@@ -20,6 +20,9 @@ uint8_t BasicIoAbstraction::readValue(uint8_t pin) {
 	return digitalRead(pin);
 }
 
+void BasicIoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode) {
+	attachInterrupt(pin, interruptHandler, mode);
+}
 
 uint8_t writeBits(uint8_t pin, uint8_t value, uint8_t existingValue) {
 	uint8_t toWrite = existingValue;
@@ -173,6 +176,22 @@ uint8_t MultiIoAbstraction::readValue(uint8_t pin) {
 		uint8_t retn = a->readValue(p);
 		return retn;
 	});
+}
+
+void MultiIoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {
+	for(uint8_t i=0; i<numDelegates; ++i) {
+		// when we are on the first expander, the "previous" last pin is 0.
+		uint8_t last = (i==0) ? 0 : limits[i-1];
+
+		// then we find the limit of the expander we are on
+		uint8_t currLimit = limits[i];
+
+		// and check if we have a match!
+		if(pin >= last && pin < currLimit) {
+			delegates[i]->attachInterrupt(pin - last, intHandler, mode);
+			break;
+		}
+	}
 }
 
 void MultiIoAbstraction::runLoop() {

@@ -6,6 +6,8 @@
 #ifndef _TIMER_MANAGER_H_
 #define _TIMER_MANAGER_H_
 
+#include "ioAbstractionCoreTypes.h"
+
 typedef void (*TimerFn)();
 typedef void (*InterruptFn)(uint8_t);
 
@@ -60,7 +62,7 @@ public:
 
 	uint8_t scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
 	uint8_t scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
-	void addInterrupt(uint8_t pin, uint8_t mode);
+	void addInterrupt(IoAbstractionRef ref, uint8_t pin, uint8_t mode);
 	void setInterruptCallback(InterruptFn handler);
 	void cancelTask(uint8_t task);
 

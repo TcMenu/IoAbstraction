@@ -108,6 +108,8 @@ public:
 	uint8_t getMenuDivisor() { return encoder->getMenuDivisor(); }
 
 	void runLoop();
+	
+	IoAbstractionRef getIoAbstraction() { return ioDevice; }
 private:
 	friend void onEncoderInterrupt(uint8_t);
 	friend void switchEncoderUp(uint8_t, bool);

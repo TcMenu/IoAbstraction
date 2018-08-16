@@ -13,17 +13,7 @@
 // that the switching from BasicIoFacilities to IoExpanderFacilities allows the same
 // code to use an IoExpander instead of direct pins
 
-class BasicIoAbstraction {
-public:
-	virtual ~BasicIoAbstraction() { }
-	virtual void pinDirection(uint8_t pin, uint8_t mode);
-	virtual void writeValue(uint8_t pin, uint8_t value);
-	virtual uint8_t readValue(uint8_t pin);
-	virtual void runLoop() { ; }
-};
-
-// Help with usage of the library without resorting pointers
-typedef BasicIoAbstraction* IoAbstractionRef;
+#include "ioAbstractionCoreTypes.h"
 
 // An implementation of BasicIoFacilities that supports the ubiquitous shift
 // register, using one for input (pins 0-7) and one for output (8-15).
@@ -45,6 +35,7 @@ public:
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
+	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {;}
 	virtual void runLoop();
 };
 
@@ -70,6 +61,7 @@ public:
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
+	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode);
 	virtual void runLoop();
 private:
 	uint8_t doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn fn);
@@ -83,6 +75,7 @@ inline void ioDevicePinMode(IoAbstractionRef ioDev, uint8_t pin, uint8_t dir) { 
 inline uint8_t ioDeviceDigitalRead(IoAbstractionRef ioDev, uint8_t pin) { return ioDev->readValue(pin); }
 inline void ioDeviceDigitalWrite(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); }
 inline void ioDeviceSync(IoAbstractionRef ioDev) { ioDev->runLoop(); }
+inline void ioDeviceAttachInterrupt(IoAbstractionRef ioDev, uint8_t pin, RawIntHandler intHandler, uint8_t mode) {ioDev->attachInterrupt(pin, intHandler, mode) ;}
 
 /*
  * passes calls to digitalRead and write directly through to arduino pins.

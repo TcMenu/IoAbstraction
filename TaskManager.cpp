@@ -5,6 +5,7 @@
 
 #include <inttypes.h>
 #include <Arduino.h>
+#include "IoAbstraction.h"
 #include "TaskManager.h"
 
 TaskManager taskManager;
@@ -250,8 +251,41 @@ void interruptHandler2() {
 void interruptHandler3() {
 	taskManager.markInterrupted(3);
 }
+void interruptHandler4() {
+	taskManager.markInterrupted(4);
+}
 void interruptHandler5() {
 	taskManager.markInterrupted(5);
+}
+void interruptHandler6() {
+	taskManager.markInterrupted(6);
+}
+void interruptHandler7() {
+	taskManager.markInterrupted(7);
+}
+void interruptHandler8() {
+	taskManager.markInterrupted(8);
+}
+void interruptHandler9() {
+	taskManager.markInterrupted(9);
+}
+void interruptHandler10() {
+	taskManager.markInterrupted(10);
+}
+void interruptHandler11() {
+	taskManager.markInterrupted(11);
+}
+void interruptHandler12() {
+	taskManager.markInterrupted(12);
+}
+void interruptHandler13() {
+	taskManager.markInterrupted(13);
+}
+void interruptHandler14() {
+	taskManager.markInterrupted(14);
+}
+void interruptHandler15() {
+	taskManager.markInterrupted(15);
 }
 void interruptHandler18() {
 	taskManager.markInterrupted(18);
@@ -260,17 +294,28 @@ void interruptHandlerOther() {
 	taskManager.markInterrupted(0xff);
 }
 
-void TaskManager::addInterrupt(uint8_t pin, uint8_t mode) {
+void TaskManager::addInterrupt(IoAbstractionRef ioDevice, uint8_t pin, uint8_t mode) {
 	if (interruptCallback == NULL) return;
 	int interruptNo = digitalPinToInterrupt(pin);
 
 	switch (pin) {
-	case 1:  attachInterrupt(interruptNo, interruptHandler1, mode); break;
-	case 2: attachInterrupt(interruptNo, interruptHandler2, mode); break;
-	case 3: attachInterrupt(interruptNo, interruptHandler3, mode); break;
-	case 5: attachInterrupt(interruptNo, interruptHandler5, mode); break;
-	case 18: attachInterrupt(interruptNo, interruptHandler18, mode); break;
-	default: attachInterrupt(interruptNo, interruptHandlerOther, mode); break;
+	case 1: ioDevice->attachInterrupt(interruptNo, interruptHandler1, mode); break;
+	case 2: ioDevice->attachInterrupt(interruptNo, interruptHandler2, mode); break;
+	case 3: ioDevice->attachInterrupt(interruptNo, interruptHandler3, mode); break;
+	case 4: ioDevice->attachInterrupt(interruptNo, interruptHandler4, mode); break;
+	case 5: ioDevice->attachInterrupt(interruptNo, interruptHandler5, mode); break;
+	case 6: ioDevice->attachInterrupt(interruptNo, interruptHandler6, mode); break;
+	case 7: ioDevice->attachInterrupt(interruptNo, interruptHandler7, mode); break;
+	case 8: ioDevice->attachInterrupt(interruptNo, interruptHandler8, mode); break;
+	case 9: ioDevice->attachInterrupt(interruptNo, interruptHandler9, mode); break;
+	case 10: ioDevice->attachInterrupt(interruptNo, interruptHandler10, mode); break;
+	case 11: ioDevice->attachInterrupt(interruptNo, interruptHandler11, mode); break;
+	case 12: ioDevice->attachInterrupt(interruptNo, interruptHandler12, mode); break;
+	case 13: ioDevice->attachInterrupt(interruptNo, interruptHandler13, mode); break;
+	case 14: ioDevice->attachInterrupt(interruptNo, interruptHandler14, mode); break;
+	case 15: ioDevice->attachInterrupt(interruptNo, interruptHandler15, mode); break;
+	case 18: ioDevice->attachInterrupt(interruptNo, interruptHandler18, mode); break;
+	default: ioDevice->attachInterrupt(interruptNo, interruptHandlerOther, mode); break;
 	}
 }
 

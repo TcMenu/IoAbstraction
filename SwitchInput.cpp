@@ -131,8 +131,8 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, Encoder
 	this->aLast = this->cleanFromB = 0;
 	this->menuDivisor = 2;
 
-	pinMode(pinA, INPUT_PULLUP);
-	pinMode(pinB, INPUT_PULLUP);
+	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
+	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
 }
 
 void onEncoderInterrupt(__attribute__((unused)) uint8_t pin) {
@@ -140,8 +140,9 @@ void onEncoderInterrupt(__attribute__((unused)) uint8_t pin) {
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
-	uint8_t a = digitalRead(pinA);
-	uint8_t b = digitalRead(pinB);
+	ioDeviceSync(switches.getIoAbstraction());
+	uint8_t a = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
+	uint8_t b = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
 	if(a != aLast) {
 		aLast = a;
 		if(b != cleanFromB) {
@@ -179,5 +180,5 @@ void setupUpDownButtonEncoder(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn 
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
 	taskManager.setInterruptCallback(onEncoderInterrupt);
-	taskManager.addInterrupt(pinA, CHANGE);
+	taskManager.addInterrupt(switches.getIoAbstraction(), pinA, CHANGE);
 }
