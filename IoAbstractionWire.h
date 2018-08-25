@@ -50,14 +50,36 @@ private:
 	uint8_t readData();
 };
 
+#define IODIR_ADDR       0x00
+#define IPOL_ADDR        0x02
+#define GPINTENA_ADDR    0x04
+#define DEFVAL_ADDR      0x06
+#define INTCON_ADDR      0x08
+#define IOCON_ADDR       0x0a
+#define GPPU_ADDR        0x0c
+#define INTF_ADDR        0x0e
+#define INTCAP_ADDR      0x10
+#define GPIO_ADDR        0x12
+
+#define IOCON_HAEN_BIT  3
+#define IOCON_SEQOP_BIT  5
+#define IOCON_MIRROR_BIT  6
+#define IOCON_BANK_BIT  7
+
+enum Mcp23xInterruptMode {
+	NOT_ENABLED = 0, ACTIVE_HIGH_OPEN = 0b110, ACTIVE_LOW_OPEN = 0b100, ACTIVE_HIGH = 0b010, ACTIVE_LOW = 0b000 
+};
+
 class MCP23017IoAbstraction : public BasicIoAbstraction {
 private:
 	uint8_t address;
 	uint8_t intPinA;
 	uint8_t intPinB;
+	uint8_t intMode;
 	uint16_t portCache;
+	bool needsWrite, needsInit;
 public:
-	MCP23017IoAbstraction(uint8_t address, uint8_t intPinA, uint8_t intPinB);
+	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  uint8_t intPinA, uint8_t intPinB);
 	virtual ~MCP23017IoAbstraction() {;}
 
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
@@ -66,8 +88,10 @@ public:
 	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode);
 	virtual void runLoop();
 private:
+	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
+	void initDevice();
 	void writeToPort(uint8_t reg, uint16_t command);
-	uint16_t readFromPort(uint8_t reg, uint16_t command);
+	uint16_t readFromPort(uint8_t reg);
 };
 
 // to remain compatible with old code

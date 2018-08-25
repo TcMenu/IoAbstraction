@@ -69,17 +69,72 @@ void PCF8574IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler
 	::attachInterrupt(digitalPinToInterrupt(interruptPin), intHandler, FALLING);
 }
 
-
 BasicIoAbstraction* ioFrom8574(uint8_t addr, uint8_t interruptPin) {
 	return new PCF8574IoAbstraction(addr, interruptPin);
 }
 
-
-MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, uint8_t intPinA, uint8_t intPinB) {
+MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, uint8_t intPinA, uint8_t intPinB) {
 	this->address = address;
 	this->intPinA = intPinA;
 	this->intPinB = intPinB;
+	this->intMode = intMode;
 	this->portCache = 0;
+	this->needsInit = true;
+	this->needsWrite = true;
+}
+
+void MCP23017IoAbstraction::initDevice() {
+	uint8_t controlReg = (readFromPort(IOCON_ADDR) & 0xff);
+	
+	if(intPinB == 0xff && intPinA != 0xff) {
+		bitSet(controlReg, IOCON_MIRROR_BIT);
+	}
+	else if(intPinA != 0xff && intPinB != 0xff) {
+		bitClear(controlReg, IOCON_MIRROR_BIT);
+	}
+
+	bitClear(controlReg, IOCON_BANK_BIT);
+	bitClear(controlReg, IOCON_SEQOP_BIT);
+
+	uint16_t regToWrite = controlReg | (controlReg << 8);
+	writeToPort(IOCON_ADDR, regToWrite);
+
+	portCache = readFromPort(GPIO_ADDR);
+
+	needsInit = false;
+}
+
+void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
+	uint16_t reg = readFromPort(regAddr);
+	bitWrite(reg, theBit, value);
+	writeToPort(regAddr, reg);
+}
+
+void MCP23017IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
+	if(!needsInit) initDevice();
+
+	toggleBitInRegister(IODIR_ADDR, pin, (mode == INPUT || mode == INPUT_PULLUP));
+	toggleBitInRegister(GPPU_ADDR, pin, mode == INPUT_PULLUP);
+}
+
+void MCP23017IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+	if(!needsInit) initDevice();
+
+	bitWrite(portCache, pin, value);
+}
+
+uint8_t MCP23017IoAbstraction::readValue(uint8_t pin) {
+	return bitRead(portCache, pin);
+}
+
+void MCP23017IoAbstraction::runLoop() {
+	if(needsInit) initDevice();
+
+	if(needsWrite) {
+		writeToPort(GPIO_ADDR, portCache);
+	}
+
+	portCache = readFromPort(GPIO_ADDR);
 }
 
 void MCP23017IoAbstraction::writeToPort(uint8_t reg, uint16_t command) {
@@ -90,11 +145,33 @@ void MCP23017IoAbstraction::writeToPort(uint8_t reg, uint16_t command) {
 	Wire.endTransmission();
 }
 
-uint16_t MCP23017IoAbstraction::readFromPort(uint8_t reg, uint16_t command) {
+uint16_t MCP23017IoAbstraction::readFromPort(uint8_t reg) {
 	Wire.beginTransmission(address);
 	Wire.write(reg);
 	Wire.endTransmission(false);
 	Wire.requestFrom(address, (uint8_t)2);
 	Wire.endTransmission();
 	return (Wire.read() << 8) | Wire.read();
+}
+
+void MCP23017IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {
+	// only if there's an interrupt pin set
+	if(intPinA == 0xff) return;
+
+	uint8_t pm = (intMode == ACTIVE_HIGH_OPEN || intMode == ACTIVE_LOW_OPEN) ? INPUT_PULLUP : INPUT;
+	uint8_t im = (intMode == ACTIVE_HIGH || intMode == ACTIVE_HIGH_OPEN) ? RISING : FALLING;
+	if(intPinB == 0xff) {
+		pinMode(intPinA, pm);
+		::attachInterrupt(digitalPinToInterrupt(intPinA), intHandler, im);
+	}
+	else {
+		pinMode(intPinA, pm);
+		pinMode(intPinB, pm);
+		::attachInterrupt(digitalPinToInterrupt(intPinA), intHandler, im);
+		::attachInterrupt(digitalPinToInterrupt(intPinB), intHandler, im);
+	}
+
+	toggleBitInRegister(GPINTENA_ADDR, pin, true);
+	toggleBitInRegister(INTCON_ADDR, pin, mode != CHANGE);
+	toggleBitInRegister(DEFVAL_ADDR, pin, mode == FALLING);
 }
