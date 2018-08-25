@@ -49,7 +49,7 @@ In setup we set it's first IO pin to input and start the Wire library:
 	Wire.begin();  
  	ioDevicePinMode(ioExpander, 0, INPUT);
   
-And then later we red from it (the only limitation is we must call runLoop to synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
+And then later we read from it (the only limitation is we must call runLoop to synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
 
   	ioDeviceSync(ioExpander);
   	int valueRead = ioDeviceDigitalRead(ioExpander, 0);
