@@ -7,7 +7,7 @@
 
  Switch input is designed to work with the task manager class which makes scheduling tasks trivial.
 
- Circuit / detail: https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/rotary-encoder-switches-interrupt-PCF8574/
+ Circuit / detail: https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/rotary-encoder-switches-interrupt-pcf8574/
 
 */
 
@@ -40,12 +40,6 @@ bool currentLedState;
 void onSpinwheelClicked(uint8_t pin, bool heldDown) {
   Serial.print("Encoder button pressed ");
   Serial.println(heldDown ? "Held" : "Pressed");
-
-  // Flip the state of the led by reading, fliping then writing it's value
-  // notice the use of the 'S' version of the ioDevice functions, these are
-  // for single operations, where it includes a sync with the io device
-  currentLedState = !currentLedState;
-  ioDeviceDigitalWriteS(switches.getIoAbstraction(), ledPin, currentLedState);
 }
 
 //
@@ -54,6 +48,12 @@ void onSpinwheelClicked(uint8_t pin, bool heldDown) {
 void onRepeatButtonClicked(uint8_t pin, bool heldDown) {
   Serial.print("Repeat button ");
   Serial.println(heldDown ? "Held" : "Pressed");
+
+  // Flip the state of the led by reading, fliping then writing it's value
+  // notice the use of the 'S' version of the ioDevice functions, these are
+  // for single operations, where it includes a sync with the io device
+  currentLedState = !currentLedState;
+  ioDeviceDigitalWriteS(switches.getIoAbstraction(), ledPin, currentLedState);
 }
 
 //
