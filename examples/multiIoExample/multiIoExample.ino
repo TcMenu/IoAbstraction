@@ -47,7 +47,7 @@ void setup() {
   Serial.println("Multi IoExpander example");
   
   // we now add an 8574 chip that allocates 10 more pins, therefore it goes from 100..109
-  multiIo.addIoExpander(ioFrom8754(0x20), 10);
+  multiIo.addIoExpander(ioFrom8574(0x20), 10);
   // add more expanders here..
 
   Serial.println("added an expander at pin 100 to 109");

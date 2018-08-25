@@ -14,7 +14,7 @@
 
 
 // create both an Arduino and an IO expander based IO abstraction
-IoAbstractionRef ioExpander = ioFrom8754(0x20);
+IoAbstractionRef ioExpander = ioFrom8574(0x20);
 
 // remember the last state of the IO expander switch so we can log any changes later
 uint8_t lastSwitchIoExp = 0;

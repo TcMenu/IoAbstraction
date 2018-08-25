@@ -32,13 +32,13 @@ If you are building a library and want it to work with either Arduino pins, shif
 
 A simple example:
 
-If we want to use the i2c wire based ioFrom8754 we must include the wire header file
+If we want to use the i2c wire based ioFrom8574 we must include the wire header file
 
 	#include <IoAbstractionWire.h>
 
 At the global level (outside of any function) we create an i2c expander on address 0x20:
 
-	IoAbstractionRef ioExpander = ioFrom8754(0x20);
+	IoAbstractionRef ioExpander = ioFrom8574(0x20);
 
 Or for Arduino pins instead..
 	
@@ -68,7 +68,7 @@ Here's a simple example example using a switch:
 
 In setup we initialise it telling it to use arduino pins for IO, we could use shift registers or an i2c expander, and we also add a switch along with the event that should be:
 
-	switches.initialise(ioUsingArduino());
+	switches.initialise(ioUsingArduino(), pullUpLogic); // pull up logic is optional, defaults to PULL_DOWN buttons.
 	switches.addSwitch(spinwheelClickPin, onClicked, NO_REPEAT); // NO_REPEAT is optional, sets the repeat interval in 100s of second.
 
 Then we create a function for onClicked, this will be called when the button is pressed:
@@ -78,6 +78,8 @@ Then we create a function for onClicked, this will be called when the button is 
     		// heldDown: if the button has been held down
   	}
 
+It is also possible to use initialiseInterrupt instead of initialise, when using this mode the library does not poll the switches unless a button is pressed down. It's use
+is interchangable with initialise().
 
 Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary
 encoder, but note that for rotary encoders PIN_A must be an interrupt pin, such as pin 2 on most boards. No debouncing is needed, the library

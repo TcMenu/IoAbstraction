@@ -70,6 +70,31 @@ void PCF8574IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler
 }
 
 
-BasicIoAbstraction* ioFrom8754(uint8_t addr, uint8_t interruptPin) {
+BasicIoAbstraction* ioFrom8574(uint8_t addr, uint8_t interruptPin) {
 	return new PCF8574IoAbstraction(addr, interruptPin);
+}
+
+
+MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, uint8_t intPinA, uint8_t intPinB) {
+	this->address = address;
+	this->intPinA = intPinA;
+	this->intPinB = intPinB;
+	this->portCache = 0;
+}
+
+void MCP23017IoAbstraction::writeToPort(uint8_t reg, uint16_t command) {
+	Wire.beginTransmission(address);
+	Wire.write(reg);
+	Wire.write(command>>8);
+	Wire.write(command&0xff);
+	Wire.endTransmission();
+}
+
+uint16_t MCP23017IoAbstraction::readFromPort(uint8_t reg, uint16_t command) {
+	Wire.beginTransmission(address);
+	Wire.write(reg);
+	Wire.endTransmission(false);
+	Wire.requestFrom(address, (uint8_t)2);
+	Wire.endTransmission();
+	return (Wire.read() << 8) | Wire.read();
 }

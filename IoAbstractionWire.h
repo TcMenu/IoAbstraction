@@ -50,9 +50,38 @@ private:
 	uint8_t readData();
 };
 
+class MCP23017IoAbstraction : public BasicIoAbstraction {
+private:
+	uint8_t address;
+	uint8_t intPinA;
+	uint8_t intPinB;
+	uint16_t portCache;
+public:
+	MCP23017IoAbstraction(uint8_t address, uint8_t intPinA, uint8_t intPinB);
+	virtual ~MCP23017IoAbstraction() {;}
+
+	virtual void pinDirection(uint8_t pin, uint8_t mode);
+	virtual void writeValue(uint8_t pin, uint8_t value);
+	virtual uint8_t readValue(uint8_t pin);
+	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode);
+	virtual void runLoop();
+private:
+	void writeToPort(uint8_t reg, uint16_t command);
+	uint16_t readFromPort(uint8_t reg, uint16_t command);
+};
+
+// to remain compatible with old code
+#define ioFrom8754 ioFrom8574
+
 /*
  * performs digital read and write function using an 8574 IO expander chip
  */
-IoAbstractionRef ioFrom8754(uint8_t addr, uint8_t interruptPin = 0xff);
+IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff);
+
+/**
+ * Perform digital read and write functions using 23017 expanders
+ */
+IoAbstractionRef iofrom23017(uint8_t addr, uint8_t interruptPin = 0xff);
+IoAbstractionRef iofrom23017IntPerPort(uint8_t addr, uint8_t interruptPinA, uint8_t interruptPinB);
 
 #endif /* _IOABSTRACTION_IOABSTRACTIONWIRE_H_ */

@@ -77,6 +77,12 @@ inline void ioDeviceDigitalWrite(IoAbstractionRef ioDev, uint8_t pin, uint8_t va
 inline void ioDeviceSync(IoAbstractionRef ioDev) { ioDev->runLoop(); }
 inline void ioDeviceAttachInterrupt(IoAbstractionRef ioDev, uint8_t pin, RawIntHandler intHandler, uint8_t mode) {ioDev->attachInterrupt(pin, intHandler, mode) ;}
 
+//
+// Special versions of read and write that also include a sync operation for simple cases
+//
+inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, uint8_t pin) { ioDev->runLoop(); return ioDev->readValue(pin); }
+inline void ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); ioDev->runLoop(); }
+
 /*
  * passes calls to digitalRead and write directly through to arduino pins.
  */

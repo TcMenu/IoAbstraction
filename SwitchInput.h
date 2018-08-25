@@ -15,7 +15,7 @@
 
 // START user adjustable section
 
-// If you want more (or less) than 5 buttons, change this definition below to the appropriate number.
+// If you want more (or less) buttons, change this definition below to the appropriate number.
 // Each button adds about 6 bytes of RAM, so on a tiny you could adjust downwards for example.
 #define MAX_KEYS 4
 
@@ -92,8 +92,9 @@ public:
 	EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 5);
 };
 
-#define SW_FLAG_PULLUP_LOGIC 1
-#define SW_FLAG_INTERRUPT_DRIVEN 2
+#define SW_FLAG_PULLUP_LOGIC 0
+#define SW_FLAG_INTERRUPT_DRIVEN 1
+#define SW_FLAG_INTERRUPT_DEBOUNCE 2
 
 class SwitchInput {
 private:
@@ -115,8 +116,10 @@ public:
 
 	bool runLoop();
 	IoAbstractionRef getIoAbstraction() { return ioDevice; }
-	bool isPullupLogic() {return (swFlags & SW_FLAG_PULLUP_LOGIC) != 0;}
-	bool isInterruptDriven() {return (swFlags & SW_FLAG_INTERRUPT_DRIVEN) != 0;}
+	bool isPullupLogic() {return bitRead(swFlags, SW_FLAG_PULLUP_LOGIC);}
+	bool isInterruptDriven() {return bitRead(swFlags, SW_FLAG_INTERRUPT_DRIVEN);}
+	bool isInterruptDebouncing() {return bitRead(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE);}
+	void setInterruptDebouncing(bool debounce) { bitWrite(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE, debounce);}
 private:
 	friend void onSwitchesInterrupt(uint8_t);
 	friend void switchEncoderUp(uint8_t, bool);

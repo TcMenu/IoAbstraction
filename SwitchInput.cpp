@@ -68,15 +68,17 @@ SwitchInput::SwitchInput() {
 
 void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
-	this->swFlags = usePullUpSwitching ? SW_FLAG_PULLUP_LOGIC : 0;
-	this->swFlags |= SW_FLAG_INTERRUPT_DRIVEN;
+	this->swFlags = 0;
+	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
+	bitSet(swFlags, SW_FLAG_INTERRUPT_DRIVEN);
 
 	// do not start any tasks here, we need to register interrupt on the pins instead.
 }
 
 void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
-	this->swFlags = usePullUpSwitching ? SW_FLAG_PULLUP_LOGIC : 0;
+	this->swFlags = 0;
+	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 
 	taskManager.scheduleFixedRate(20, [] {
 		switches.runLoop();
@@ -118,7 +120,8 @@ bool SwitchInput::runLoop() {
 		// and pass to the key handler.
 		keys[i].checkAndTrigger(pinState);
 
-		needAnotherGo |= (keys[i].isDebouncing());
+		// we need to call into here again if we are debouncing or anything is pressed.
+		needAnotherGo |= (keys[i].isDebouncing() || keys[i].isPressed());
 	}
 
 	return needAnotherGo;
@@ -157,6 +160,9 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, Encoder
 }
 
 void checkRunLoopAndRepeat() {
+	// turn off interrupts until deboucing / repeat logic is complete.
+	switches.setInterruptDebouncing(true);
+
 	// instead of running constantly, we only run when there's a need to, eg something
 	// is still in a debouncing state. Otherwise we wait for an interrupt.
 	if(switches.runLoop()) {
@@ -164,11 +170,15 @@ void checkRunLoopAndRepeat() {
 			checkRunLoopAndRepeat();
 		});
 	}
+	else {
+			// back to normal now - interrupt only
+			switches.setInterruptDebouncing(false);
+	}
 }
 
 void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
 
-	if(switches.isInterruptDriven()) {
+	if(switches.isInterruptDriven() && !switches.isInterruptDebouncing()) {
 		checkRunLoopAndRepeat();
 	}
 
