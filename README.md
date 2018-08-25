@@ -101,13 +101,13 @@ For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstr
 	// along with the current value
 	switches.changeEncoderPrecision(maximumEncoderValue, 100);
 
-## EEPROM Abstraction
+## EEPROM Abstractions
 
 The eeprom abstraction has several implementations, which makes it possible for libraries and code to be transparent from
-AVR or I2C eeprom storage, it even has a No-Op implementation as well. All the implementations shown below are interchangable
+AVR or AT24 based I2C eeprom storage, it even has a No-Op implementation as well. All the implementations shown below are interchangable
 so if like me you switch between 8 and 32 bit boards, just change the EEPROM implementation!
 
-### AvrEeprom
+### Avr Eeprom abstraction
 
 This implementation uses the standard AVR EEPROM space for storage - only available on 8bit AVR such as Uno, MEGA.
 
@@ -115,7 +115,7 @@ To create an instance
 
 	AvrEeprom avrEeprom;
 
-### I2cAt24Eeprom
+### I2c AT24 EEPROM abstraction
 
 A ground up implementation of the i2c eeprom protocol that should be compatible with the vast majority of i2c EEPROM devices.
 
