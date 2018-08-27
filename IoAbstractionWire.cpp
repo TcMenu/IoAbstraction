@@ -116,6 +116,7 @@ void MCP23017IoAbstraction::initDevice() {
 void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
+	Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" reg "); Serial.println(regAddr, HEX);
 	writeToDevice(regAddr, reg);
 }
 
@@ -164,8 +165,9 @@ void MCP23017IoAbstraction::runLoop() {
 void MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
 	Wire.beginTransmission(address);
 	Wire.write(reg);
-	Wire.write(command>>8);
+	// write port A then port B.
 	Wire.write(command&0xff);
+	Wire.write(command>>8);
 	Wire.endTransmission();
 }
 
@@ -175,7 +177,10 @@ uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
 	Wire.endTransmission(false);
 	Wire.requestFrom(address, (uint8_t)2);
 	Wire.endTransmission();
-	return (Wire.read() << 8) | Wire.read();
+	// read will get port A first then port B.
+	uint8_t portA = Wire.read();
+	uint16_t portB = (Wire.read() << 8);
+	return portA | portB;
 }
 
 void MCP23017IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {
@@ -200,10 +205,14 @@ void MCP23017IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandle
 	toggleBitInRegister(DEFVAL_ADDR, pin, mode == FALLING);
 }
 
-IoAbstractionRef iofrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin = 0xff) {
-	return iofrom23017IntPerPort(addr, intMode, interruptPin, 0xff);
+IoAbstractionRef ioFrom23017(uint8_t addr) {
+	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff);
 }
 
-IoAbstractionRef iofrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB) {
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin) {
+	return ioFrom23017IntPerPort(addr, intMode, interruptPin, 0xff);
+}
+
+IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB) {
 	return new MCP23017IoAbstraction(addr, intMode, interruptPinA, interruptPinB);
 }

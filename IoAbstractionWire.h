@@ -99,10 +99,19 @@ private:
 #define IOCON_MIRROR_BIT  6
 #define IOCON_BANK_BIT  7
 
+/**
+ * The interrupt mode in which the 23x17 device is going to operate. See the device datasheet for more information.
+ * Using the ACTIVE_LOW_OPEN the library will ensure INPUT_PULLUP is used on the Arduino side.
+ */
 enum Mcp23xInterruptMode {
 	NOT_ENABLED = 0, ACTIVE_HIGH_OPEN = 0b110, ACTIVE_LOW_OPEN = 0b100, ACTIVE_HIGH = 0b010, ACTIVE_LOW = 0b000 
 };
 
+/**
+ * This abstaction supports most of the available features on the 23x17 range of IOExpanders. It supports most
+ * of the GPIO functions and nearly all of the interrupt modes, and is therefore very close to Arduino pins in
+ * terms of functionality.
+ */
 class MCP23017IoAbstraction : public BasicIoAbstraction {
 private:
 	uint8_t address;
@@ -112,10 +121,21 @@ private:
 	uint16_t portCache;
 	bool needsWrite, needsInit;
 public:
+	/**
+	 * Normally, it's easier to use the helper functions to create an instance of this class rather than create yourself.
+	 * @see iofrom23017
+	 * @see iofrom23017IntPerPort
+	 */
 	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  uint8_t intPinA, uint8_t intPinB);
 	virtual ~MCP23017IoAbstraction() {;}
 
+	/**
+	 * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT_PULLUP, INPUT and OUTPUT.
+	 * @param pin the pin to set direction for on this device
+	 * @param mode the mode such as INPUT, INPUT_PULLUP, OUTPUT
+	 */
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
+
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
 
@@ -161,14 +181,22 @@ private:
 IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff);
 
 /**
- * Perform digital read and write functions using 23017 expanders. These expanders are the closest include
+ * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
  * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
- * capabilities. If interrupts are needed, this uses one Arduino pin for BOTH ports on the device.
+ * capabilities. See the other helper methods if you want interrupts.
+ * @param addr the i2c address of the device
+ */
+IoAbstractionRef ioFrom23017(uint8_t addr);
+
+/**
+ * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
+ * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
+ * capabilities. This uses one Arduino interrupt pin for BOTH ports on the device.
  * @param addr the i2c address of the device
  * @param intMode the interrupt mode the device will operate in
  * @param interruptPin the pin on the Arduino that will be used to detect the interrupt condition.
  */
-IoAbstractionRef iofrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin = 0xff);
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest include
@@ -179,6 +207,6 @@ IoAbstractionRef iofrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t 
  * @param interruptPinA the pin on the Arduino that will be used to detect the PORTA interrupt condition.
  * @param interruptPinB the pin on the Arduino that will be used to detect the PORTB interrupt condition.
  */
-IoAbstractionRef iofrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB);
+IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB);
 
 #endif /* _IOABSTRACTION_IOABSTRACTIONWIRE_H_ */
