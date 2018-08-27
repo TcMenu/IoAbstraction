@@ -42,6 +42,8 @@ addInterrupt	KEYWORD2
 setInterruptCallback	KEYWORD2
 cancelTask	KEYWORD2
 runLoop	KEYWORD2
+readPort    KEYWORD2
+writePort   KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)

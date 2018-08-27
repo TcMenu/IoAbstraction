@@ -3,43 +3,84 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+/**
+ * @file EepromAbstraction.h
+ * 
+ * Wraps up EEPROM support in a way that is compatible between implementations. For example presently there
+ * are AVR and i2c implemenations that work interchangably. Adding another variant is quite trivial.
+ */
+
 #ifndef _IOABSTRACTION_EEPROMABSTRACTION_H_
 #define _IOABSTRACTION_EEPROMABSTRACTION_H_
 
 #include <Arduino.h>
 
+/**
+ * Defines an address or position within the eeprom storage 
+ */
 typedef uint16_t EepromPosition;
 
 /**
  * Provides an abstraction on eeprom storage, to allow either on chip or external I2c based eeprom storage, or even
  * No storage whatsoever. This helps no end with 32 bit boards that don't have eeprom!
+ * Most EEPROM implementions here only write if there are changes.
  */
 class EepromAbstraction {
 public:
 	virtual ~EepromAbstraction() {}
 
-	/** read an 8 bit (byte) value at position */
+	/** 
+	 * Read an 8 bit (byte) value at a specified position 
+	 * @param position address at which to read
+	 */
 	virtual uint8_t read8(EepromPosition position) = 0;
-	/** write an 8 bit (byte) value to position */
+
+	/** 
+	 * write an 8 bit (byte) value to the specified position 
+	 * @param position the position at which to write
+	 * @param val the new value
+	 */
 	virtual void write8(EepromPosition position, uint8_t val) = 0;
 
-	/** read a 16 bit value at position */
+	/** 
+	 * read a 16 bit value at position at a specified position 
+	 * @param position the position at which to read 
+	 */
 	virtual uint16_t read16(EepromPosition position) = 0;
-	/** write a 16 bit value to position */
+
+	/** 
+	 * write a 16 bit value to the specified position 
+	 * @param position the position at which to write
+	 * @param val the value to read
+	 */
 	virtual void write16(EepromPosition position, uint16_t val) = 0;
 
-	/** read a 32 bit value at position */
+	/** 
+	 * read a 32 bit value at a specified position 
+	 * @param position the position at which to read
+	 */
 	virtual uint32_t read32(EepromPosition position) = 0;
-	/** write a 32 bit value to position */
+
+	/** 
+	 * write a 32 bit value to position 
+	 * @param position the position at which to write
+	 * @param val the value to write out.
+	 */
 	virtual void write32(EepromPosition position, uint32_t val) = 0;
 
 	/**
-	 * read an array from EEPROM at romSrc into memory at memDest, with a length of len
+	 * Read an array of bytes from EEPROM into memory
+	 * @param memDest the memory where the EEPROM data should be copied to
+	 * @param romSrc the source position in EEPROM storage
+	 * @param len the length of the array
 	 */
 	virtual void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) = 0;
 
 	/**
-	 * writes an array into EEPROM at romDest from memory memSrc, with a length of len
+	 * Writes an array of bytes from memory to EEPROM storage
+	 * @param romDest the start position in eeprom storage that the array should be copied to
+	 * @param memSrc the memory where the rom should be copied from
+	 * @param len the length of the array
 	 */
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) = 0;
 };

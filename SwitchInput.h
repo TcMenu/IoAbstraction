@@ -3,6 +3,15 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+/**
+ * @file SwitchInput.h
+ * 
+ * Switch input provides the button and rotary encoder input capabilities provided by this library.
+ * There is a globally defined variable `switches` declared that you can use directly. To add a
+ * rotary encoder, see the helper functions further down. There's also a rotary encoder emulation
+ * based on Up and Down buttons.
+ */
+
 #ifndef _SWITCHINPUT_H
 #define _SWITCHINPUT_H
 
@@ -15,12 +24,15 @@
 
 // START user adjustable section
 
-// If you want more (or less) buttons, change this definition below to the appropriate number.
-// Each button adds about 6 bytes of RAM, so on a tiny you could adjust downwards for example.
+/**
+ * If you want more (or less) buttons, change this definition below to the appropriate number.
+ * Each button adds about 6 bytes of RAM, so on a tiny you could adjust downwards for example.
+ */
 #define MAX_KEYS 4
 
 // END user adjustable section
 
+/** For buttons that should not repeat, and instead just indicate they are HELD down */
 #define NO_REPEAT 0xff
 
 enum KeyPressState : byte {
@@ -31,7 +43,17 @@ enum KeyPressState : byte {
 	BUTTON_HELD
 };
 
+/** 
+ * The signature for a callback function that is registered with addSwitch
+ * @param key the pin associated with the pin
+ * @param heldDown if the button has been held down
+ */ 
 typedef void(*KeyCallbackFn)(uint8_t key, bool heldDown);
+
+/**
+ * The signature of a callback function for rotary encoders, registered when initialising the encoder setupUpDownButtonEncoder
+ * @param newValue the value the encoder changed to
+ */
 typedef void(*EncoderCallbackFn)(int newValue);
 
 class KeyboardItem {
@@ -126,6 +148,9 @@ private:
 	friend void switchEncoderDown(uint8_t, bool);
 };
 
+/**
+ * This is the global switch input variable. Do not create other instances of this class.
+ */
 extern SwitchInput switches;
 
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);

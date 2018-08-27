@@ -11,17 +11,23 @@
 #include "EepromAbstraction.h"
 #include<Wire.h>
 
+/** the page size for 32kbit (4KB) roms */
 #define PAGESIZE_AT24C32   32
+/** the page size for 64kbit (8KB) roms */
 #define PAGESIZE_AT24C64   32
+/** the page size for 128kbit (16KB) roms */
 #define PAGESIZE_AT24C128  64
+/** the page size for 256kbit (32KB) roms */
 #define PAGESIZE_AT24C256  64
+/** the page size for 512bit (64KB) roms */
 #define PAGESIZE_AT24C512 128
 
 /**
- * An implementation of eeprom that works with the very well known At24C256 chip over i2c. Before
+ * An implementation of eeprom that works with the very well known At24CXXX chips over i2c. Before
  * using this class you must first initialise the Wire library by calling Wire.begin(); If you
  * do not do this, your code may hang. Further, avoid any call to read or write until at least
- * the setup() function is called.
+ * the setup() function is called. This is a limitation of the way the Wire library gets
+ * constructed.
  *
  * It is your responsibility to call Wire.begin because you don't want more than one class
  * reinitialising the Wire library.

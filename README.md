@@ -1,14 +1,23 @@
-# IoAbstraction summary
+# IoAbstraction Arduino library summary
 
 This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation.
 
-## Installation
+## Full API documentation
 
-To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries directory`, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
+Along with ths quick start guide and the examples also see:
+
+* [IoAbstraction documentation pages](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/)
+* [IoAbstraction reference documentation](https://www.thecoderscorner.com/ref-docs/ioabstraction/html)
+
+## Installation for Arduino IDE
+
+To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries` directory, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
 
 ## TaskManager - simple, event based programming for Arduino 
 
-Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or the executor framework in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
+Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or co-routine frameworks 
+in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction
+with this library is not to call delay() or do any operations that block for more than a few microseconds. 
 
 A simple example:
 
@@ -23,10 +32,9 @@ Then in the loop method you need to call:
 
   	taskManager.runLoop();
 
-## IoAbstraction - easily interchange between pins, PCF8574 IO and shift registers.
+## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
 
-Lets you choose to use Arduino pins, shift register Input/Output, 8574 i2c IO Expanders in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. There's even an abstraction that can combine together Arduino pins and one or more other expander! See the 
-documentation link further down or the examples for more details.
+Lets you choose to use Arduino pins, shift register Input/Output, PCF8574 i2c and MCP23017 i2c in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. There's even an abstraction that can combine together Arduino pins and one or more other expander! See the documentation (link further up) for more details.
 
 If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
 
@@ -49,12 +57,18 @@ In setup we set it's first IO pin to input and start the Wire library:
 	Wire.begin();  
  	ioDevicePinMode(ioExpander, 0, INPUT);
   
-And then later we read from it (the only limitation is we must call runLoop to synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
+And then later we read from it, in this case as we are doing a single read, use the 'S' version of the method as it removes the need to call the sync method. The only limitation is we must synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
 
-  	ioDeviceSync(ioExpander);
-  	int valueRead = ioDeviceDigitalRead(ioExpander, 0);
+  	int valueRead = ioDeviceDigitalReadS(ioExpander, 0); // read pin 0 on ioExpander
 
-## SwitchInput
+Let's now say we wanted to write one value and read two items on the same device, in this case we don't use the 'S' version of the method, because otherwise it would sync three times.
+
+	ioDeviceDigitalWrite(ioExpander, outputPin, HIGH);
+	ioDeviceSync(ioExpander);
+	int read1 = ioDeviceDigitalRead(ioExpander, inputPin1);
+	int read2 = ioDeviceDigitalRead(ioExpander, inputPin2);
+
+## SwitchInput - buttons that are debounced with event based callbacks
 
 This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this library also uses the above on task manager.
 
@@ -81,6 +95,8 @@ Then we create a function for onClicked, this will be called when the button is 
 It is also possible to use initialiseInterrupt instead of initialise, when using this mode the library does not poll the switches unless a button is pressed down. It's use
 is interchangable with initialise().
 
+## RotaryEncoder - hardware and button emulation, even available with i2c IO expanders
+
 Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary
 encoder, but note that for rotary encoders PIN_A must be an interrupt pin, such as pin 2 on most boards. No debouncing is needed, the library
 will switch on pull up resistors too, but you may need lower resistance pull ups will long wire runs.
@@ -101,7 +117,7 @@ For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstr
 	// along with the current value
 	switches.changeEncoderPrecision(maximumEncoderValue, 100);
 
-## EEPROM Abstractions
+## EepromAbstraction - support for both AVR and i2c AT24 EEPROMs with a common interface
 
 The eeprom abstraction has several implementations, which makes it possible for libraries and code to be transparent from
 AVR or AT24 based I2C eeprom storage, it even has a No-Op implementation as well. All the implementations shown below are interchangable
@@ -169,11 +185,7 @@ Writing arrays and strings
 	anEeprom.readIntoMemArray((unsigned char*)data, romStart, sizeof data);
 	anEeprom.writeArrayToRom(romStart, (const unsigned char*)data, sizeof data);
 	
-## More detail
-
-There's more detail here:
-
-[https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/]
+## Other links
 
 [https://www.thecoderscorner.com/electronics/microcontrollers/switches-inputs/basic-io-abstraction-library-pins-or-8574/]
 

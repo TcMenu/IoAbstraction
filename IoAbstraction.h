@@ -13,10 +13,12 @@
 // that the switching from BasicIoFacilities to IoExpanderFacilities allows the same
 // code to use an IoExpander instead of direct pins
 
-#include "ioAbstractionCoreTypes.h"
+#include "BasicIoAbstraction.h"
 
-// An implementation of BasicIoFacilities that supports the ubiquitous shift
-// register, using one for input (pins 0-7) and one for output (8-15).
+/**
+ * An implementation of BasicIoFacilities that supports the ubiquitous shift
+ * register, using one for input (pins 0 to 23) and one for output (24 onwards).
+ */
 class ShiftRegisterIoAbstraction : public BasicIoAbstraction {
 private:
 	uint8_t toWrite;
@@ -37,6 +39,16 @@ public:
 	virtual uint8_t readValue(uint8_t pin);
 	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {;}
 	virtual void runLoop();
+	
+	/**
+	 * writes to the output shift register - currently always port 0
+	 */
+	virtual void writePort(uint8_t port, uint8_t portVal);
+
+	/**
+	 * reads from the input shift register - currently always port 3
+	 */
+	virtual uint8_t readPort(uint8_t port);
 };
 
 // this defines the number of IOExpanders can be put into a multi IO expander.
@@ -58,54 +70,93 @@ public:
 	virtual ~MultiIoAbstraction();
 	void addIoExpander(IoAbstractionRef expander, uint8_t numOfPinsNeeded);
 
+	/** 
+	 * delegates the pin direction call to whichever abstraction owns the pin, and that
+	 * abstraction will then set the pin mode
+	 * @param pin the pin to set the mode on
+	 * @param mode as per pinMode modes
+	 */
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
+
+	/**
+	 * delegates writing the value to whichever abstraction owns the pin, this abstraction
+	 * will then write out the value.
+	 * @param pin the pin to write to
+	 * @param value the value to write to the pin
+	 */
 	virtual void writeValue(uint8_t pin, uint8_t value);
+
+	/**
+	 * delegates reading the value from a pin to whichever abstraction owns the pin.
+	 * @param pin the pin to read from 
+	 */
 	virtual uint8_t readValue(uint8_t pin);
+
+	/**
+	 * delegates writing the port value to the abstraction that owns that pin, the abstraction
+	 * will then determine the port that the pin belongs to
+	 * @param port any pin within the port
+	 * @param portVal an 8 bit value to write direct to the port. 
+	 */
+	virtual void writePort(uint8_t port, uint8_t portVal);
+
+	/**
+	 * delegates reading a port to the abstraction that owns the pin, the abstraction will then
+	 * determine which port owns the pin and return the port value.
+	 * @param port any pin within that port.
+	 */
+	virtual uint8_t readPort(uint8_t port);
+
+	/**
+	 * delegates attaching an interrupt to the abstraction that owns the pin, see each abstraction
+	 * for more information about how interrupts work with the given device.
+	 * @param pin the pin on the device
+	 * @param intHandler the interrupt intHandler
+	 * @param mode as per arduino interrupt modes.
+	 */
 	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode);
+
+	/**
+	 * will run through all delegate abstractions and sync them
+	 */
 	virtual void runLoop();
 private:
 	uint8_t doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn fn);
 };
 
-//
-// helpers to create the various type of IO Facilities 
-//
-
-inline void ioDevicePinMode(IoAbstractionRef ioDev, uint8_t pin, uint8_t dir) { ioDev->pinDirection(pin, dir); }
-inline uint8_t ioDeviceDigitalRead(IoAbstractionRef ioDev, uint8_t pin) { return ioDev->readValue(pin); }
-inline void ioDeviceDigitalWrite(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); }
-inline void ioDeviceSync(IoAbstractionRef ioDev) { ioDev->runLoop(); }
-inline void ioDeviceAttachInterrupt(IoAbstractionRef ioDev, uint8_t pin, RawIntHandler intHandler, uint8_t mode) {ioDev->attachInterrupt(pin, intHandler, mode) ;}
-
-//
-// Special versions of read and write that also include a sync operation for simple cases
-//
-inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, uint8_t pin) { ioDev->runLoop(); return ioDev->readValue(pin); }
-inline void ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); ioDev->runLoop(); }
-
-/*
- * passes calls to digitalRead and write directly through to arduino pins.
+/**
+ * performs both input and output functions using two shift registers, one for reading and one for writing.  As shift registers have a fixed direction
+ * input and output are handled by different devices, and therefore fixed at the time of building the circuit. This abstraction works as follows:
+ * 
+ * * Input pins of the input shift register start at 0
+ * * Output pins of the output shift register start at 24.
+ * 
+ * @param readClockPin the clock pin on the INPUT shift register
+ * @param readDataPin the data pin on the INPUT shift register
+ * @param readLatchPin the latch pin on the INPUT shift register
+ * @param readClockEnaPin the clock enable pin on the INPUT shift register.
+ * @param writeClockPin the clock pin on the OUTPUT shift register
+ * @param writeDataPin the data pin on the OUTPUT shift register
+ * @param writeLatchPin the latch pin on the OUTPUT shift register
  */
-IoAbstractionRef ioUsingArduino();
-
-/*
-* performs both input and output functions using two shift registers, one for reading and one for writing. 
-* Input pins of the input shift register show as 0-7.
-* Output pins of the output shift register show as 8-15.
-*/
 IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin);
 
-/*
-* performs input only functions using a shift register, the input pins of the shift register show as 0-7.
-*/
-IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t readClkEnaPin, uint8_t dataPin, uint8_t latchPin);
-
-/*
- * performs output only functions using a shift register, the ouyput pins of the shift register show as 8-15.
+/**
+ * performs input only functions using a shift register, the input pins of the shift register start at pin 0.
+ * @param readClockPin the clock pin on the INPUT shift register
+ * @param dataPin the data pin on the INPUT shift register
+ * @param latchPin the latch pin on the INPUT shift register
+ * @param readClockEnaPin the clock enable pin on the INPUT shift register.
  */
-IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin);
+IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClockPin, uint8_t readClockEnaPin, uint8_t dataPin, uint8_t latchPin);
 
-uint8_t writeBits(uint8_t pin, uint8_t value, uint8_t existingValue);
+/**
+ * performs output only functions using a shift register, the output pins of the shift register start at 24.
+ * @param writeClockPin the clock pin on the OUTPUT shift register
+ * @param writeDataPin the data pin on the OUTPUT shift register
+ * @param writeLatchPin the latch pin on the OUTPUT shift register
+ */
+IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin);
 
 #include "TaskManager.h"
 #include "SwitchInput.h"
