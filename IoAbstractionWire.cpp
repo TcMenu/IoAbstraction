@@ -116,8 +116,9 @@ void MCP23017IoAbstraction::initDevice() {
 void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
-	Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" pin "); Serial.print(theBit); Serial.print(" toggle "); Serial.print(value);
-	Serial.print(" reg "); Serial.println(regAddr, HEX);
+	// for debugging to see the commands being sent
+	//Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" pin "); Serial.print(theBit); Serial.print(" toggle "); Serial.print(value);
+	//Serial.print(" reg "); Serial.println(regAddr, HEX);
 	writeToDevice(regAddr, reg);
 }
 
@@ -159,11 +160,11 @@ void MCP23017IoAbstraction::runLoop() {
 	if(needsInit) initDevice();
 
 	if(needsWrite) {
-		Serial.print("Writing out "); Serial.print(portCache, BIN);
 		writeToDevice(GPIO_ADDR, portCache);
 		needsWrite = false;
 		portCache = readFromDevice(GPIO_ADDR);
-		Serial.print(" read back "); Serial.println(portCache, BIN);
+		// for debugging IO
+		//Serial.print("port read "); Serial.println(portCache, BIN);
 	}
 	else {
 		portCache = readFromDevice(GPIO_ADDR);
