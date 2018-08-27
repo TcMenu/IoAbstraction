@@ -19,15 +19,16 @@
 // END User adjustable values
 
 /**
- * A function to be called back when a scheduled event is required. Takes no parameters, returns nothing.
+ * Definition of a function to be called back when a scheduled event is required. Takes no parameters, returns nothing.
  */
 typedef void (*TimerFn)();
 
 /**
- * A function to be called back when an interrupt is detected, marshalled by task manager into a task.
+ * Definition of a function to be called back when an interrupt is detected, marshalled by task manager into a task.
  * The pin that caused the interrupt is passed in the parameter on a best efforts basis.
+ * @param pin the pin on which the interrupt occurred (best efforts)
  */ 
-typedef void (*InterruptFn)(uint8_t);
+typedef void (*InterruptFn)(uint8_t pin);
 
 #define TASKMGR_INVALIDID 0xff
 

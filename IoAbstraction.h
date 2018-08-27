@@ -8,16 +8,18 @@
 #define _BASIC_IO_ABSTRACTION_H_
 
 #include <Arduino.h>
-
-// Using basic IoFacilities allows one to abstract away the use of IoExpanders, such 
-// that the switching from BasicIoFacilities to IoExpanderFacilities allows the same
-// code to use an IoExpander instead of direct pins
+/**
+ * @file IoAbstaction.h
+ * Using basic IoFacilities allows one to abstract away the use of IoExpanders, such 
+ * that the switching from BasicIoFacilities to IoExpanderFacilities allows the same
+ * code to use an IoExpander instead of direct pins
+ */
 
 #include "BasicIoAbstraction.h"
 
 /**
  * An implementation of BasicIoFacilities that supports the ubiquitous shift
- * register, using one for input (pins 0 to 23) and one for output (24 onwards).
+ * register, using 74HC165 for input (pins 0 to 23) and a 74HC595 for output (24 onwards).
  */
 class ShiftRegisterIoAbstraction : public BasicIoAbstraction {
 private:
@@ -32,6 +34,12 @@ private:
 	uint8_t writeLatchPin;
 	uint8_t readClockPin, writeClockPin;
 public:
+	/** 
+	 * Normally use the shift register helper functions to create an instance.
+	 * @see inputOutputFromShiftRegister
+	 * @see inputOnlyFromShiftRegister
+	 * @see outputOnlyFromShiftRegister
+	 */
 	ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin);
 	virtual ~ShiftRegisterIoAbstraction() { }
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
