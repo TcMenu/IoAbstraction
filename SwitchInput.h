@@ -271,7 +271,8 @@ extern SwitchInput switches;
 /**
  * Initialise a hardware rotary encoder on the pins passed in, when the value changes the callback function
  * will be called. This library will set pinA and pinB to INPUT_PULLUP, and debounces internally. In most
- * cases no additional components are needed.
+ * cases no additional components are needed. This function automatically adds the encoder to the global
+ * switches instance.
  * @param pinA the first pin of the encoder, this pin must handle interrupts.
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
@@ -279,6 +280,7 @@ extern SwitchInput switches;
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
+ * This function automatically adds the encoder to the global switches instance.
  * @param pinUp the up button
  * @param pinDown the down button
  * @param callback the function that will receive the new state on change.
