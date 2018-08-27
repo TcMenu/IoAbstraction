@@ -88,7 +88,7 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
-	ioDevice->pinDirection(pin, INPUT);
+	ioDevice->pinDirection(pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
 
 	if(isInterruptDriven()) {
 		registerInterrupt(pin);

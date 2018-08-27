@@ -56,6 +56,9 @@ typedef void(*KeyCallbackFn)(uint8_t key, bool heldDown);
  */
 typedef void(*EncoderCallbackFn)(int newValue);
 
+/**
+ * An internal class that represents the state of a single key being managed by switches.
+ */
 class KeyboardItem {
 private:
 	KeyPressState state;

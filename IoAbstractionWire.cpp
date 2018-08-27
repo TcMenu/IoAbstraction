@@ -116,21 +116,23 @@ void MCP23017IoAbstraction::initDevice() {
 void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
-	Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" reg "); Serial.println(regAddr, HEX);
+	Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" pin "); Serial.print(theBit); Serial.print(" toggle "); Serial.print(value);
+	Serial.print(" reg "); Serial.println(regAddr, HEX);
 	writeToDevice(regAddr, reg);
 }
 
 void MCP23017IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
-	if(!needsInit) initDevice();
+	if(needsInit) initDevice();
 
 	toggleBitInRegister(IODIR_ADDR, pin, (mode == INPUT || mode == INPUT_PULLUP));
 	toggleBitInRegister(GPPU_ADDR, pin, mode == INPUT_PULLUP);
 }
 
 void MCP23017IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
-	if(!needsInit) initDevice();
+	if(needsInit) initDevice();
 
 	bitWrite(portCache, pin, value);
+	needsWrite = true;
 }
 
 uint8_t MCP23017IoAbstraction::readValue(uint8_t pin) {
@@ -150,16 +152,23 @@ void MCP23017IoAbstraction::writePort(uint8_t pin, uint8_t value) {
 		portCache &= 0x00ff; 
 		portCache |= ((uint16_t)value << 8);
 	}
+	needsWrite = true;
 }
 
 void MCP23017IoAbstraction::runLoop() {
 	if(needsInit) initDevice();
 
 	if(needsWrite) {
+		Serial.print("Writing out "); Serial.print(portCache, BIN);
 		writeToDevice(GPIO_ADDR, portCache);
+		needsWrite = false;
+		portCache = readFromDevice(GPIO_ADDR);
+		Serial.print(" read back "); Serial.println(portCache, BIN);
+	}
+	else {
+		portCache = readFromDevice(GPIO_ADDR);
 	}
 
-	portCache = readFromDevice(GPIO_ADDR);
 }
 
 void MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
