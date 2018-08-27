@@ -30,10 +30,11 @@ MultiIoAbstraction multiIo(EXPANDER1);
 
 void onSwitchPressed(uint8_t key, bool held) {
 	// here we just toggle the state of the built in LED and an LED on the expander.
-	uint8_t ledState = ioDeviceDigitalRead(&multiIo, LED_BUILTIN);
+	uint8_t ledState = ioDeviceDigitalReadS(&multiIo, LED_BUILTIN);
+
 	ioDeviceDigitalWrite(&multiIo, LED_BUILTIN, !ledState);
 	ioDeviceDigitalWrite(&multiIo, EXPANDER1 + 1, !ledState);
-	ioDeviceSync(&multiIo);
+	ioDeviceSync(&multiIo); // force another sync
 
   Serial.print("Switch "); 
   Serial.print(key);

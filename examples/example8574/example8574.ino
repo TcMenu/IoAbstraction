@@ -33,8 +33,9 @@ void setup() {
 
 void loop() {
 
-	// we must always call the read loop, this allows the library to send the i2c command
-	// to the device, avoiding a call with every adjustment.
+	// we must always call the read loop, this allows the library to send the i2c command to the device, avoiding a call 
+	// with every adjustment. If you're only doing one read / write, use ioDeviceDigitalReadS or ioDeviceDigitalWriteS instead
+	// as they sync automatically, but less efficiently for many calls at once.
 	ioDeviceSync(ioExpander);
 
 	// here we read from the IO expander and write to serial.

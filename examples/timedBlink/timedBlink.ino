@@ -33,9 +33,8 @@ void setup() {
 // this is the call back method that gets called once a second
 // from the schedule above.
 void toggle() {
-	// notice we are using the IO abstraction again.
-	ioDeviceDigitalWrite(ioDevice, ledPin, ledOn);
-	ioDeviceSync(ioDevice); // we must sync after writing.
+	// now we write to the device, the 'S' version of the method automatically syncs.
+	ioDeviceDigitalWriteS(ioDevice, ledPin, ledOn);
 
 	ledOn = !ledOn; // toggle the LED state.
 }

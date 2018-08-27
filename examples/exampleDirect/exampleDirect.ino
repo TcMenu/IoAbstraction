@@ -15,7 +15,6 @@ void setup() {
 
 void loop() {
 	// read the arduino, write to IO expander.
-	uint8_t switchValue = ioDeviceDigitalRead(arduinoPins, 30);
+	uint8_t switchValue = ioDeviceDigitalReadS(arduinoPins, 30);
 	ioDeviceDigitalWrite(arduinoPins, 31, switchValue);
-	ioDeviceSync(arduinoPins);
 }
