@@ -296,26 +296,25 @@ void interruptHandlerOther() {
 
 void TaskManager::addInterrupt(IoAbstractionRef ioDevice, uint8_t pin, uint8_t mode) {
 	if (interruptCallback == NULL) return;
-	int interruptNo = pin;
 
 	switch (pin) {
-	case 1: ioDevice->attachInterrupt(interruptNo, interruptHandler1, mode); break;
-	case 2: ioDevice->attachInterrupt(interruptNo, interruptHandler2, mode); break;
-	case 3: ioDevice->attachInterrupt(interruptNo, interruptHandler3, mode); break;
-	case 4: ioDevice->attachInterrupt(interruptNo, interruptHandler4, mode); break;
-	case 5: ioDevice->attachInterrupt(interruptNo, interruptHandler5, mode); break;
-	case 6: ioDevice->attachInterrupt(interruptNo, interruptHandler6, mode); break;
-	case 7: ioDevice->attachInterrupt(interruptNo, interruptHandler7, mode); break;
-	case 8: ioDevice->attachInterrupt(interruptNo, interruptHandler8, mode); break;
-	case 9: ioDevice->attachInterrupt(interruptNo, interruptHandler9, mode); break;
-	case 10: ioDevice->attachInterrupt(interruptNo, interruptHandler10, mode); break;
-	case 11: ioDevice->attachInterrupt(interruptNo, interruptHandler11, mode); break;
-	case 12: ioDevice->attachInterrupt(interruptNo, interruptHandler12, mode); break;
-	case 13: ioDevice->attachInterrupt(interruptNo, interruptHandler13, mode); break;
-	case 14: ioDevice->attachInterrupt(interruptNo, interruptHandler14, mode); break;
-	case 15: ioDevice->attachInterrupt(interruptNo, interruptHandler15, mode); break;
-	case 18: ioDevice->attachInterrupt(interruptNo, interruptHandler18, mode); break;
-	default: ioDevice->attachInterrupt(interruptNo, interruptHandlerOther, mode); break;
+	case 1: ioDevice->attachInterrupt(pin, interruptHandler1, mode); break;
+	case 2: ioDevice->attachInterrupt(pin, interruptHandler2, mode); break;
+	case 3: ioDevice->attachInterrupt(pin, interruptHandler3, mode); break;
+	case 4: ioDevice->attachInterrupt(pin, interruptHandler4, mode); break;
+	case 5: ioDevice->attachInterrupt(pin, interruptHandler5, mode); break;
+	case 6: ioDevice->attachInterrupt(pin, interruptHandler6, mode); break;
+	case 7: ioDevice->attachInterrupt(pin, interruptHandler7, mode); break;
+	case 8: ioDevice->attachInterrupt(pin, interruptHandler8, mode); break;
+	case 9: ioDevice->attachInterrupt(pin, interruptHandler9, mode); break;
+	case 10: ioDevice->attachInterrupt(pin, interruptHandler10, mode); break;
+	case 11: ioDevice->attachInterrupt(pin, interruptHandler11, mode); break;
+	case 12: ioDevice->attachInterrupt(pin, interruptHandler12, mode); break;
+	case 13: ioDevice->attachInterrupt(pin, interruptHandler13, mode); break;
+	case 14: ioDevice->attachInterrupt(pin, interruptHandler14, mode); break;
+	case 15: ioDevice->attachInterrupt(pin, interruptHandler15, mode); break;
+	case 18: ioDevice->attachInterrupt(pin, interruptHandler18, mode); break;
+	default: ioDevice->attachInterrupt(pin, interruptHandlerOther, mode); break;
 	}
 }
 

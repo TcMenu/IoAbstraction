@@ -16,20 +16,11 @@ Licenced with an Apache licnese.
 */
 
 #include <IoAbstraction.h>
-#ifdef __AVR__
-#include <util/atomic.h>
 
-void setMillis(unsigned long ms)
-{
-  extern unsigned long timer0_millis;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    timer0_millis = ms;
-  }
-}
-#else
-void setMillis(unsigned long) {}
-#endif
+// We'll register an interrupt on an arduino pin later, so need this reference. 
+IoAbstractionRef arduinoIo = ioUsingArduino();
 
+// we use this to provide the debug information that shows the state of each task slot
 char slotString[10] = { 0 };
 
 int taskId = -1;
@@ -38,7 +29,6 @@ void log(const char* logLine) {
 	Serial.print(millis());
 	Serial.print(": ");
 	Serial.println(logLine);
-
 }
 
 
@@ -52,24 +42,32 @@ void setup() {
 	taskManager.scheduleOnce(10000, tenSecondsUp);
 	taskId = taskManager.scheduleFixedRate(1000, oneSecondPulse);
 	
+	// first we do a yield operation for 32 millis to test the yield functionality
 	log("Waiting 32 milli second with yield in setup");
 	taskManager.yieldForMicros(32000);
 	log("Waited 32 milli second with yield in setup");
 
+	// now schedule a task to run once in 30 seconds
 	taskManager.scheduleOnce(30000, [] {
 		log("30 seconds up, stopping 1 second job");
 		taskManager.cancelTask(taskId); 
 	});
+
+	// and another to run repeatedly at 5 second intervals, shows the task slot status
 	taskManager.scheduleFixedRate(5, [] { 
 		log(taskManager.checkAvailableSlots(slotString)); 
 	}, TIME_SECONDS);
+
+	// and now a job that runs every 100 micros
 	taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
-	taskManager.setInterruptCallback (onInterrupt);
-	taskManager.addInterrupt(ioUsingArduino(), 2, CHANGE);
 
+	// and one every 10 millis that yields for a while.
 	taskManager.scheduleFixedRate(10, [] { taskManager.yieldForMicros(10000); });
-}
 
+	// register a port 2 interrupt.
+	taskManager.setInterruptCallback (onInterrupt);
+	taskManager.addInterrupt(arduinoIo, 2, CHANGE);
+}
 
 void onInterrupt(uint8_t bits) {	
 	// notice it is safe to call Serial and log here, we are not in an interrupt handler.
@@ -108,3 +106,16 @@ void randomJob() {
 void loop() {
 	taskManager.runLoop();
 }
+
+#ifdef __AVR__
+#include <util/atomic.h>
+void setMillis(unsigned long ms)
+{
+  extern unsigned long timer0_millis;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    timer0_millis = ms;
+  }
+}
+#else
+void setMillis(unsigned long) {}
+#endif

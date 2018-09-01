@@ -21,15 +21,28 @@
 MultiIoAbstraction allDevices;
 uint8_t ledState = 0xaa;
 
+// We'll use port that starts at pin 42 on the Mega, change for your board.
 #define PORT_L_OFFSET 42
-// we will program port B
+
+// we will program port B on the IoExpander
 #define EXPANDER_OFFSET 108
+
+// we need to make sure we reset the 23017 properly on restart..
+#define RESET_23017_PIN 32
 
 void setup() {
     Wire.begin();
     Serial.begin(9600);
 
     Serial.println("Multi IO expander example");
+
+    // this is optional, in a real world system you could probably just connect the
+    // reset pin of the device to Vcc, but when prototyping you'll want a reset
+    // on every restart.
+    pinMode(RESET_23017_PIN, OUTPUT);
+    digitalWrite(RESET_23017_PIN, LOW);
+    delayMicroseconds(100);
+    digitalWrite(RESET_23017_PIN, HIGH);
 
     // when using multiIO the pins are arranged with each device owning some of the pins, in this case
     // Arduino: 0..99
