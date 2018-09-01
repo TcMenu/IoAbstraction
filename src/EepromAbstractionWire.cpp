@@ -32,8 +32,7 @@ uint8_t I2cAt24Eeprom::read8(EepromPosition position) {
 	waitForReady(eepromAddr);
 	writeAddressWire(eepromAddr, position, true);
 
-	Wire.beginTransmission(eepromAddr);
-    	Wire.requestFrom(eepromAddr, (uint8_t)1, (uint8_t)true);
+	Wire.requestFrom(eepromAddr, (uint8_t)1, (uint8_t)true);
 	if(Wire.available()) ret = (uint8_t)Wire.read();
 
     return ret;
@@ -41,13 +40,11 @@ uint8_t I2cAt24Eeprom::read8(EepromPosition position) {
 
 void I2cAt24Eeprom::write8(EepromPosition position, uint8_t val) {
 	if(read8(position) == val) return;
+	waitForReady(eepromAddr);
 	writeByte(position, val);
 }
 
 void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
-	waitForReady(eepromAddr);
-
-	Wire.beginTransmission(eepromAddr);
 	writeAddressWire(eepromAddr, position, false);
 	Wire.write(val);
 	Wire.endTransmission();
@@ -63,6 +60,7 @@ uint16_t I2cAt24Eeprom::read16(EepromPosition position) {
 void I2cAt24Eeprom::write16(EepromPosition position, uint16_t val) {
 
 	if(read16(position) == val) return;
+	waitForReady(eepromAddr);
 
 	writeByte(position++, (val >> 8) & 0xff);
 	writeByte(position, val & 0xff);
@@ -81,6 +79,7 @@ uint32_t I2cAt24Eeprom::read32(EepromPosition position) {
 void I2cAt24Eeprom::write32(EepromPosition position, uint32_t val) {
 
 	if(read32(position) == val) return;
+	waitForReady(eepromAddr);
 
 	writeByte(position++, val >> 24);
 	writeByte(position++, (val >> 16) & 0xff);
@@ -118,7 +117,6 @@ void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSr
 	while(len > 0) {
 		waitForReady(eepromAddr);
 		int currentGo = findMaximumInPage(romDest + romOffset, len);
-		Wire.beginTransmission(eepromAddr);
 		writeAddressWire(eepromAddr, romDest + romOffset, false);
 		while(currentGo) {
 			Wire.write(memSrc[romOffset]);
