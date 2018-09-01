@@ -60,6 +60,8 @@ public:
 private:
 	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
 	void writeByte(EepromPosition position, uint8_t val);
+	uint8_t readByte(EepromPosition position);
+
 };
 
 #endif /* _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */
