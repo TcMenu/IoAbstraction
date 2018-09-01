@@ -184,6 +184,7 @@ uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
 	Wire.beginTransmission(address);
 	Wire.write(reg);
 	Wire.endTransmission(false);
+	
 	Wire.requestFrom(address, (uint8_t)2);
 	// read will get port A first then port B.
 	uint8_t portA = Wire.read();

@@ -23,7 +23,7 @@ void waitForReady(uint8_t eeprom) {
 }
 
 uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
-	Wire.beginTransmission();
+	Wire.beginTransmission(eepromAddr);
 	writeAddressWire(eepromAddr, position);
 	Wire.endTransmission();
 
@@ -44,14 +44,19 @@ void I2cAt24Eeprom::write8(EepromPosition position, uint8_t val) {
 }
 
 void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
-	Wire.beginTransmission();
-	writeAddressWire(eepromAddr, position, false);
+	// before ANY write that is going to be committed (by ending i2c send)
+	// then we must first wait for the device to be ready. In case a previous
+	// write has not yet completed.
+	waitForReady(eepromAddr);
+
+	Wire.beginTransmission(eepromAddr);
+	writeAddressWire(eepromAddr, position);
 	Wire.write(val);
 	Wire.endTransmission();
 }
 
 uint16_t I2cAt24Eeprom::read16(EepromPosition position) {
-	waitForReady();
+	waitForReady(eepromAddr);
 
 	uint16_t ret = ((uint16_t)readByte(position++) << 8);
 	ret |= readByte(position);
@@ -66,7 +71,7 @@ void I2cAt24Eeprom::write16(EepromPosition position, uint16_t val) {
 }
 
 uint32_t I2cAt24Eeprom::read32(EepromPosition position) {
-	waitForReady();
+	waitForReady(eepromAddr);
 
 	uint32_t ret = ((uint32_t)readByte(position++) << 24);
 	ret |= ((uint32_t)readByte(position++) << 16);
@@ -100,7 +105,7 @@ void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, ui
 		waitForReady(eepromAddr);
 		uint8_t currentGo = findMaximumInPage(romSrc + romOffset, len);
 
-		Wire.beginTransmission();
+		Wire.beginTransmission(eepromAddr);
 		writeAddressWire(eepromAddr, romSrc + romOffset);
 		Wire.endTransmission();
 
@@ -118,7 +123,7 @@ void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSr
 	while(len > 0) {
 		waitForReady(eepromAddr);
 		int currentGo = findMaximumInPage(romDest + romOffset, len);
-		Wire.beginTransmission();
+		Wire.beginTransmission(eepromAddr);
 		writeAddressWire(eepromAddr, romDest + romOffset);
 		while(currentGo) {
 			Wire.write(memSrc[romOffset]);
