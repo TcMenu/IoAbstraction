@@ -45,7 +45,10 @@ public:
 	virtual void pinDirection(uint8_t pin, uint8_t mode);
 	virtual void writeValue(uint8_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
-	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {;}
+	/**
+	 * Interrupts are not supported on shift registers
+	 */
+	virtual void attachInterrupt(uint8_t, RawIntHandler, uint8_t) {;}
 	virtual void runLoop();
 	
 	/**

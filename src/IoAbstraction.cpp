@@ -44,7 +44,7 @@ void ShiftRegisterIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
 	if (pin < 24) return;
 	pin = pin - 24;
 
-	toWrite = bitWrite(toWrite, pin, value);
+	bitWrite(toWrite, pin, value);
 	needsWrite = true;
 }
 
@@ -54,7 +54,7 @@ void ShiftRegisterIoAbstraction::writePort(uint8_t pin, uint8_t portVal) {
 	needsWrite = true;
 }
 
-uint8_t ShiftRegisterIoAbstraction::readPort(uint8_t pin) {
+uint8_t ShiftRegisterIoAbstraction::readPort(uint8_t /*pin*/) {
 	return lastRead;
 }
 
@@ -149,7 +149,7 @@ void MultiIoAbstraction::writePort(uint8_t pin, uint8_t val) {
 }
 
 uint8_t MultiIoAbstraction::readPort(uint8_t pin) {
-	return doExpanderOp(pin, 0, [](IoAbstractionRef a, uint8_t p, uint8_t v) {
+	return doExpanderOp(pin, 0, [](IoAbstractionRef a, uint8_t p, uint8_t) {
 		return a->readPort(p);
 	});
 }

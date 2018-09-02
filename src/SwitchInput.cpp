@@ -165,6 +165,7 @@ void checkRunLoopAndRepeat() {
 
 	// instead of running constantly, we only run when there's a need to, eg something
 	// is still in a debouncing state. Otherwise we wait for an interrupt.
+	// switches.runLoop returns true when it needs to run again.
 	if(switches.runLoop()) {
 		taskManager.scheduleOnce(20, [] { 
 			checkRunLoopAndRepeat();

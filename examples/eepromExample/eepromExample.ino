@@ -22,17 +22,18 @@ const unsigned int romStart = 2000;
 
 // when you don't want the eeprom writes / reads to do anything.
 // comment/ uncomment to select
-//NoEeprom anEeprom;
+// NoEeprom anEeprom;
 
 // When you want to use the AVR built in EEPROM support (only available on AVR)
 // comment / uncomment to select
-//AvrEeprom anEeprom;
+// AvrEeprom anEeprom;
 
 // When you wish to use AT24 based i2c EEPROMs (Uses Wire library)
 // comment / uncomment to select
 I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
 const char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
+char readBuffer[128]; // for reading back and comparing the above string.
 
 void setup() {
 	Serial.begin(9600);
@@ -43,16 +44,36 @@ void setup() {
 
 	Serial.println("Eeprom example starting");
 
+	// clear everything in the rom before proceeding.
+	for(EepromPosition pos = 0; pos < 100;pos++) {
+		anEeprom.write8(romStart + pos, 0);
+	}
+
+	Serial.println("Cleared ROM ready for re-writing the test values");
+	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
+	readBackValues();
+
 	anEeprom.write8(romStart, (byte)42);
 	anEeprom.write16(romStart + 1, 0xface);
 	anEeprom.write32(romStart + 3, 0xf00dface);
 	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
 	Serial.println("Eeprom example written initial values");
+	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
 }
 
 void loop() {
-	char readBuffer[128];
 
+	readBackValues();
+
+	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
+	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
+	bool same = strcmp(readBuffer, strData) == 0;
+	Serial.println(same ? "Array compare of ROM identical" : "Array compare of ROM is different");
+
+	delay(10000);
+}
+
+void readBackValues() {
 	Serial.print("Reading back byte: ");
 	Serial.println(anEeprom.read8(romStart));
 
@@ -62,11 +83,6 @@ void loop() {
 	Serial.print("Reading back long: 0x");
 	Serial.println(ltoa(anEeprom.read32(romStart + 3), readBuffer, 16));
 
-	Serial.print("Reading back array and comparing with source!");
 	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
-	Serial.println(strData);
-	bool same = strcmp(readBuffer, strData) == 0;
-	Serial.println(same ? "ROM identical" : "ROM is different");
-
-	delay(10000);
+	Serial.println(readBuffer);
 }

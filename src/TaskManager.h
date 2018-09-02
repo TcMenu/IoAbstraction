@@ -16,6 +16,26 @@
 #define DEFAULT_TASK_SIZE 10
 #endif
 
+//
+// at the moment task manager will ONLY override the default delay methods for AVR and SAMD (eg Uno, Mega, MKR and Zero). 
+// If you are on a single core board other than these you could enable this feature too.
+//
+#if defined(__AVR__) || defined(_SAM_IO_)
+#define _TASKMGR_OVERRIDE_DELAY_
+#endif
+
+#if defined(_TASKMGR_OVERRIDE_DELAY_)
+/**
+ * TaskManager can override the delay behaviour controlled by _TASKMGR_OVERRIDE_DELAY_ in TaskManager.h (default off)
+ * Instead of holding everything up this option keeps the task queue running. Do not enable this option on multicore 
+ * processors at the moment. It is tested ONLY on AVR and SAMD.
+ * 
+ * This tries to run tasks during the time that delay is called, returning after at least x micros.
+ * @param x the number of microseconds to wait
+ */
+#define delayMicroseconds(x) (taskManager.yieldForMicros(x))
+#endif
+
 // END User adjustable values
 
 /**

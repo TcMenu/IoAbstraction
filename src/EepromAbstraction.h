@@ -29,6 +29,11 @@ class EepromAbstraction {
 public:
 	virtual ~EepromAbstraction() {}
 
+	/**
+	 * Best efforts error flag that will clear once read.
+	 */
+	virtual bool hasErrorOccurred() { return false;}
+
 	/** 
 	 * Read an 8 bit (byte) value at a specified position 
 	 * @param position address at which to read

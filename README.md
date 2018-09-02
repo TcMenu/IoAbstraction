@@ -32,6 +32,11 @@ Then in the loop method you need to call:
 
   	taskManager.runLoop();
 
+### Advanced usage of TaskManager
+
+If you want to improve task manager performance in code that frequently calls delayMicroseconds(..), you can enable the flag `_TASKMGR_OVERRIDE_DELAY_` by opening TaskManager.h
+and reading the comment in the user definable section. At the moment, it's only enabled where I've personally tested it, SAMD (MKR, Zero etc) and AVR (Uno, Mega etc).
+
 ## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
 
 Lets you choose to use Arduino pins, shift register Input/Output, PCF8574 i2c and MCP23017 i2c in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. There's even an abstraction that can combine together Arduino pins and one or more other expander! See the documentation (link further up) for more details.

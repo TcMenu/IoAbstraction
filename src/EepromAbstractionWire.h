@@ -38,6 +38,7 @@
 class I2cAt24Eeprom : public EepromAbstraction {
 	uint8_t eepromAddr;
 	uint8_t pageSize;
+	bool    errorOccurred;
 public:
 	/**
 	 * Create an I2C EEPROM object giving it's address and the page size of the device.
@@ -45,6 +46,12 @@ public:
 	 */
 	I2cAt24Eeprom(uint8_t address, uint8_t pageSize);
 	virtual ~I2cAt24Eeprom() {}
+
+	/** 
+	 * This indicates if an I2C error has ocrrued at any point since the last call to error.
+	 * Side effect: Every call clears it's state.
+	 */
+	virtual bool hasErrorOccurred();
 
 	virtual uint8_t read8(EepromPosition position);
 	virtual void write8(EepromPosition position, uint8_t val);
@@ -61,7 +68,8 @@ private:
 	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
 	void writeByte(EepromPosition position, uint8_t val);
 	uint8_t readByte(EepromPosition position);
-
+	void writeAddressWire(uint16_t memAddr);
+	void waitForReady(uint8_t eeprom);
 };
 
 #endif /* _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */

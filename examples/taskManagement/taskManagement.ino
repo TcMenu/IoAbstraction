@@ -21,7 +21,7 @@ Licenced with an Apache licnese.
 IoAbstractionRef arduinoIo = ioUsingArduino();
 
 // we use this to provide the debug information that shows the state of each task slot
-char slotString[10] = { 0 };
+char slotString[20] = { 0 };
 
 int taskId = -1;
 

@@ -6,25 +6,45 @@
 #include <EepromAbstractionWire.h>
 #include <Wire.h>
 
+#define READY_TRIES_COUNT 100
+
 I2cAt24Eeprom::I2cAt24Eeprom(uint8_t address, uint8_t pageSize) {
 	this->eepromAddr = address;
 	this->pageSize = pageSize;
 }
 
-void writeAddressWire(uint8_t deviceAddr, uint16_t memAddr) {
+void I2cAt24Eeprom::writeAddressWire(uint16_t memAddr) {
 	Wire.write(memAddr >> 8);
 	Wire.write(memAddr & 0xff);
 }
 
-void waitForReady(uint8_t eeprom) {
+void I2cAt24Eeprom::waitForReady(uint8_t eeprom) {
+	// as per discussion with Koepel, probably a good idea to bound the number of
+	// tries here so it does not lock up in the case of hardware problems. 
+	// It now tries for a few millis waiting for the rom to write. It will wait
+	// around 5 - 10 milliseconds depending on the bus speed.
+	uint16_t triesLeft = READY_TRIES_COUNT;
 	do {
+		// when not on the first time around, introduce a small delay while the eeprom settles.
+		// this gives us more certainty that we'll wait long enough before timing out.
+		if(triesLeft != READY_TRIES_COUNT) delayMicroseconds(50);
 		Wire.beginTransmission(eeprom);
-	} while(Wire.endTransmission() != 0);
+		--triesLeft;
+	} while(Wire.endTransmission() != 0 && triesLeft != 0);
+
+	// if we timed out (triesLeft = 0) then we set the error condition.
+	errorOccurred |= (triesLeft == 0); 
+}
+
+bool I2cAt24Eeprom::hasErrorOccurred() {
+	bool ret = errorOccurred;
+	errorOccurred = false;
+	return ret;
 }
 
 uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
 	Wire.beginTransmission(eepromAddr);
-	writeAddressWire(eepromAddr, position);
+	writeAddressWire(position);
 	Wire.endTransmission();
 
 	uint8_t ret = 0;
@@ -50,7 +70,7 @@ void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
 	waitForReady(eepromAddr);
 
 	Wire.beginTransmission(eepromAddr);
-	writeAddressWire(eepromAddr, position);
+	writeAddressWire(position);
 	Wire.write(val);
 	Wire.endTransmission();
 }
@@ -66,8 +86,8 @@ uint16_t I2cAt24Eeprom::read16(EepromPosition position) {
 void I2cAt24Eeprom::write16(EepromPosition position, uint16_t val) {
 	if(read16(position) == val) return;
 
-	writeByte(position++, (val >> 8) & 0xff);
-	writeByte(position, val & 0xff);
+	writeByte(position++, (uint8_t)(val >> 8));
+	writeByte(position,   (uint8_t)val);
 }
 
 uint32_t I2cAt24Eeprom::read32(EepromPosition position) {
@@ -83,10 +103,10 @@ uint32_t I2cAt24Eeprom::read32(EepromPosition position) {
 void I2cAt24Eeprom::write32(EepromPosition position, uint32_t val) {
 	if(read32(position) == val) return;
 
-	writeByte(position++, val >> 24);
-	writeByte(position++, (val >> 16) & 0xff);
-	writeByte(position++, (val >> 8) & 0xff);
-	writeByte(position, val & 0xff);
+	writeByte(position++, (uint8_t)(val >> 24));
+	writeByte(position++, (uint8_t)(val >> 16));
+	writeByte(position++, (uint8_t)(val >> 8));
+	writeByte(position,   (uint8_t)val);
 }
 
 uint8_t I2cAt24Eeprom::findMaximumInPage(uint16_t destEeprom, uint8_t len) {
@@ -106,10 +126,10 @@ void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, ui
 		uint8_t currentGo = findMaximumInPage(romSrc + romOffset, len);
 
 		Wire.beginTransmission(eepromAddr);
-		writeAddressWire(eepromAddr, romSrc + romOffset);
+		writeAddressWire(romSrc + romOffset);
 		Wire.endTransmission();
 
-		Wire.requestFrom(eepromAddr, (uint8_t)currentGo, (uint8_t)1);
+		Wire.requestFrom(eepromAddr, (uint8_t)currentGo, (uint8_t)true);
 		while(len && Wire.available()) {
 			memDest[romOffset] = (uint8_t)Wire.read();
 			--len;
@@ -124,7 +144,7 @@ void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSr
 		waitForReady(eepromAddr);
 		int currentGo = findMaximumInPage(romDest + romOffset, len);
 		Wire.beginTransmission(eepromAddr);
-		writeAddressWire(eepromAddr, romDest + romOffset);
+		writeAddressWire(romDest + romOffset);
 		while(currentGo) {
 			Wire.write(memSrc[romOffset]);
 			--currentGo;

@@ -27,7 +27,7 @@ void PCF8574IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 }
 
 void PCF8574IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
-	toWrite = bitWrite(toWrite, pin, value);
+	bitWrite(toWrite, pin, value);
 	needsWrite = true;
 }
 
@@ -35,11 +35,11 @@ uint8_t PCF8574IoAbstraction::readValue(uint8_t pin) {
 	return (lastRead & (1 << pin)) ? HIGH : LOW;
 }
 
-uint8_t PCF8574IoAbstraction::readPort(uint8_t pin) {
+uint8_t PCF8574IoAbstraction::readPort(uint8_t /*pin*/) {
 	return lastRead;
 }
 
-void PCF8574IoAbstraction::writePort(uint8_t pin, uint8_t value) {
+void PCF8574IoAbstraction::writePort(uint8_t /*pin*/, uint8_t value) {
 	toWrite = value;
 	needsWrite = true;
 }
@@ -67,7 +67,7 @@ uint8_t PCF8574IoAbstraction::readData() {
 	return lastRead;
 }
 
-void PCF8574IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {
+void PCF8574IoAbstraction::attachInterrupt(uint8_t /*pin*/, RawIntHandler intHandler, uint8_t /*mode*/) {
 	// if there's an interrupt pin set
 	if(interruptPin == 0xff) return;
 
