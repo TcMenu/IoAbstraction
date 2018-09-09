@@ -13,7 +13,7 @@ IoAbstractionRef	KEYWORD1
 SwitchInput	KEYWORD1
 EepromAbstraction	KEYWORD1
 I2cAt24Eeprom	KEYWORD1
-NoEeprom		KEYWORD1
+NoEeprom	KEYWORD1
 AvrEeprom	KEYWORD1
 
 #######################################
@@ -42,8 +42,8 @@ addInterrupt	KEYWORD2
 setInterruptCallback	KEYWORD2
 cancelTask	KEYWORD2
 runLoop	KEYWORD2
-readPort    KEYWORD2
-writePort   KEYWORD2
+readPort	KEYWORD2
+writePort	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
