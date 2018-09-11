@@ -13,6 +13,7 @@ but like any community a few rules are needed in order to ensure things go smoot
   copyright, but they must be provided under the same Apache as the rest of the project, and with copyright granted to
   the library at the top of the file.
 * If you edit keywords.txt, be exceptionally careful that tabs have not been replaced as spaces.
+* Please make sure that compiler warnings are set to All, (Arduino Menu -> Preferences -> Compiler warnings)
   
 ## Why do all TheCodersCorner libraries use an Apache license?
 
