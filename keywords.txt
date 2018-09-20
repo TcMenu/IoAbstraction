@@ -28,6 +28,7 @@ ioDeviceAttachInterrupt	KEYWORD2
 ioDeviceSync	KEYWORD2
 ioUsingArduino	KEYWORD2
 ioFrom8574	KEYWORD2
+ioFrom23017	KEYWORD2
 inputOutputFromShiftRegister	KEYWORD2
 inputOnlyFromShiftRegister	KEYWORD2
 outputOnlyFromShiftRegister	KEYWORD2
