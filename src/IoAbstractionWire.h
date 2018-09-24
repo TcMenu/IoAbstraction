@@ -161,6 +161,8 @@ public:
 	 * Any pin between 0-7 refers to portA, otherwise portB.
 	 */ 
 	virtual uint8_t readPort(uint8_t pin);
+
+	void debugData();
 private:
 	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
 	void initDevice();

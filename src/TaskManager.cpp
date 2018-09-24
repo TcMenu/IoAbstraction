@@ -83,9 +83,8 @@ void TaskManager::markInterrupted(uint8_t interruptNo) {
 	taskManager.interrupted = true;
 }
 
-TaskManager::TaskManager(uint8_t taskSlots) {
-	this->numberOfSlots = taskSlots;
-	this->tasks = new TimerTask[taskSlots];
+TaskManager::TaskManager() {
+	this->numberOfSlots = DEFAULT_TASK_SIZE;
 	interrupted = false;
 	first = NULL;
 	interruptCallback = NULL;

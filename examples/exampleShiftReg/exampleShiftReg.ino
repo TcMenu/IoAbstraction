@@ -9,7 +9,7 @@
 #define WRITE_DATA_PIN 23
 #define WRITE_LATCH_PIN 24
 
-IoAbstractionRef shiftRegister = inputOutputFromShiftRegister(READ_CLOCK_PIN, READ_DATA_PIN, READ_LATCH_PIN, READ_CLK_ENA_PIN, WRITE_CLOCK_PIN, WRITE_DATA_PIN, WRITE_LATCH_PIN);
+IoAbstractionRef shiftRegister = inputOutputFromShiftRegister(READ_CLOCK_PIN, READ_DATA_PIN, READ_LATCH_PIN, WRITE_CLOCK_PIN, WRITE_DATA_PIN, WRITE_LATCH_PIN);
 
 void setup() {
 	// although not technically needed for the shift register we should always call pinDirection

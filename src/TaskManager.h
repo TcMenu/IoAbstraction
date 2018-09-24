@@ -101,7 +101,7 @@ public:
  */
 class TaskManager {
 private:
-	TimerTask *tasks;
+	TimerTask tasks[6];
 	TimerTask *first;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
@@ -111,7 +111,7 @@ public:
 	/**
 	 * Do not construct this class manually, there is a global instance called `taskManager`
 	 */
-	TaskManager(uint8_t taskSlots = DEFAULT_TASK_SIZE);
+	TaskManager();
 
 	/**
 	 * Schedules a task for one shot execution in the timeframe provided.

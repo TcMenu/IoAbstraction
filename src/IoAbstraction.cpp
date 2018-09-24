@@ -7,18 +7,20 @@
 
 #define LATCH_TIME 5
 
-ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
+ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t writeClockPin, uint8_t writeDataPin, 
+                                                       uint8_t writeLatchPin, uint8_t noReadDevices, uint8_t noWriteDevices) {
 	needsWrite = true;
 	toWrite = 0;
 
-	this->readClkEnablePin = readClockEnaPin;
 	this->readClockPin = readClockPin;
-	this->writeClockPin = writeClockPin;
 	this->readDataPin = readDataPin;
-	this->writeDataPin = writeDataPin;
 	this->readLatchPin = readLatchPin;
 	this->writeLatchPin = writeLatchPin;
+	this->writeDataPin = writeDataPin;
+	this->writeClockPin = writeClockPin;
 	this->lastRead = 0;
+	this->numOfDevicesRead = noReadDevices;
+	this->numOfDevicesWrite = noWriteDevices; 
 
 	if (writeDataPin != 0xff) {
 		pinMode(writeLatchPin, OUTPUT);
@@ -31,52 +33,89 @@ ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uin
 		pinMode(readLatchPin, OUTPUT);
 		pinMode(readDataPin, INPUT);
 		pinMode(readClockPin, OUTPUT);
-		pinMode(readClockEnaPin, OUTPUT);
 		digitalWrite(readLatchPin, HIGH);
 	}
 }
 
 void ShiftRegisterIoAbstraction::pinDirection(__attribute((unused)) uint8_t pin, __attribute((unused)) uint8_t mode) {
-	// ignored, this implementation has hardwired inputs and outputs - inputs are 0-23, outputs are 24 onwards
+	// ignored, this implementation has hardwired inputs and outputs - inputs are 0-31, outputs are 32 onwards
 }
 
 void ShiftRegisterIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
-	if (pin < 24) return;
-	pin = pin - 24;
+	if (pin < SHIFT_REGISTER_OUTPUT_CUTOVER) return;
+	pin = pin - SHIFT_REGISTER_OUTPUT_CUTOVER;
 
 	bitWrite(toWrite, pin, value);
 	needsWrite = true;
 }
 
-void ShiftRegisterIoAbstraction::writePort(uint8_t pin, uint8_t portVal) {
-	if(pin < 24) return;
+void ShiftRegisterIoAbstraction::writePort(uint8_t pin, uint8_t portV) {
+	uint32_t portVal = portV;
+	if(pin < SHIFT_REGISTER_OUTPUT_CUTOVER) return;
+	pin = pin - SHIFT_REGISTER_OUTPUT_CUTOVER;
+	if(pin < 8) {
+		toWrite &= 0xffffff00;
+		toWrite |= portVal;
+	}
+	else if(pin < 16) {
+		toWrite &= 0xffff00ff;
+		toWrite |= (portVal << 8);
+	}
+	else if(pin < 24) {
+		toWrite &= 0xff00ffff;
+		toWrite |= (portVal << 16);
+	}
+	else {
+		toWrite &= 0x00ffffff;
+		toWrite |= (portVal << 24);
+	}
 	toWrite = portVal;
 	needsWrite = true;
 }
 
-uint8_t ShiftRegisterIoAbstraction::readPort(uint8_t /*pin*/) {
-	return lastRead;
+uint8_t ShiftRegisterIoAbstraction::readPort(uint8_t pin) {
+	if(pin < 8) {
+		return lastRead & 0xff;
+	}
+	else if(pin < 16) {
+		return (lastRead >> 8) & 0xff;
+	}
+	else if(pin < 24) {
+		return (lastRead >> 16) & 0xff;
+	}
+	else {
+		return (lastRead >> 24) & 0xff;
+	}
 }
 
 uint8_t ShiftRegisterIoAbstraction::readValue(uint8_t pin) {
-	return (lastRead & (1 << pin)) ? HIGH : LOW;
+	return ((lastRead & (1 << pin)) != 0) ? HIGH : LOW;
 }
 
 void ShiftRegisterIoAbstraction::runLoop() {
+	uint8_t i;
 	if (readDataPin != 0xff) {
-		digitalWrite(readClkEnablePin, HIGH);
 		digitalWrite(readLatchPin, LOW);
 		delayMicroseconds(LATCH_TIME);
 		digitalWrite(readLatchPin, HIGH);
-		digitalWrite(readClkEnablePin, LOW);
 
-		lastRead = shiftIn(readDataPin, readClockPin, MSBFIRST);
+		lastRead = 0;
+		for(i = 0; i < numOfDevicesRead; ++i) {
+			lastRead = lastRead << 8;
+			lastRead |= (shiftIn(readDataPin, readClockPin, MSBFIRST) & 0xff);
+		}
 	}
 	
 	if (writeDataPin != 0xff && needsWrite) {
 		digitalWrite(writeLatchPin, LOW);
 		delayMicroseconds(LATCH_TIME);
-		shiftOut(writeDataPin, writeClockPin, MSBFIRST, toWrite);
+		
+		uint32_t shiftLocal = toWrite;
+		for(i = 0; i < numOfDevicesWrite; ++i) {
+			uint8_t regVal = (shiftLocal & 0xff);
+			shiftOut(writeDataPin, writeClockPin, MSBFIRST, regVal);
+			shiftLocal = shiftLocal >> 8;
+		}
 		needsWrite = false;
 		digitalWrite(writeLatchPin, HIGH);
 	}
@@ -178,17 +217,24 @@ void MultiIoAbstraction::runLoop() {
 
 // helper functions to create the abstractions. 
 
-IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin) {
-	return new ShiftRegisterIoAbstraction(0xff, 0xff, 0xff, 0xff, writeClkPin, dataPin, latchPin);
+IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin, uint8_t numOfDevices) {
+	return new ShiftRegisterIoAbstraction(0xff, 0xff, 0xff, writeClkPin, dataPin, latchPin, 1, numOfDevices);
 }
 
-IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t readClkEnaPin, uint8_t dataPin, uint8_t latchPin) {
-	return new ShiftRegisterIoAbstraction(readClkPin, dataPin, latchPin, readClkEnaPin, 0xff, 0xff, 0xff);
+IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t dataPin, uint8_t latchPin, uint8_t numOfDevices) {
+	return new ShiftRegisterIoAbstraction(readClkPin, dataPin, latchPin, 0xff, 0xff, 0xff, numOfDevices, 1);
 }
 
-IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t readClockEnaPin, uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
-	return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, readClockEnaPin, writeClockPin, writeDataPin, writeLatchPin);
+IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t numOfReadDevices,
+									          uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin, uint8_t numOfWriteDevices) {
+	return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, numOfReadDevices, numOfWriteDevices);
 }
+
+IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin,
+									          uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
+	return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, 1, 1);
+}
+
 
 IoAbstractionRef ioUsingArduino() { 
 	return new BasicIoAbstraction(); 

@@ -104,7 +104,7 @@ void MCP23017IoAbstraction::initDevice() {
 	bitClear(controlReg, IOCON_BANK_BIT);
 	bitClear(controlReg, IOCON_SEQOP_BIT);
 
-	uint16_t regToWrite = controlReg | (controlReg << 8);
+	uint16_t regToWrite = controlReg | (((uint16_t)controlReg) << 8);
 	writeToDevice(IOCON_ADDR, regToWrite);
 
 	portCache = readFromDevice(GPIO_ADDR);
@@ -162,8 +162,6 @@ void MCP23017IoAbstraction::runLoop() {
 		writeToDevice(GPIO_ADDR, portCache);
 		needsWrite = false;
 		portCache = readFromDevice(GPIO_ADDR);
-		// for debugging IO
-		//Serial.print("port read "); Serial.println(portCache, BIN);
 	}
 	else {
 		portCache = readFromDevice(GPIO_ADDR);
@@ -176,6 +174,7 @@ void MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
 	Wire.write(reg);
 	// write port A then port B.
 	Wire.write(command&0xff);
+	// for debugging IO
 	Wire.write(command>>8);
 	Wire.endTransmission();
 }
