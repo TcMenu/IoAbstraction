@@ -116,7 +116,7 @@ uint8_t I2cAt24Eeprom::findMaximumInPage(uint16_t destEeprom, uint8_t len) {
 	int currentGo = min(pageSize, offs + len) - offs;
 
 	// dont exceed the buffer length of the  wire library
-	return min(currentGo, BUFFER_LENGTH);
+	return min(currentGo, WIRE_BUFFER_SIZE);
 }
 
 void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) {

@@ -35,6 +35,13 @@
  * Thanks to https://github.com/cyberp/AT24Cx for some of the ideas I've used in this library,
  * although this is implemented differently.
  */
+
+#ifdef __AVR__
+#define WIRE_BUFFER_SIZE 16
+#else
+#define WIRE_BUFFER_SIZE 32
+#endif
+
 class I2cAt24Eeprom : public EepromAbstraction {
 	uint8_t eepromAddr;
 	uint8_t pageSize;
