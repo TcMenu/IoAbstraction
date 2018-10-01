@@ -17,13 +17,14 @@
 #endif
 
 //
-// at the moment task manager will ONLY override the default delay methods for AVR and SAMD (eg Uno, Mega, MKR and Zero). 
-// If you are on a single core board other than these you could enable this feature too.
+// Only define this if you have libraries you are using that have long delays that you cannot control. Be aware this
+// comes with a lot of side effects, and you should check carefully that it works for you before using.
+// For sure, the library you are using will need protecting from more than one task accessing it. (EG: run from only one task)
 //
-#if defined(__AVR__) || defined(_SAM_IO_)
-#define _TASKMGR_OVERRIDE_DELAY_
-#endif
-
+// default off, uncomment line below to enable - test carefully!!
+//
+// #define _TASKMGR_OVERRIDE_DELAY_ 1
+//
 #if defined(_TASKMGR_OVERRIDE_DELAY_)
 /**
  * TaskManager can override the delay behaviour controlled by _TASKMGR_OVERRIDE_DELAY_ in TaskManager.h (default off)
