@@ -91,6 +91,7 @@ private:
 #define INTF_ADDR        0x0e
 #define INTCAP_ADDR      0x10
 #define GPIO_ADDR        0x12
+#define OUTLAT_ADDR      0x14
 
 // definitions for the IO control register
 
@@ -118,7 +119,8 @@ private:
 	uint8_t intPinA;
 	uint8_t intPinB;
 	uint8_t intMode;
-	uint16_t portCache;
+	uint16_t lastRead;
+	uint16_t toWrite;
 	bool needsWrite, needsInit;
 public:
 	/**

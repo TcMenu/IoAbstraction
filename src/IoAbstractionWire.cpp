@@ -86,7 +86,7 @@ MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMod
 	this->intPinA = intPinA;
 	this->intPinB = intPinB;
 	this->intMode = intMode;
-	this->portCache = 0;
+	this->toWrite = this->lastRead = 0;
 	this->needsInit = true;
 	this->needsWrite = true;
 }
@@ -107,7 +107,8 @@ void MCP23017IoAbstraction::initDevice() {
 	uint16_t regToWrite = controlReg | (((uint16_t)controlReg) << 8);
 	writeToDevice(IOCON_ADDR, regToWrite);
 
-	portCache = readFromDevice(GPIO_ADDR);
+	lastRead = readFromDevice(GPIO_ADDR);
+	toWrite = 0;
 
 	needsInit = false;
 }
@@ -131,26 +132,26 @@ void MCP23017IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 void MCP23017IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
 	if(needsInit) initDevice();
 
-	bitWrite(portCache, pin, value);
+	bitWrite(toWrite, pin, value);
 	needsWrite = true;
 }
 
 uint8_t MCP23017IoAbstraction::readValue(uint8_t pin) {
-	return bitRead(portCache, pin);
+	return bitRead(lastRead, pin);
 }
 
 uint8_t MCP23017IoAbstraction::readPort(uint8_t pin) {
-	return (pin < 8) ? (portCache & 0xff) : (portCache >> 8);
+	return (pin < 8) ? (lastRead & 0xff) : (lastRead >> 8);
 }
 
 void MCP23017IoAbstraction::writePort(uint8_t pin, uint8_t value) {
 	if(pin < 8) {
-		portCache &= 0xff00; 
-		portCache |= value;
+		toWrite &= 0xff00; 
+		toWrite |= value;
 	}
 	else {
-		portCache &= 0x00ff; 
-		portCache |= ((uint16_t)value << 8);
+		toWrite &= 0x00ff; 
+		toWrite |= ((uint16_t)value << 8);
 	}
 	needsWrite = true;
 }
@@ -159,14 +160,11 @@ void MCP23017IoAbstraction::runLoop() {
 	if(needsInit) initDevice();
 
 	if(needsWrite) {
-		writeToDevice(GPIO_ADDR, portCache);
+		writeToDevice(OUTLAT_ADDR, toWrite);
 		needsWrite = false;
-		portCache = readFromDevice(GPIO_ADDR);
-	}
-	else {
-		portCache = readFromDevice(GPIO_ADDR);
 	}
 
+	lastRead = readFromDevice(GPIO_ADDR);
 }
 
 void MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
