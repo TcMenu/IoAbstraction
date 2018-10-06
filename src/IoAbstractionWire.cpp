@@ -88,7 +88,7 @@ MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMod
 	this->intMode = intMode;
 	this->toWrite = this->lastRead = 0;
 	this->needsInit = true;
-	this->needsWrite = true;
+	this->portFlags = 0;
 }
 
 void MCP23017IoAbstraction::initDevice() {
@@ -107,18 +107,17 @@ void MCP23017IoAbstraction::initDevice() {
 	uint16_t regToWrite = controlReg | (((uint16_t)controlReg) << 8);
 	writeToDevice(IOCON_ADDR, regToWrite);
 
-	lastRead = readFromDevice(GPIO_ADDR);
-	toWrite = 0;
-
+	portFlags = 0;
 	needsInit = false;
 }
 
 void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
-	// for debugging to see the commands being sent
+	// for debugging to see the commands being sent, uncomment below
 	//Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" pin "); Serial.print(theBit); Serial.print(" toggle "); Serial.print(value);
 	//Serial.print(" reg "); Serial.println(regAddr, HEX);
+	// end debugging code
 	writeToDevice(regAddr, reg);
 }
 
@@ -127,13 +126,15 @@ void MCP23017IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 
 	toggleBitInRegister(IODIR_ADDR, pin, (mode == INPUT || mode == INPUT_PULLUP));
 	toggleBitInRegister(GPPU_ADDR, pin, mode == INPUT_PULLUP);
+
+	bitSet(portFlags, (pin < 8) ? READER_PORTA_BIT : READER_PORTB_BIT);
 }
 
 void MCP23017IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
 	if(needsInit) initDevice();
 
 	bitWrite(toWrite, pin, value);
-	needsWrite = true;
+	bitSet(portFlags, (pin < 8) ? CHANGE_PORTA_BIT : CHANGE_PORTB_BIT);
 }
 
 uint8_t MCP23017IoAbstraction::readValue(uint8_t pin) {
@@ -148,32 +149,56 @@ void MCP23017IoAbstraction::writePort(uint8_t pin, uint8_t value) {
 	if(pin < 8) {
 		toWrite &= 0xff00; 
 		toWrite |= value;
+		bitSet(portFlags, CHANGE_PORTA_BIT);
 	}
 	else {
 		toWrite &= 0x00ff; 
 		toWrite |= ((uint16_t)value << 8);
+		bitSet(portFlags, CHANGE_PORTB_BIT);
 	}
-	needsWrite = true;
 }
 
 void MCP23017IoAbstraction::runLoop() {
 	if(needsInit) initDevice();
 
-	if(needsWrite) {
+	bool flagA = bitRead(portFlags, CHANGE_PORTA_BIT);
+	bool flagB = bitRead(portFlags, CHANGE_PORTB_BIT);
+	if(flagA && flagB) // write on both ports
 		writeToDevice(OUTLAT_ADDR, toWrite);
-		needsWrite = false;
-	}
+	else if(flagA) 
+		writeToDevice8(OUTLAT_ADDR, toWrite);
+	else if(flagB)
+		writeToDevice8(OUTLAT_ADDR + 1, toWrite >> 8);
 
-	lastRead = readFromDevice(GPIO_ADDR);
+	bitClear(portFlags, CHANGE_PORTA_BIT);
+	bitClear(portFlags, CHANGE_PORTB_BIT);
+
+	flagA = bitRead(portFlags, READER_PORTA_BIT);
+	flagB = bitRead(portFlags, READER_PORTB_BIT);
+	if(flagA && flagB)
+		lastRead = readFromDevice(GPIO_ADDR);
+	else if(flagA)
+		lastRead = readFromDevice8(GPIO_ADDR);
+	else if(flagB)
+		lastRead = readFromDevice8(GPIO_ADDR + 1) << 8;
 }
 
 void MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
 	Wire.beginTransmission(address);
 	Wire.write(reg);
+
 	// write port A then port B.
-	Wire.write(command&0xff);
-	// for debugging IO
-	Wire.write(command>>8);
+	Wire.write((uint8_t)command);
+	Wire.write((uint8_t)(command>>8));
+	Wire.endTransmission();
+}
+
+void MCP23017IoAbstraction::writeToDevice8(uint8_t reg, uint8_t command) {
+	Wire.beginTransmission(address);
+	Wire.write(reg);
+
+	// write only one port.
+	Wire.write((uint8_t)command);
 	Wire.endTransmission();
 }
 
@@ -187,6 +212,15 @@ uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
 	uint8_t portA = Wire.read();
 	uint16_t portB = (Wire.read() << 8);
 	return portA | portB;
+}
+
+uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
+	Wire.beginTransmission(address);
+	Wire.write(reg);
+	Wire.endTransmission(false);
+	
+	Wire.requestFrom(address, (uint8_t)1);
+	return Wire.read();
 }
 
 void MCP23017IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {

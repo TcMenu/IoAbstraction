@@ -108,6 +108,11 @@ enum Mcp23xInterruptMode {
 	NOT_ENABLED = 0, ACTIVE_HIGH_OPEN = 0b110, ACTIVE_LOW_OPEN = 0b100, ACTIVE_HIGH = 0b010, ACTIVE_LOW = 0b000 
 };
 
+#define CHANGE_PORTA_BIT 0
+#define CHANGE_PORTB_BIT 1
+#define READER_PORTA_BIT 2
+#define READER_PORTB_BIT 3
+
 /**
  * This abstaction supports most of the available features on the 23x17 range of IOExpanders. It supports most
  * of the GPIO functions and nearly all of the interrupt modes, and is therefore very close to Arduino pins in
@@ -115,13 +120,14 @@ enum Mcp23xInterruptMode {
  */
 class MCP23017IoAbstraction : public BasicIoAbstraction {
 private:
-	uint8_t address;
-	uint8_t intPinA;
-	uint8_t intPinB;
-	uint8_t intMode;
+	uint8_t  address;
+	uint8_t  intPinA;
+	uint8_t  intPinB;
+	uint8_t  intMode;
+	uint8_t  portFlags;
+	bool     needsInit;
 	uint16_t lastRead;
 	uint16_t toWrite;
-	bool needsWrite, needsInit;
 public:
 	/**
 	 * Normally, it's easier to use the helper functions to create an instance of this class rather than create yourself.
@@ -170,6 +176,8 @@ private:
 	void initDevice();
 	void writeToDevice(uint8_t reg, uint16_t command);
 	uint16_t readFromDevice(uint8_t reg);
+	void writeToDevice8(uint8_t reg, uint8_t command);
+	uint8_t readFromDevice8(uint8_t reg);
 };
 
 // to remain compatible with old code
