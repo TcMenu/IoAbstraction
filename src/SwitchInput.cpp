@@ -135,7 +135,6 @@ RotaryEncoder::RotaryEncoder(EncoderCallbackFn callback) {
 	this->callback = callback;
 	this->currentReading = 0;
 	this->maximumValue = 0;
-	this->menuDivisor = 0;
 }
 
 void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
@@ -153,7 +152,6 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, Encoder
 	this->pinA = pinA;
 	this->pinB = pinB;
 	this->aLast = this->cleanFromB = 0;
-	this->menuDivisor = 2;
 
 	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
 	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
@@ -214,7 +212,6 @@ void switchEncoderDown(__attribute((unused)) uint8_t key, __attribute((unused)) 
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed) : RotaryEncoder(callback) {
-	menuDivisor = 1;
 	switches.addSwitch(pinUp, switchEncoderUp, speed);
 	switches.addSwitch(pinDown, switchEncoderDown, speed);
 }

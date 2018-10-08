@@ -88,7 +88,6 @@ protected:
 	uint16_t maximumValue;
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
-	uint8_t menuDivisor;
 public:
 	RotaryEncoder(EncoderCallbackFn callback);
 	virtual ~RotaryEncoder() {;}
@@ -116,11 +115,6 @@ public:
 	 * @param incVal the amount by which to change the encoder.
 	 */
 	void increment(int8_t incVal);
-
-	/**
-	 * Set the divisor used internally, to reduce the sensitivity of the encoder.
-	 */
-	uint8_t getMenuDivisor() { return menuDivisor; }
 
 	/**
 	 * internal method not for external use..
@@ -224,10 +218,6 @@ public:
 	 * @param currentValue the current value to be set.
 	 */
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
-	/**
-	 * Helper to get the menu divisor from the encoder, gets the sensitivity of the encoder basically
-	 */
-	uint8_t getMenuDivisor() { return encoder->getMenuDivisor(); }
 
 	/**
 	 * This will normally be called by task manager when not interrupt driven.
