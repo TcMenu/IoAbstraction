@@ -8,7 +8,11 @@
 
 #include "BasicIoAbstraction.h"
 
-// START User adjustable values 
+/** 
+ * @file TaskManager.h
+ * 
+ * Task manager is a simple co-routine style implementation for Arduino which supports basic task scheduling.
+ */
 
 #ifdef __AVR__
 #define DEFAULT_TASK_SIZE 6
@@ -26,10 +30,10 @@
 // #define _TASKMGR_OVERRIDE_DELAY_ 1
 //
 #if defined(_TASKMGR_OVERRIDE_DELAY_)
+
 /**
  * TaskManager can override the delay behaviour controlled by _TASKMGR_OVERRIDE_DELAY_ in TaskManager.h (default off)
- * Instead of holding everything up this option keeps the task queue running. Do not enable this option on multicore 
- * processors at the moment. It is tested ONLY on AVR and SAMD.
+ * Instead of holding everything up this option keeps the task queue running. Only enable after testing for your cases.
  * 
  * This tries to run tasks during the time that delay is called, returning after at least x micros.
  * @param x the number of microseconds to wait
