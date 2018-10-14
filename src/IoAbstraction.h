@@ -9,7 +9,7 @@
 
 #include <Arduino.h>
 /**
- * @file IoAbstaction.h
+ * @file IoAbstraction.h
  * 
  * Using basic IoFacilities allows one to abstract away the use of IoExpanders, such 
  * that the switching from BasicIoFacilities to IoExpanderFacilities allows the same
