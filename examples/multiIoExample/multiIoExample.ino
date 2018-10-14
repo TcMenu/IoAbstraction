@@ -26,21 +26,27 @@
 #define EXPANDER1 100
 
 // create a multi Io that allocates the first 100 pins to arduino pins
-MultiIoAbstraction multiIo(EXPANDER1);
+MultiIoAbstractionRef multiIo = multiIoExpander(EXPANDER1);
 
+//
+// when the switch is pressed then this function will be called.
+//
 void onSwitchPressed(uint8_t key, bool held) {
 	// here we just toggle the state of the built in LED and an LED on the expander.
-	uint8_t ledState = ioDeviceDigitalReadS(&multiIo, LED_BUILTIN);
+	uint8_t ledState = ioDeviceDigitalReadS(multiIo, LED_BUILTIN);
 
-	ioDeviceDigitalWrite(&multiIo, LED_BUILTIN, !ledState);
-	ioDeviceDigitalWrite(&multiIo, EXPANDER1 + 1, !ledState);
-	ioDeviceSync(&multiIo); // force another sync
+	ioDeviceDigitalWrite(multiIo, LED_BUILTIN, !ledState);
+	ioDeviceDigitalWrite(multiIo, EXPANDER1 + 1, !ledState);
+	ioDeviceSync(multiIo); // force another sync
 
   Serial.print("Switch "); 
   Serial.print(key);
   Serial.println(held ? " Held down" : " Pressed");
 }
 
+//
+// traditional arduino setup function
+//
 void setup() {
   Wire.begin();
   Serial.begin(9600);
@@ -48,7 +54,7 @@ void setup() {
   Serial.println("Multi IoExpander example");
   
   // we now add an 8574 chip that allocates 10 more pins, therefore it goes from 100..109
-  multiIo.addIoExpander(ioFrom8574(0x20), 10);
+  multiIoAddExpander(multiIo, ioFrom8574(0x20), 10);
   // add more expanders here..
 
   Serial.println("added an expander at pin 100 to 109");
@@ -56,15 +62,15 @@ void setup() {
   // set up the outputs we are going to use which are basically
   // the built in LED
   // port 1 of the expander.
-  ioDevicePinMode(&multiIo, LED_BUILTIN, OUTPUT);
-  ioDevicePinMode(&multiIo, EXPANDER1 + 1, OUTPUT);
+  ioDevicePinMode(multiIo, LED_BUILTIN, OUTPUT);
+  ioDevicePinMode(multiIo, EXPANDER1 + 1, OUTPUT);
 
   Serial.println("Io is setup, adding switch");
 
   // set up the button on port 0 of the expander.
-  switches.initialise(&multiIo, true);
+  switches.initialise(multiIo, true);
   switches.addSwitch(EXPANDER1 + 0, onSwitchPressed);
-  ioDevicePinMode(&multiIo, EXPANDER1, INPUT);
+  ioDevicePinMode(multiIo, EXPANDER1, INPUT);
 
   Serial.println("setup is done!");
 }

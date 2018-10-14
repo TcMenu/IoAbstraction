@@ -210,6 +210,25 @@ IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClockPin, uint8_t dataPi
  */
 IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin, uint8_t numOfDevicesWrite = 1);
 
+/**
+ * A reference specifically to a MultiIoAbstraction that can be passed to any of the ioDevice calls, but can also have more
+ * IO expanders added to it.
+ */
+typedef MultiIoAbstraction* MultiIoAbstractionRef;
+
+/**
+ * Create a multiIoExpander by adding together more than one IoAbstraction, for example Arduino pins plus a few 8574 devices.
+ * @param arduinoPinRange the number of pins to assign to Arduino.
+ */ 
+inline MultiIoAbstractionRef multiIoExpander(uint8_t arduinoPinRange) { return new MultiIoAbstraction(arduinoPinRange); }
+
+/**
+ * Add an additional expander to an existing multiIoExpander.
+ * @param expander the expander to be added
+ * @param pinRange the number of pins needed by the expander.
+ */
+inline void multiIoAddExpander(MultiIoAbstractionRef multiIo, IoAbstractionRef expander, uint8_t pinRange) { multiIo->addIoExpander(expander, pinRange); }
+
 #include "TaskManager.h"
 #include "SwitchInput.h"
 

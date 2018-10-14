@@ -160,4 +160,29 @@ inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, uint8_t pin) { ioDev
  */
 inline void ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); ioDev->runLoop(); }
 
+/**
+ * Write a whole 8 bit byte onto the port that the pin belongs to. For example if pin 42 where on PORTH then this would write to PORTH.
+ * For i2c and shift registers, it works the same, but the results are more predictable.
+ * 
+ * This version calls ioDeviceSync automatically after doing the write
+ * 
+ * @param ioDev the previously created IoAbstraction
+ * @param pinOnPort any pin belonging to the port
+ * @param val the new value for the port
+ */
+inline void ioDeviceDigitalWritePortS(IoAbstractionRef ioDev, uint8_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); ioDev->runLoop(); }
+
+/**
+ * Reads a whole 8 bit value back from the port with automatic sync before the operation. Specify the pin on the port that you wish to read.
+ * For example if pin 42 where on PORTH then this would write to PORTH. For i2c and shift registers, it works the same, but the results are 
+ * more predictable.
+ * 
+ * This version calls ioDeviceSync automatically before doing the read.
+ * 
+ * @param ioDev the previously created IoAbstraction
+ * @param pin any pin belonging to the port to be read
+ * @return the value of the port.
+ */
+inline uint8_t ioDeviceDigitalReadPortS(IoAbstractionRef ioDev, uint8_t pinOnPort) { ioDev->runLoop(); return ioDev->readPort(pinOnPort);  }
+
 #endif
