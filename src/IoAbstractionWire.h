@@ -27,6 +27,7 @@ private:
 	uint8_t lastRead;
 	uint8_t toWrite;
 	bool needsWrite;
+	bool pinsConfiguredRead;
 	uint8_t interruptPin;
 public:
 	/** Construct a 8574 expander on i2c address and with interrupts connected to a given pin (0xff no interrupts) */

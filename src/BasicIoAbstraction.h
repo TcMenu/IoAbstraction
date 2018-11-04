@@ -68,8 +68,7 @@ public:
 
 	/**
 	 * Writes out a whole port at once, on Arduino pins this is achieved by providing any pin within that port.
-	 * WARNING this is a potentially dangerous operation and should be used with care, as such there is no
-	 * ioDevice helper function defined. Remember that you need to sync the device after using. 
+	 * On Arduino pins you should take care not to use ports that are providing core functions.
 	 * @param pin the pin determines the hardware port to use.
 	 * @param portVal the 8 bit value to write to the port. Use with care. 
 	 */
@@ -77,8 +76,7 @@ public:
 
 	/**
 	 * Reads a whole port at once, on Arduino pins this is achieved by providing any pin within that port.
-	 * WARNING this is a potentially dangerous operation and should be used with care,  as such there is no
-	 * ioDevice helper function defined. Remember that you need to sync the device before using.
+	 * On Arduino pins you should take care not to use ports that are providing core functions.
 	 * @param pin the pin determines the hardware port to use.
 	 * @return the 8 bit value read from the port.
 	 */

@@ -126,6 +126,17 @@ uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerU
 	return taskId;
 }
 
+void TaskManager::addIdleTask(IdleTask* idleTask) {
+	if(this->firstIdleTask) {
+		IdleTask * idletask = firstIdleTask;
+		while(idletask->nextIdleTask) {
+			idletask = idletask->nextIdleTask;
+		}
+		idletask->nextIdleTask = idleTask;
+	}
+	else this->firstIdleTask = idleTask;
+}
+
 void TaskManager::cancelTask(uint8_t task) {
 	if (task < numberOfSlots) {
 		tasks[task].clear();
@@ -146,18 +157,22 @@ char* TaskManager::checkAvailableSlots(char* data) {
 void TaskManager::yieldForMicros(uint16_t microsToWait) {
 	yield();
 	
-	unsigned long microsEnd = micros() + microsToWait;
-	while(micros() < microsEnd) {
+	unsigned long microsStart = micros();
+	do {
 		runLoop();
-	}
+	} while((micros() - microsStart) < microsToWait);
 }
 
 void TaskManager::runLoop() {
+	// when there's an interrupt, we marshall it into a timer interrupt.
 	if (interrupted) {
 		interrupted = false;
 		interruptCallback(lastInterruptTrigger);
 	}
 
+	// go through the timer (scheduled) tasks in priority order. they are stored
+	// in a linked list ordered by first to be scheduled. So we only go through
+	// these until the first one that isn't ready.
 	TimerTask* tm = first;
 	while(tm != NULL) {
 		if (tm->isReady()) {
@@ -172,6 +187,14 @@ void TaskManager::runLoop() {
 		}
 
 		tm = tm->getNext();
+	}
+
+	// go through any idle tasks running them in turn. They are in a one way linked list.
+	// idle tasks must be very light weight indeed as they are run very frequently.
+	IdleTask *idle = firstIdleTask;
+	while(idle) {
+		idle->timerFn(idle->associatedData);
+		idle = idle->nextIdleTask;
 	}
 
 	// TODO, if not interrupted, and no task for a while sleep and set timer - go into low power.

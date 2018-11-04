@@ -73,6 +73,25 @@ enum TimerUnit : byte {
 };
 
 /**
+ * A timer callback for idle tasks
+ */
+typedef void (*TimerFnWithData)(void* data);
+
+/**
+ * Between tasks, when there's nothing to execute, Idle tasks will be run.
+ * These should be exceptionally short lived jobs that short circuit quickly
+ * when there's nothing for them to do. They are called very frequently.
+ */
+struct IdleTask {
+	/** An associated data item that will be passed back with the call */
+    void* associatedData;
+	/** the callback for the idle task. */
+    TimerFnWithData timerFn;
+	/** the next idle task in the chain if more than one is created. */
+    IdleTask *nextIdleTask;
+};
+
+/**
  * Internal class only that represents a single task slot.
  */
 class TimerTask {
@@ -105,9 +124,10 @@ public:
  * There is a globally defined variable called `taskManager`, do not create more instances of this class.
  */
 class TaskManager {
-private:
+protected:
 	TimerTask tasks[6];
 	TimerTask *first;
+	IdleTask *firstIdleTask;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
 	volatile uint8_t lastInterruptTrigger;
@@ -133,6 +153,13 @@ public:
 	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
 	 */
 	uint8_t scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+
+	/**
+	 * Adds an idle task to the chain of idle tasks, or creates the first one if there wasn't previously one. Note that
+	 * idle tasks are called very, very frequenlty and should be exceptionally short in duration and take very little
+	 * CPU under most circumstances.
+	 */
+	void addIdleTask(IdleTask* idleTask);
 
 	/**
 	 * Adds an interrupt that will be handled by task manager, such that it's marshalled into a task.
@@ -162,7 +189,7 @@ public:
 	 * not call back until at least `micros` time has passed.
 	 * @param micros the number of microseconds to wait.
 	 */  
-	void yieldForMicros(uint16_t micros);
+	virtual void yieldForMicros(uint16_t micros);
 
 	/**
 	 * This method fills slotData with the current running conditions of each available task slot.
@@ -182,6 +209,7 @@ public:
 	 * Used internally by the interrupt handlers to tell task manager an interrupt is waiting. Not for external use.
 	 */
 	static void markInterrupted(uint8_t interruptNo);
+
 private:
 	int findFreeTask();
 	void removeFromQueue(TimerTask* task);

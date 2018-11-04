@@ -14,10 +14,12 @@ PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin) {
 	this->lastRead = 0;
 	this->interruptPin = interruptPin;
 	this->needsWrite = true;
+	this->pinsConfiguredRead = false;
 }
 
 void PCF8574IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 	if (mode == INPUT || mode == INPUT_PULLUP) {
+		pinsConfiguredRead = true;
 		writeValue(pin, HIGH);
 	}
 	else {
@@ -49,7 +51,10 @@ void PCF8574IoAbstraction::runLoop(){
 		needsWrite = false;
 		writeData();
 	}
-	readData();
+	
+	if(pinsConfiguredRead) {
+		readData();
+	}
 }
 
 void PCF8574IoAbstraction::writeData() {
