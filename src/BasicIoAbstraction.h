@@ -63,8 +63,9 @@ public:
 
 	/**
 	 * This method is not needed on Arduino pins, but for most serial implementations it causes the device and abstraction to be synced.
+	 * Returns true if the write call worked, normally true, false indicates error
 	 */
-	virtual void runLoop() { ; }
+	virtual bool runLoop() { return true; }
 
 	/**
 	 * Writes out a whole port at once, on Arduino pins this is achieved by providing any pin within that port.
@@ -126,7 +127,7 @@ inline void ioDeviceDigitalWrite(IoAbstractionRef ioDev, uint8_t pin, uint8_t va
  * are in sync.
  * @param ioDev the IoAbstraction to be synchronised.
  */ 
-inline void ioDeviceSync(IoAbstractionRef ioDev) { ioDev->runLoop(); }
+inline bool ioDeviceSync(IoAbstractionRef ioDev) { return ioDev->runLoop(); }
 
 /**
  * Attach an interrupt to any IoAbstraction, regardless of the device location this will perform the required tasks to register
@@ -156,7 +157,7 @@ inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, uint8_t pin) { ioDev
  * @param pin the pin to be updated
  * @param val the new value for the pin, HIGH/LOW
  */
-inline void ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); ioDev->runLoop(); }
+inline bool ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); return ioDev->runLoop(); }
 
 /**
  * Write a whole 8 bit byte onto the port that the pin belongs to. For example if pin 42 where on PORTH then this would write to PORTH.
@@ -168,7 +169,7 @@ inline void ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t v
  * @param pinOnPort any pin belonging to the port
  * @param val the new value for the port
  */
-inline void ioDeviceDigitalWritePortS(IoAbstractionRef ioDev, uint8_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); ioDev->runLoop(); }
+inline bool ioDeviceDigitalWritePortS(IoAbstractionRef ioDev, uint8_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); return ioDev->runLoop(); }
 
 /**
  * Reads a whole 8 bit value back from the port with automatic sync before the operation. Specify the pin on the port that you wish to read.

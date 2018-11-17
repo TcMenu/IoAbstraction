@@ -97,12 +97,13 @@ public:
         this->intMode = mode;
     }
 
-	void runLoop() override { 
+	bool runLoop() override { 
         // copy over the last written values (as they are generally additive) and bump counter.
         uint16_t currentWritten = writeValues[runLoopCalls];
         runLoopCalls++;
         runLoopCalls = runLoopCalls % numberOfCycles;
         writeValues[runLoopCalls] = currentWritten;
+        return true;
     }
 
    	void writePort(uint8_t pin, uint8_t portVal) override {
@@ -219,19 +220,20 @@ public:
     }
     uint8_t readPort(uint8_t pin) override { return delegate->readPort(pin);}
 
-    void runLoop() override { 
+    bool runLoop() override { 
         Serial.print("Port write ");
         uint32_t val = writeVals;
         for(int i=0;i<ports;i++) {
             printHexZeroPad(val);
             val = val >> 8;
         }
-        delegate->runLoop();
+        bool ret = delegate->runLoop();
         Serial.print("read ");
         for(int i=0;i<ports;i++) {
             printHexZeroPad(delegate->readPort(i * 8));
         }
         Serial.println();
+        return ret;
     }
 
     void printHexZeroPad(uint8_t val) {

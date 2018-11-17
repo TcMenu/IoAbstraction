@@ -70,10 +70,7 @@ public:
 	/** 
 	 * updates settings on the board after changes 
 	 */
-	virtual void runLoop();
-private:
-	void writeData();
-	uint8_t readData();
+	virtual bool runLoop();
 };
 
 //
@@ -157,7 +154,7 @@ public:
 	/** 
 	 * updates settings on the board after changes 
 	 */
-	virtual void runLoop();
+	virtual bool runLoop();
 	
 	/**
 	 * Writes a complete 8 bit port value, that is updated to the device each sync
@@ -175,9 +172,9 @@ public:
 private:
 	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
 	void initDevice();
-	void writeToDevice(uint8_t reg, uint16_t command);
+	bool writeToDevice(uint8_t reg, uint16_t command);
 	uint16_t readFromDevice(uint8_t reg);
-	void writeToDevice8(uint8_t reg, uint8_t command);
+	bool writeToDevice8(uint8_t reg, uint8_t command);
 	uint8_t readFromDevice8(uint8_t reg);
 };
 

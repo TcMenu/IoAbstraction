@@ -46,30 +46,22 @@ void PCF8574IoAbstraction::writePort(uint8_t /*pin*/, uint8_t value) {
 	needsWrite = true;
 }
 
-void PCF8574IoAbstraction::runLoop(){
+bool PCF8574IoAbstraction::runLoop(){
+	bool writeOk = true;
 	if (needsWrite) {
 		needsWrite = false;
-		writeData();
+		Wire.beginTransmission(address);
+		Wire.write(toWrite);
+		writeOk = Wire.endTransmission() == 0;
 	}
 	
 	if(pinsConfiguredRead) {
-		readData();
+		Wire.requestFrom(address, (uint8_t)1);
+		if (Wire.available()) {
+			lastRead = Wire.read();
+		}
 	}
-}
-
-void PCF8574IoAbstraction::writeData() {
-	Wire.beginTransmission(address);
-	Wire.write(toWrite);
-	Wire.endTransmission();
-	needsWrite = false;
-}
-
-uint8_t PCF8574IoAbstraction::readData() {
-	Wire.requestFrom(address, (uint8_t)1);
-	if (Wire.available()) {
-		lastRead = Wire.read();
-	}
-	return lastRead;
+	return writeOk;
 }
 
 void PCF8574IoAbstraction::attachInterrupt(uint8_t /*pin*/, RawIntHandler intHandler, uint8_t /*mode*/) {
@@ -163,17 +155,19 @@ void MCP23017IoAbstraction::writePort(uint8_t pin, uint8_t value) {
 	}
 }
 
-void MCP23017IoAbstraction::runLoop() {
+bool MCP23017IoAbstraction::runLoop() {
 	if(needsInit) initDevice();
+
+	bool writeOk = true;
 
 	bool flagA = bitRead(portFlags, CHANGE_PORTA_BIT);
 	bool flagB = bitRead(portFlags, CHANGE_PORTB_BIT);
 	if(flagA && flagB) // write on both ports
-		writeToDevice(OUTLAT_ADDR, toWrite);
+		writeOk = writeToDevice(OUTLAT_ADDR, toWrite);
 	else if(flagA) 
-		writeToDevice8(OUTLAT_ADDR, toWrite);
+		writeOk = writeToDevice8(OUTLAT_ADDR, toWrite);
 	else if(flagB)
-		writeToDevice8(OUTLAT_ADDR + 1, toWrite >> 8);
+		writeOk = writeToDevice8(OUTLAT_ADDR + 1, toWrite >> 8);
 
 	bitClear(portFlags, CHANGE_PORTA_BIT);
 	bitClear(portFlags, CHANGE_PORTB_BIT);
@@ -186,25 +180,27 @@ void MCP23017IoAbstraction::runLoop() {
 		lastRead = readFromDevice8(GPIO_ADDR);
 	else if(flagB)
 		lastRead = readFromDevice8(GPIO_ADDR + 1) << 8;
+
+	return writeOk;
 }
 
-void MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
+bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
 	Wire.beginTransmission(address);
 	Wire.write(reg);
 
 	// write port A then port B.
 	Wire.write((uint8_t)command);
 	Wire.write((uint8_t)(command>>8));
-	Wire.endTransmission();
+	return Wire.endTransmission() == 0;
 }
 
-void MCP23017IoAbstraction::writeToDevice8(uint8_t reg, uint8_t command) {
+bool MCP23017IoAbstraction::writeToDevice8(uint8_t reg, uint8_t command) {
 	Wire.beginTransmission(address);
 	Wire.write(reg);
 
 	// write only one port.
 	Wire.write((uint8_t)command);
-	Wire.endTransmission();
+	return Wire.endTransmission() == 0;
 }
 
 uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {

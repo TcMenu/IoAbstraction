@@ -19,35 +19,35 @@ void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 	this->executionInfo = executionInfo;
 	this->callback = execCallback;
 	
-	this->scheduledAt = (executionInfo & TASK_MICROS) ? micros() : millis();
+	this->scheduledAt = (isJobMicros(executionInfo)) ? micros() : millis();
 }
 
 bool TimerTask::isReady() {
 	if (!isInUse() || isRunning()) return false;
 
-	if ((executionInfo & TASK_MICROS) != 0) {
-		uint16_t delay = (executionInfo & TIMER_MASK);
+	if ((isJobMicros(executionInfo)) != 0) {
+		uint16_t delay = timeFromExecInfo(executionInfo);
 		return (micros() - scheduledAt) >= delay;
 	}
-	else if((executionInfo & TASK_SECONDS) != 0) {
-		uint32_t delay = (executionInfo & TIMER_MASK) * 1000L;
+	else if(isJobSeconds(executionInfo)) {
+		uint32_t delay = timeFromExecInfo(executionInfo) * 1000L;
 		return (millis() - scheduledAt) >= delay;
 	}
 	else {
-		uint16_t delay = (executionInfo & TIMER_MASK);
+		uint16_t delay = timeFromExecInfo(executionInfo);
 		return (millis() - scheduledAt) >= delay;
 	}
 }
 
 unsigned long TimerTask::microsFromNow() {
 	uint32_t microsFromNow;
-	if ((executionInfo & TASK_MICROS) != 0) {
-		uint16_t delay = (executionInfo & TIMER_MASK);
+	if (isJobMicros(executionInfo)) {
+		uint16_t delay = timeFromExecInfo(executionInfo);
 		microsFromNow =  delay - (micros() - scheduledAt);
 	}
 	else {
-		uint32_t startTm = (executionInfo & TIMER_MASK);
-		if ((executionInfo & TASK_SECONDS) != 0) {
+		uint32_t startTm = timeFromExecInfo(executionInfo);
+		if (isJobSeconds(executionInfo)) {
 			startTm *= 1000;
 		}
 		microsFromNow = (startTm - (millis() - scheduledAt)) * 1000;
@@ -63,7 +63,7 @@ inline void TimerTask::execute() {
 	if (isRepeating()) {
 		markRunning();
 		callback();
-		this->scheduledAt = (executionInfo & TASK_MICROS) ? micros() : millis();
+		this->scheduledAt = isJobMicros(executionInfo) ? micros() : millis();
 		clearRunning();
 	}
 	else {
@@ -108,19 +108,19 @@ inline int toTimerValue(int v, TimerUnit unit) {
 	return v | (((uint16_t)unit) << 12);
 }
 
-uint8_t TaskManager::scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit) {
+uint8_t TaskManager::scheduleOnce(int when, TimerFn timerFunction, TimerUnit timeUnit) {
 	uint8_t taskId = findFreeTask();
 	if (taskId != TASKMGR_INVALIDID) {
-		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE, timerFunction);
+		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE, timerFunction);
 		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
 }
 
-uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit) {
+uint8_t TaskManager::scheduleFixedRate(int when, TimerFn timerFunction, TimerUnit timeUnit) {
 	uint8_t taskId = findFreeTask();
 	if (taskId != TASKMGR_INVALIDID) {
-		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
+		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
 		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;

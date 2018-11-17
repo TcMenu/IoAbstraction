@@ -62,8 +62,14 @@ typedef void (*InterruptFn)(uint8_t pin);
 #define TASK_MILLIS     0x2000
 #define TASK_SECONDS    0x1000
 #define TASK_MICROS     0x0000
+#define TIMING_MASKING  0x3000 
 #define TASK_RUNNING    0x0800
 #define TIMER_MASK      0x07ff
+
+#define isJobMicros(x)  ((x & TIMING_MASKING)==0)
+#define isJobMillis(x)  ((x & TIMING_MASKING)==0x2000)
+#define isJobSeconds(x) ((x & TIMING_MASKING)==0x1000)
+#define timeFromExecInfo(x) ((x & TIMER_MASK))
 
 /**
  * The time units that can be used with the schedule calls.
@@ -209,6 +215,16 @@ public:
 	 * Used internally by the interrupt handlers to tell task manager an interrupt is waiting. Not for external use.
 	 */
 	static void markInterrupted(uint8_t interruptNo);
+
+	/**
+	 * Reset the task manager such that all current tasks are cleared, back to power on state.
+	 */
+    void reset() {
+        for(int i =0; i<numberOfSlots; i++) {
+            tasks[i].clear();
+        }
+    }
+
 
 private:
 	int findFreeTask();
