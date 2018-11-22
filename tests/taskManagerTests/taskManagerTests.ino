@@ -188,16 +188,41 @@ testF(TimingHelpFixture, cancellingAJobAfterCreation) {
 // We can only reset the clock to a new value on AVR, this is very useful and allows us to ensure the
 // rollover cases work properly
 
-// #ifdef __AVR__
-// #include <util/atomic.h>
-// void setMillis(unsigned long ms)
-// {
-//   extern unsigned long timer0_millis;
-//   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-//     timer0_millis = ms;
-//   }
-// }
-// test(testClockRollover) {
-//     fail();
-// }
-// // #endif
+#ifdef __AVR__
+#include <util/atomic.h>
+void setMillis(unsigned long ms)
+{
+  extern unsigned long timer0_millis;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    timer0_millis = ms;
+  }
+}
+
+//
+// this test only runs on AVR - it sets the timer near to overflow and schedules some tasks
+//
+testF(TimingHelpFixture, testClockRollover) {
+	uint32_t oldMillis = millis();
+    setMillis(((uint32_t)-200L));
+
+	taskManager.scheduleOnce(1, recordingJob, TIME_SECONDS);
+	taskManager.scheduleFixedRate(250, recordingJob2, TIME_MICROS);
+	// make sure it's still to wrap.
+	assertTrue(millis() > 100000000L);
+
+	// now make sure it actually runs as expected
+	assertThatTaskRunsOnTime(1000000L, MILLIS_ALLOWANCE);
+	assertTasksSpacesTaken(0);
+
+	// make sure it has wrapped now.
+	assertTrue(millis() < 10000L);
+
+	// and make sure the microsecond job is still going..	
+	int count2Then = count2;
+	taskManager.yieldForMicros(10000);
+	assertTrue(count2Then != count2);
+
+	setMillis(oldMillis);
+}
+
+#endif // AVR test only

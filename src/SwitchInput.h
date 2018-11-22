@@ -247,6 +247,7 @@ public:
 	 * @param debounce true if debouncing.
 	 */
 	void setInterruptDebouncing(bool debounce) { bitWrite(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE, debounce);}
+
 private:
 	friend void onSwitchesInterrupt(uint8_t);
 	friend void switchEncoderUp(uint8_t, bool);

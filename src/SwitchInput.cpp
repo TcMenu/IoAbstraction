@@ -69,6 +69,7 @@ SwitchInput::SwitchInput() {
 void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
 	this->swFlags = 0;
+	this->numberOfKeys = 0;
 	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 	bitSet(swFlags, SW_FLAG_INTERRUPT_DRIVEN);
 
@@ -78,6 +79,7 @@ void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpS
 void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
 	this->swFlags = 0;
+	this->numberOfKeys = 0;
 	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 
 	taskManager.scheduleFixedRate(20, [] {
@@ -88,7 +90,7 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
-	ioDevice->pinDirection(pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
+	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
 
 	if(isInterruptDriven()) {
 		registerInterrupt(pin);
@@ -108,11 +110,11 @@ void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentVal
 bool SwitchInput::runLoop() {
 	bool needAnotherGo = false;
 
-	ioDevice->runLoop();
+	ioDeviceSync(ioDevice);
 
 	for (int i = 0; i < numberOfKeys; ++i) {
 		// get the pins current state
-		uint8_t pinState = ioDevice->readValue(keys[i].getPin());
+		uint8_t pinState = ioDeviceDigitalRead(ioDevice, keys[i].getPin());
 		// if the switches are pull up, invert the state.
 		if(isPullupLogic()) {
 			pinState = !pinState;
@@ -170,8 +172,8 @@ void checkRunLoopAndRepeat() {
 		});
 	}
 	else {
-			// back to normal now - interrupt only
-			switches.setInterruptDebouncing(false);
+		// back to normal now - interrupt only
+		switches.setInterruptDebouncing(false);
 	}
 }
 
