@@ -15,10 +15,14 @@ using namespace aunit;
  * will be recorded in the error variable. However, only the last one is kept.
  */ 
 enum MockIoError {
-    NO_ERROR,
-    PIN_TOO_HIGH,
-    READ_NOT_INPUT,
-    WRITE_NOT_OUTPUT
+    /** No error has occurred during reads and write */
+    NO_ERROR = 0,
+    /** A pin outside of range has been requested */
+    PIN_TOO_HIGH = 1,
+    /** A request to read an output pin */
+    READ_NOT_INPUT = 2,
+    /** A request to write to an input pin */
+    WRITE_NOT_OUTPUT = 3,
 };
 
 /**
@@ -81,6 +85,7 @@ public:
 
    	virtual void writeValue(uint8_t pin, uint8_t value) {
         checkPinInRange(pin);
+
         if(pinModes[pin] != OUTPUT) error = WRITE_NOT_OUTPUT;
         bitWrite(writeValues[runLoopCalls], pin, value != 0);
     }
@@ -100,13 +105,15 @@ public:
 	bool runLoop() override { 
         // copy over the last written values (as they are generally additive) and bump counter.
         uint16_t currentWritten = writeValues[runLoopCalls];
-        runLoopCalls++;
-        runLoopCalls = runLoopCalls % numberOfCycles;
         writeValues[runLoopCalls] = currentWritten;
+
+        runLoopCalls++;
+        runLoopCalls = runLoopCalls % numberOfCycles; // dont exceed array
         return true;
     }
 
    	void writePort(uint8_t pin, uint8_t portVal) override {
+
         checkPinInRange(pin);
 
         if(pin < 8) {

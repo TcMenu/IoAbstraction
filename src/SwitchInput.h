@@ -76,6 +76,7 @@ public:
 	bool isPressed() { return state == PRESSED || state == BUTTON_HELD; }
 	bool isHeld() { return state == BUTTON_HELD; }
 	uint8_t getPin() { return pin;  }
+	void trigger(bool held) { callback(pin, held); }
 };
 
 /**
@@ -172,7 +173,7 @@ private:
 	IoAbstractionRef ioDevice;
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
-	uint8_t swFlags;
+	volatile uint8_t swFlags;
 public:
 	/** 
 	 * always use the global switches instance.
@@ -209,7 +210,12 @@ public:
 	 * @see setupRotaryEncoderWithInterrupt
 	 * @see setupUpDownButtonEncoder
 	 */
-	void setEncoder(RotaryEncoder* encoder);
+	void setEncoder(RotaryEncoder* encoder) { this->encoder = encoder; };
+
+	/**
+	 * Gets a pointer to the current encoder, or NULL if there is not one
+	 */
+	RotaryEncoder* getEncoder() {return encoder; }
 
 	/**
 	 * This is helper function that calls the rotary encoders change precision function. It changes the
@@ -218,6 +224,14 @@ public:
 	 * @param currentValue the current value to be set.
 	 */
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
+
+	/**
+	 * Simulates a switch press by calling the callback directly without changing the internal state
+	 * of the key. Useful to simulate a key press in some situations.
+	 * @param pin the pin associated with the switch
+	 * @param held if the held state should be set on the callback
+	 */
+	void pushSwitch(uint8_t pin, bool held);
 
 	/**
 	 * This will normally be called by task manager when not interrupt driven.

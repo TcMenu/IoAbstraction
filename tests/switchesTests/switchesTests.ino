@@ -8,6 +8,7 @@ bool pressed;
 uint8_t key;
 bool held;
 int callsMade;
+int encoderCurrentVal;
 
 using namespace aunit;
 
@@ -21,6 +22,11 @@ void setup() {
 
 void loop() {
 	TestRunner::run();
+}
+
+void encoderCallback(int newValue) {
+    encoderCurrentVal = newValue;
+    callsMade++;
 }
 
 void onSwitchPressed(uint8_t k, bool h) {
@@ -38,9 +44,13 @@ public:
     SwitchesFixture() : mockIo(25) { }
 
     void setup() override {   
+        mockIo.resetIo();
+        taskManager.reset();
+
         pressed = false;
         held = false;
         callsMade = 0;
+        encoderCurrentVal = 0;
     }
 
     void assertPressedState(bool shouldBePressed) {
@@ -65,19 +75,28 @@ public:
         assertEqual(held, shouldBeHeld);
         assertEqual(mockIo.getErrorMode(), NO_ERROR);
     }
+
+    void runInterruptLoopTimes(int times) {
+        for(int i=0; i<times; i++) {
+            mockIo.getInterruptFunction()();
+            taskManager.yieldForMicros(10);
+        }
+    }
 };
 
 testF(SwitchesFixture, testPressingASingleButton) {
     switches.initialise(&mockIo, true);
     switches.addSwitch(2, onSwitchPressed, NO_REPEAT);
+    assertFalse(switches.isInterruptDriven());
 
     // simulate the button being pressed (with a bounce).
     mockIo.setValueForReading(0, 0x0000); // pressed
+    mockIo.setValueForReading(1, 0x0000); // pressed
     assertFalse(pressed); 
-    mockIo.setValueForReading(1, 0x0004); // bounce 
+    mockIo.setValueForReading(2, 0x0004); // bounce 
 
     // we now simulate the button being pressed down.
-    for(int i=2; i<25;i++)  mockIo.setValueForReading(i, 0x0000);
+    for(int i=3; i<25;i++)  mockIo.setValueForReading(i, 0x0000);
     assertPressedState(true);
 
     long millisStart = millis();
@@ -93,29 +112,35 @@ testF(SwitchesFixture, testPressingASingleButton) {
 }
 
 testF(SwitchesFixture, testInterruptButtonRepeating) {
+    // initialise the switches library using interrupt based initialisation.
     switches.initialiseInterrupt(&mockIo, true);
     switches.addSwitch(2, onSwitchPressed, 10);
     assertTrue(mockIo.isIntRegisteredAs(2, CHANGE));
+    assertTrue(switches.isInterruptDriven());
 
     // simulate the button being pressed (with a double bounce - debounce 2).
     mockIo.setValueForReading(0, 0x0000);
-    mockIo.setValueForReading(1, 0x0004); 
-    mockIo.setValueForReading(2, 0x0000);
-    mockIo.setValueForReading(3, 0x0004); 
+    mockIo.setValueForReading(1, 0x0000);
+    mockIo.setValueForReading(2, 0x0004); 
+    mockIo.setValueForReading(3, 0x0000);
+    mockIo.setValueForReading(4, 0x0004); 
 
     // we now simulate the button being pressed down (and the interrupt handler).
     for(int i=4; i<25;i++)  mockIo.setValueForReading(i, 0x0000);
-    onSwitchesInterrupt(2);
     assertPressedState(true);
 
     // the first time around, the repeat threshold is 400milli, after that it is 200 millis
     // because we set the repeat interval to 10 of the switch, and the loop delay is 20millis.
     int threshold = 400;
 
+    // make sure we are not already in the held state - we should not be at the moment.
+    assertFalse(held);
+
     // try a few repeat keys..
     for(int i=0; i<4; i++) {
         // capture when we started
         long timeThen = millis();
+
         // we now simualte the button being held for a while
         mockIo.resetIo();
         for(int j=0; j<25;j++)  mockIo.setValueForReading(j, 0x0000);
@@ -127,8 +152,9 @@ testF(SwitchesFixture, testInterruptButtonRepeating) {
         // ensure the timing is close to what we expect.
         assertMoreOrEqual(millis() - timeThen, (uint32_t)threshold  - 50);
         assertLess(millis() - timeThen, (uint32_t)threshold + 50);
-
-        // after the first go, the timing should go down to 200 millis
+        
+        // clear held after each go, the timing of each repeat should be 200.
+        held = false;
         threshold = 200;
     }
 
@@ -145,4 +171,79 @@ testF(SwitchesFixture, testInterruptButtonRepeating) {
 
     // we should not have received any more events.
     assertEqual(callsMade, callsWhenButtonReleased);
+}
+
+testF(SwitchesFixture, testUpDownEncoder) {
+    switches.initialise(&mockIo, true);
+
+    // set up the encoder and add to switches. 1 is up, 2 down.
+    EncoderUpDownButtons encoder(1, 2, encoderCallback);
+    switches.setEncoder(&encoder);
+
+    // set the range to be 0 to 10
+    switches.changeEncoderPrecision(10, 0);
+
+    // do more than 10 up presses
+    switches.pushSwitch(1, false);
+    for(int i=0; i<20; i++) switches.pushSwitch(1, true);
+    
+    // the encoder should limit at 10 making only 10 calls.
+    assertEqual(encoderCurrentVal, 10);
+    assertEqual(callsMade, 11);
+
+    // now do more than 10 down presses.
+    switches.pushSwitch(2, false);
+    for(int i=0; i<20; i++) switches.pushSwitch(2, true);
+
+    // again the encoder should limit out at another 10 calls (20 in total)
+    // and zero reading.
+    assertEqual(encoderCurrentVal, 0);
+    assertEqual(callsMade, 21);
+
+    // make sure the IO was used correctly
+    assertEqual(mockIo.getErrorMode(), NO_ERROR);
+}
+
+#define abSet(pinA, pinB) (pinA | (pinB << 1))
+
+testF(SwitchesFixture, testRotaryEncoder) {
+    // This is a smoke test, never ever rely on this to exhasutively test the
+    // rotary encoder. It just makes sure it has a chance of working by running
+    // it through some common cases. A full test is a must if the encoder is changed.
+    switches.initialise(&mockIo, true);
+
+    // here we define all the states that the encoder will go through to go up, then down
+
+    // A is 0x01 B is 0x02 - B will be stable when A changes
+    // intial state = 0, 1
+    mockIo.resetIo();
+    mockIo.setValueForReading(0, abSet(0, 1)); // initial state of inputs
+    mockIo.setValueForReading(1, abSet(0, 1)); 
+    mockIo.setValueForReading(2, abSet(1, 0)); // one click CCY
+    mockIo.setValueForReading(3, abSet(0, 0)); 
+    mockIo.setValueForReading(4, abSet(1, 1)); // one click CY
+    mockIo.setValueForReading(5, abSet(0, 1)); // should be ignored as flicker
+    mockIo.setValueForReading(5, abSet(1, 1)); // should be ignored as flicker
+
+    // set up a hardware rotary encoder on pins two and three
+    setupRotaryEncoderWithInterrupt(0, 1, encoderCallback);
+    assertTrue(mockIo.isIntRegisteredAs(0, CHANGE));
+
+    // and set its range to 10 starting at 5 
+    switches.changeEncoderPrecision(10, 5);
+    assertEqual(5, encoderCurrentVal);
+
+    runInterruptLoopTimes(2);
+
+    // and check it has gone down.
+    assertEqual(encoderCurrentVal, 4);
+    assertEqual(callsMade, 2);
+
+    runInterruptLoopTimes(4);
+
+    assertEqual(encoderCurrentVal, 5);
+    assertEqual(callsMade, 3);
+
+    // finally delete the encoder we created earlier.
+    delete switches.getEncoder();
 }
