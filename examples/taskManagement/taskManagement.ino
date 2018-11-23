@@ -47,6 +47,7 @@ void setup() {
 	taskManager.scheduleOnce(10000, tenSecondsUp);
 	
 	// Now we schedule oneSecondPulse() to be called every second. 
+	// keep hold of the ID as we will later cancel it from running.
 	taskId = taskManager.scheduleFixedRate(1, oneSecondPulse, TIME_SECONDS);
 
 	//
