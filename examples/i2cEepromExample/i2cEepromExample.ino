@@ -24,7 +24,7 @@ I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 const char strData[15] = { "Hello Eeprom"};
 
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	while(!Serial);
 
 	// if you are using the i2c eeprom, you must include this line below, not needed otherwise.
@@ -53,10 +53,10 @@ void loop() {
 	Serial.println(anEeprom.read8(romStart));
 
 	Serial.print("Reading back word: 0x");
-	Serial.println(itoa(anEeprom.read16(romStart + 1), readBuffer, 16));
+	Serial.println(anEeprom.read16(romStart + 1), HEX);
 
 	Serial.print("Reading back long: 0x");
-	Serial.println(ltoa(anEeprom.read32(romStart + 3), readBuffer, 16));
+	Serial.println(anEeprom.read32(romStart + 3), HEX);
 
 	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
 	char readBuffer[15];

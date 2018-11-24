@@ -54,10 +54,10 @@ protected:
 	}
 
 	void assertThatTaskRunsOnTime(uint32_t minExpected, uint32_t allowanceOver) {
-		unsigned long maxTime = millis() + 5000; // 5 seconds maximum wait.
+		unsigned long start = millis();
 
 		// wait until the task is marked as scheduled.
-		while(!scheduled && (millis() < maxTime)) {
+		while(!scheduled && (millis() - start) < 5000) {
 			taskManager.yieldForMicros(1);
 		}
 
@@ -186,7 +186,7 @@ testF(TimingHelpFixture, cancellingAJobAfterCreation) {
 }
 
 // We can only reset the clock to a new value on AVR, this is very useful and allows us to ensure the
-// rollover cases work properly
+// rollover cases work properly at least for milliseconds
 
 #ifdef __AVR__
 #include <util/atomic.h>
@@ -202,17 +202,20 @@ void setMillis(unsigned long ms)
 // this test only runs on AVR - it sets the timer near to overflow and schedules some tasks
 //
 testF(TimingHelpFixture, testClockRollover) {
+	
+	// set the clock so that it will roll
 	uint32_t oldMillis = millis();
     setMillis(((uint32_t)-200L));
 
 	taskManager.scheduleOnce(1, recordingJob, TIME_SECONDS);
 	taskManager.scheduleFixedRate(250, recordingJob2, TIME_MICROS);
+	
 	// make sure it's still to wrap.
 	assertTrue(millis() > 100000000L);
 
 	// now make sure it actually runs as expected
 	assertThatTaskRunsOnTime(1000000L, MILLIS_ALLOWANCE);
-	assertTasksSpacesTaken(0);
+	assertTasksSpacesTaken(1);
 
 	// make sure it has wrapped now.
 	assertTrue(millis() < 10000L);
@@ -226,3 +229,72 @@ testF(TimingHelpFixture, testClockRollover) {
 }
 
 #endif // AVR test only
+
+int counts[6];
+
+void testCall1() {
+	counts[0]++;
+}
+
+void testCall2() {
+	counts[1]++;
+}
+
+void testCall3() {
+	counts[2]++;
+}
+
+void testCall4() {
+	counts[3]++;
+	taskManager.scheduleOnce(1, testCall4, TIME_SECONDS);
+}
+
+void testCall6() {
+	counts[5]++;
+	if(counts[5] < 10) taskManager.scheduleOnce(500, testCall6);
+}
+
+void testCall5() {
+	counts[4]++;
+	taskManager.scheduleOnce(1000, testCall6);
+}
+
+void clearCounts() {
+	for(int i=0;i<6;i++) counts[i]=0;
+	taskManager.reset();
+}
+
+//
+// This test actually runs the task manager full up with tasks for around 20 seconds, scheduling using
+// lots of different intervals from micros through to seconds, using both single shot and repeating
+// schedules, this is the most important test to pass in the whole suite.
+//
+test(taskManagerHighThroughputTest) {
+	char slotData[15];
+	clearCounts();
+
+	Serial.print("Dumping thread queue"); Serial.println(taskManager.checkAvailableSlots(slotData));
+
+	taskManager.scheduleFixedRate(10, testCall1);
+	taskManager.scheduleFixedRate(100, testCall2);
+	taskManager.scheduleFixedRate(100, testCall3, TIME_MICROS);
+	taskManager.scheduleOnce(1, testCall4, TIME_SECONDS);
+	taskManager.scheduleOnce(10, testCall5, TIME_SECONDS);
+
+	Serial.print("Dumping thread queue"); Serial.println(taskManager.checkAvailableSlots(slotData));
+
+	unsigned long start = millis();
+	while(counts[5] < 10 && (millis() - start) < 25000) {
+		taskManager.yieldForMicros(10000);
+	}
+
+	Serial.print("Dumping thread queue"); Serial.println(taskManager.checkAvailableSlots(slotData));
+
+	assertEqual(counts[5], 10); 	// should be 10 runs as it's manually repeating
+	assertMore(counts[0], 1600);	// should be at least 1600 runs it's scheduled every 10 millis
+	assertMore(counts[1], 160);		// should be at least 160 runs, scheduled every 100 millis, 
+	assertMore(counts[3], 16);		// should be at least 16 runs, as this test lasts about 20 seconds. 
+	assertEqual(counts[4], 1); 		// these should both be 1, trigged exactly once.
+	assertNotEqual(counts[2], 0); 	// meaningless to count micros calls. check it happened
+}
+

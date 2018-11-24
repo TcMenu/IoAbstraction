@@ -43,6 +43,11 @@ void setup() {
 	// connect a switch to pin 2, so you can raise interrupts.
 	pinMode(2, INPUT);
 
+  //
+  // Now we register some taks, note that on AVR by default there are 6 slots, all others have 10 slots.
+  // this can be changed in TaskManager.h to your preferred setting.
+  //
+
 	// We schedule the function tenSecondsUp() to be called in 10,000 milliseconds.
 	taskManager.scheduleOnce(10000, tenSecondsUp);
 	
@@ -67,15 +72,10 @@ void setup() {
 	});
 
 	// and another to run repeatedly at 5 second intervals, shows the task slot status
-	taskManager.scheduleFixedRate(5, [] { 
-		log(taskManager.checkAvailableSlots(slotString)); 
-	}, TIME_SECONDS);
+	taskManager.scheduleFixedRate(5, [] { log(taskManager.checkAvailableSlots(slotString)); }, TIME_SECONDS);
 
 	// and now schedule onMicrosJob() to be called every 100 micros
 	taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
-
-	// and lastly a job that schedules in microseconds.
-	taskManager.scheduleFixedRate(10, [] { taskManager.yieldForMicros(10000); });
 
 	// register a port 2 interrupt.
 	taskManager.setInterruptCallback (onInterrupt);
@@ -106,8 +106,8 @@ int microCount = 0;
  */
 void onMicrosJob() {
 	microCount++;
-	if (abs(microCount % 100) == 1) {
-		log("Micros job increased by 100");
+	if (abs(microCount % 10000) == 1) {
+		log("Micros job increased by 10000");
 	}
 }
 
@@ -124,14 +124,17 @@ void oneSecondPulse() {
  */
 void tenSecondsUp() {
 	log("Ten seconds up");
-	taskManager.scheduleOnce(10000, twentySecondsUp);
+  log(taskManager.checkAvailableSlots(slotString));
+	if(taskManager.scheduleOnce(10000, twentySecondsUp) == -1) {
+	  log("Failed to register twenty second task");
+	}
 }
 
 /**
  * This is the job that was started in the tenSecondsUp above.
  */
 void twentySecondsUp() {
-	log("Twenty seconds timer");
+	log("Twenty seconds up");
 }
 
 /**

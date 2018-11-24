@@ -7,7 +7,7 @@
 
 IoAbstractionRef arduinoPins = ioUsingArduino();
 
-const int pinInput, pinLed;
+const int pinInput = 2, pinLed = LED_BUILTIN;
 
 void setup() {
 	// and also on arduino pins
