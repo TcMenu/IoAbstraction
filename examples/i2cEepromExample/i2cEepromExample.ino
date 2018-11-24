@@ -13,13 +13,13 @@
  */
 
 // you always needs this include.
-#include <EepromAbstraction.h>
+#include <EepromAbstractionWire.h>
 
 const unsigned int romStart = 800;
 
 // When you want to use the AVR built in EEPROM support (only available on AVR)
 // comment / uncomment to select
-AvrEeprom anEeprom;
+I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
 const char strData[15] = { "Hello Eeprom"};
 
@@ -58,13 +58,15 @@ void loop() {
 	Serial.print("Reading back long: 0x");
 	Serial.println(ltoa(anEeprom.read32(romStart + 3), readBuffer, 16));
 
+	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
+	char readBuffer[15];
 	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
+	Serial.print("Rom Array: ");
 	Serial.println(readBuffer);
 
-	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
-	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
-	Serial.print("Rom Array");
-	Serial.println(readBuffer);
+	// we can check if there are any errors writing by calling hasErrorOccurred, for AVR there is never an error.
+	// but for i2c variants there may well be.
+	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
 
 	delay(10000);
 }

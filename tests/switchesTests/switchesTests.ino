@@ -244,6 +244,8 @@ testF(SwitchesFixture, testRotaryEncoder) {
     assertEqual(encoderCurrentVal, 5);
     assertEqual(callsMade, 3);
 
+    assertEqual(mockIo.getErrorMode(), NO_ERROR);
+    
     // finally delete the encoder we created earlier.
     delete switches.getEncoder();
 }

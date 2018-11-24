@@ -1,88 +1,100 @@
-/**
- * This sketch is part of IOAbstraction, it shows how to use the EEPROM abstraction,
- * for which you can choose from NoEeprom, AvrEeprom and I2cAt24C based eeproms.
- * Just uncomment the eeprom type you want and comment out the others.
- *
- * This allows any libraries or code you write to work easily across 8 and 32 bit
- * machines by allowing you to decide what type of eeprom you have at compile / runtime.
- *
- * Note that running this sketch WILL WRITE INTO THE SELECTED ROM at the location
- * starting at romStart.
- *
- * It writes a byte, int, double and string to the eeprom and reads them back.
- */
+#line 2 "eepromTests.ino"
 
-// you always needs this include.
+// This test requires an At24C eeprom to be installed at 0x50, setup for a 128kbit unit. 
+// Also this test needs to run on AVR as it checks the AVR eeprom code too.
+// Any changes to the eeprom code require this test to be run before release.
+
+#include <AUnit.h>
 #include <EepromAbstraction.h>
-
-const unsigned int romStart = 2000;
-
-// if you are using the I2c based eeprom you need the line below
 #include <EepromAbstractionWire.h>
+#include <MockEepromAbstraction.h>
 
-// when you don't want the eeprom writes / reads to do anything.
-// comment/ uncomment to select
-// NoEeprom anEeprom;
-
-// When you want to use the AVR built in EEPROM support (only available on AVR)
-// comment / uncomment to select
-// AvrEeprom anEeprom;
-
-// When you wish to use AT24 based i2c EEPROMs (Uses Wire library)
-// comment / uncomment to select
-I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
+using namespace aunit;
 
 const char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
-char readBuffer[128]; // for reading back and comparing the above string.
 
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	while(!Serial);
-
-	// if you are using the i2c eeprom, you must include this line below, not needed otherwise.
 	Wire.begin();
-
-	Serial.println("Eeprom example starting");
-
-	// clear everything in the rom before proceeding.
-	for(EepromPosition pos = 0; pos < 100;pos++) {
-		anEeprom.write8(romStart + pos, 0);
-	}
-
-	Serial.println("Cleared ROM ready for re-writing the test values");
-	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
-	readBackValues();
-
-	anEeprom.write8(romStart, (byte)42);
-	anEeprom.write16(romStart + 1, 0xface);
-	anEeprom.write32(romStart + 3, 0xf00dface);
-	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
-	Serial.println("Eeprom example written initial values");
-	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
 }
 
 void loop() {
-
-	readBackValues();
-
-	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
-	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
-	bool same = strcmp(readBuffer, strData) == 0;
-	Serial.println(same ? "Array compare of ROM identical" : "Array compare of ROM is different");
-
-	delay(10000);
+	TestRunner::run();
 }
 
-void readBackValues() {
-	Serial.print("Reading back byte: ");
-	Serial.println(anEeprom.read8(romStart));
+class EepromFixtures : public TestOnce {
+protected:
+	EepromAbstraction *eeprom;
+	int romStart = 600;
+public:
+	void setEeprom(EepromAbstraction* eeprom) {this->eeprom = eeprom;}
 
-	Serial.print("Reading back word: 0x");
-	Serial.println(itoa(anEeprom.read16(romStart + 1), readBuffer, 16));
+	void clearRom() {
+		for(EepromPosition pos = 0; pos < 100;pos++) {
+			eeprom->write8(romStart + pos, 0);
+		}
+		Serial.println("Cleared ROM ready for test ");
+	}
+	
+	void standardRomChecks() {
+		eeprom->write8(romStart, (byte)42);
+		eeprom->write16(romStart + 1, 0xface);
+		eeprom->write32(romStart + 3, 0xf00dface);
 
-	Serial.print("Reading back long: 0x");
-	Serial.println(ltoa(anEeprom.read32(romStart + 3), readBuffer, 16));
+		assertEqual((uint8_t)42, eeprom->read8(romStart));
+		assertEqual((uint16_t) 0xface, eeprom->read16(romStart + 1));
+		assertEqual((uint32_t) 0xf00dface, eeprom->read32(romStart + 3));
+	}
 
-	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
-	Serial.println(readBuffer);
+	void arrayRomChecks() {
+		eeprom->writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
+		char readBuffer[128];
+		eeprom->readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
+		assertEqual(readBuffer, strData);
+	}
+};
+
+testF(EepromFixtures, testAvrEeprom) {
+	AvrEeprom anEeprom;
+	romStart = 500;
+	setEeprom(&anEeprom);
+	Serial.println("Doing AVR checks");
+
+	clearRom();	
+	standardRomChecks();
+	arrayRomChecks();
+	assertFalse(anEeprom.hasErrorOccurred());
+}
+
+testF(EepromFixtures, testI2cEeprom) {
+	I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
+	romStart = 500;
+	setEeprom(&anEeprom);
+	Serial.println("Doing AT24C128 checks");
+
+	clearRom();	
+	standardRomChecks();
+	arrayRomChecks();
+
+	assertFalse(anEeprom.hasErrorOccurred());
+}
+
+const char* helloText[6] = {"Hello"};
+
+testF(EepromFixtures, testTheMockEeeprom) {
+	romStart = 0;
+	MockEepromAbstraction mockRom;
+	setEeprom(&mockRom);
+	Serial.println("Doing Mock EEPROM checks");
+
+	clearRom();
+	standardRomChecks();
+
+	mockRom.writeArrayToRom(romStart + 7, (const unsigned char*)helloText, sizeof helloText);
+	char readBuffer[6];
+	mockRom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, 6);
+	assertEqual(helloText, strData);
+
+	assertFalse(mockRom.hasErrorOccurred());
 }

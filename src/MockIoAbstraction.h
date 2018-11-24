@@ -105,10 +105,11 @@ public:
 	bool runLoop() override { 
         // copy over the last written values (as they are generally additive) and bump counter.
         uint16_t currentWritten = writeValues[runLoopCalls];
-        writeValues[runLoopCalls] = currentWritten;
 
         runLoopCalls++;
         runLoopCalls = runLoopCalls % numberOfCycles; // dont exceed array
+
+        writeValues[runLoopCalls] = currentWritten;
         return true;
     }
 
@@ -121,7 +122,7 @@ public:
             writeValues[runLoopCalls] = (writeValues[runLoopCalls] & 0xff00) | portVal;
         }
         else {
-            checkPinsAre(INPUT, 8, 15);
+            checkPinsAre(OUTPUT, 8, 15);
             writeValues[runLoopCalls] = (writeValues[runLoopCalls] & 0x00ff) | (portVal << 8);
         }
     }
@@ -153,6 +154,9 @@ public:
 
     /** get any error in usage of the class */
     MockIoError getErrorMode() {return error;}
+
+    /** clear down the error state */
+    void clearError() { error = NO_ERROR; }
 
     /** get the interrupt function registered using the attachInterrupt call */
     RawIntHandler getInterruptFunction() {return intHandler;}

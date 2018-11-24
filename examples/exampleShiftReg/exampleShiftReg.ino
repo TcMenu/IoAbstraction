@@ -15,7 +15,7 @@ void setup() {
 	// although not technically needed for the shift register we should always call pinDirection
 	// as it makes it possible to switch in future to either arduino direct or IO expander.
 
-	// 0-7 are always input and 32 onwards are always output with the shift register abstraction
+	// 0-31 are always input and 32 onwards are always output with the shift register abstraction
 	// this allows for up to 4 input and 4 output devices to be chained together.
 	for (int i = 32; i < 40; ++i) {
 		ioDevicePinMode(shiftRegister, i, OUTPUT);

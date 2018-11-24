@@ -47,7 +47,7 @@ public:
 
 	virtual uint32_t read32(EepromPosition position) override {
 		checkBounds(position, 4);
-		return (uint32_t)read8(position) | ((uint32_t)read8(position + 1) << 8) | ((uint32_t)read8(position + 1) << 16) | ((uint32_t)read8(position + 1) << 24);
+		return (uint32_t)read8(position) | ((uint32_t)read8(position + 1) << 8) | ((uint32_t)read8(position + 2) << 16) | ((uint32_t)read8(position + 3) << 24);
 	}
 
 	virtual void write32(EepromPosition position, uint32_t val) override {
@@ -59,13 +59,13 @@ public:
 	}
 
 	virtual void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) override {
-		checkBounds(position, len);
-		memcpy(memDest, romSrc, len);
+		checkBounds(romSrc, len);
+		memcpy(memDest, &data[romSrc], len);
 	}
 
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) override {
-		checkBounds();
-		memcpy(romDest, memSrc, len);
+		checkBounds(romDest, len);
+		memcpy(&data[romDest], memSrc, len);
 	}
 };
 
