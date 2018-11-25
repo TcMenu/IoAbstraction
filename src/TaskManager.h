@@ -57,18 +57,18 @@ typedef void (*InterruptFn)(uint8_t pin);
 
 #define TASKMGR_INVALIDID 0xff
 
-#define TASK_IN_USE     0x8000
-#define TASK_REPEATING  0x4000
-#define TASK_MILLIS     0x2000
-#define TASK_SECONDS    0x1000
-#define TASK_MICROS     0x0000
-#define TIMING_MASKING  0x3000 
-#define TASK_RUNNING    0x0800
-#define TIMER_MASK      0x07ff
+#define TASK_IN_USE     0x8000U
+#define TASK_REPEATING  0x4000U
+#define TASK_MILLIS     0x2000U
+#define TASK_SECONDS    0x1000U
+#define TASK_MICROS     0x0000U
+#define TIMING_MASKING  0x3000U 
+#define TASK_RUNNING    0x0800U
+#define TIMER_MASK      0x07ffU
 
 #define isJobMicros(x)  ((x & TIMING_MASKING)==0)
-#define isJobMillis(x)  ((x & TIMING_MASKING)==0x2000)
-#define isJobSeconds(x) ((x & TIMING_MASKING)==0x1000)
+#define isJobMillis(x)  ((x & TIMING_MASKING)==0x2000U)
+#define isJobSeconds(x) ((x & TIMING_MASKING)==0x1000U)
 #define timeFromExecInfo(x) ((x & TIMER_MASK))
 
 /**
@@ -120,6 +120,7 @@ public:
 	bool isRunning() { return (executionInfo & TASK_RUNNING) != 0; }
 	TimerTask* getNext() { return next; }
 	void setNext(TimerTask* next) { this->next = next; }
+	bool isMicrosecondJob() {return isJobMicros(executionInfo);}
 };
 
 /**
@@ -150,7 +151,7 @@ public:
 	 * @param timerFunction the function to run at that time
 	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
 	 */
-	uint8_t scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+	uint8_t scheduleOnce(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
 
 	/**
 	 * Schedules a task for repeated execution at the frequency provided.
@@ -158,7 +159,7 @@ public:
 	 * @param timerFunction the function to run at that time
 	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
 	 */
-	uint8_t scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+	uint8_t scheduleFixedRate(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
 
 	/**
 	 * Adds an idle task to the chain of idle tasks, or creates the first one if there wasn't previously one. Note that
@@ -198,14 +199,6 @@ public:
 	virtual void yieldForMicros(uint16_t micros);
 
 	/**
-	 * This method fills slotData with the current running conditions of each available task slot.
-	 * Useful to ensure that you're not overloading taskManager, or if the number of tasks need
-	 * be increased.
-	 * @param slotData the char array to fill in with task information. Must be as long as number of tasks.
-	 */
-	char* checkAvailableSlots(char* slotData);
-
-	/**
 	 * This should be called in the loop() method of your sketch, ensure that your loop method does
 	 * not do anything that will unduly delay calling this method.
 	 */
@@ -225,7 +218,20 @@ public:
         }
     }
 
+	/**
+	 * This method fills slotData with the current running conditions of each available task slot.
+	 * Useful to ensure that you're not overloading taskManager, or if the number of tasks need
+	 * be increased.
+	 * @param slotData the char array to fill in with task information. Must be as long as number of tasks + 1.
+	 */
+	char* checkAvailableSlots(char* slotData);
 
+	/**
+	 * Gets the first task in the run queue. Not often useful outside of testing.
+	 */
+	TimerTask* getFirstTask() {
+		return first;
+	}
 private:
 	int findFreeTask();
 	void removeFromQueue(TimerTask* task);

@@ -259,41 +259,93 @@ void testCall5() {
 	taskManager.scheduleOnce(1000, testCall6);
 }
 
-void clearCounts() {
-	for(int i=0;i<6;i++) counts[i]=0;
-	taskManager.reset();
-}
-
 //
-// This test actually runs the task manager full up with tasks for around 20 seconds, scheduling using
+// This test actually runs the task manager full up with tasks for around 15 seconds, scheduling using
 // lots of different intervals from micros through to seconds, using both single shot and repeating
 // schedules, this is the most important test to pass in the whole suite.
 //
-test(taskManagerHighThroughputTest) {
+
+class HighThroughputFixture : public TestOnce {
+public:
+	/**
+	 * This method checks that taskmanager tasks are in proper and stable order. And that only running tasks
+	 * are in the linked list.
+	 */
+	void assertTasksAreInOrder() {
+		bool inOrder = true;
+		TimerTask* task = taskManager.getFirstTask();
+		unsigned long prevTaskMicros = 0;
+		while(inOrder && task != NULL) {
+			unsigned long currentTaskMicros = task->microsFromNow();
+			// the task must be in use
+			inOrder = inOrder && task->isInUse();
+			// and it must have a higher or equal number of micros than the prior task.
+			unsigned long difference = (currentTaskMicros >= prevTaskMicros);
+			if(task->isMicrosecondJob()) {
+				// microsecond jobs must have absolute accuracy
+				inOrder = inOrder && difference >= 0;
+			}
+			else {
+				// millisecond jobs should have about 1 millisecond accuracy.
+				inOrder = inOrder && difference > 1000;
+			}
+			Serial.println(inOrder);
+
+			// get the next item and store this micros for next compare.
+			prevTaskMicros = currentTaskMicros;
+			task = task->getNext();
+		}
+
+		// if somehting goes wrong, dump out the whole lot!
+		if(!inOrder) dumpTasks();
+
+		// assert that it's in order.
+		assertTrue(inOrder);
+	}
+
+	void dumpTasks() {
+		Serial.println("Dumping the task queue contents");
+		TimerTask* task = taskManager.getFirstTask();
+		while(task) {
+			Serial.print(" - Task schedule "); Serial.print(task->microsFromNow());
+			Serial.print(task->isRepeating() ? " Repeating ":" Once ");
+			Serial.println(task->isInUse() ? " InUse":" Free");
+			task = task->getNext();
+		}
+	}
+
+	void clearCounts() {
+		for(int i=0;i<6;i++) counts[i]=0;
+		taskManager.reset();
+	}
+};
+
+testF(HighThroughputFixture, taskManagerHighThroughputTest) {
 	char slotData[15];
 	clearCounts();
 
-	Serial.print("Dumping thread queue"); Serial.println(taskManager.checkAvailableSlots(slotData));
+	Serial.print("Dumping threads"); Serial.println(taskManager.checkAvailableSlots(slotData));
 
 	taskManager.scheduleFixedRate(10, testCall1);
 	taskManager.scheduleFixedRate(100, testCall2);
-	taskManager.scheduleFixedRate(100, testCall3, TIME_MICROS);
+	taskManager.scheduleFixedRate(250, testCall3, TIME_MICROS);
 	taskManager.scheduleOnce(1, testCall4, TIME_SECONDS);
 	taskManager.scheduleOnce(10, testCall5, TIME_SECONDS);
 
-	Serial.print("Dumping thread queue"); Serial.println(taskManager.checkAvailableSlots(slotData));
+	Serial.print("Dumping threads"); Serial.println(taskManager.checkAvailableSlots(slotData));
 
 	unsigned long start = millis();
 	while(counts[5] < 10 && (millis() - start) < 25000) {
 		taskManager.yieldForMicros(10000);
+		assertTasksAreInOrder();
 	}
 
-	Serial.print("Dumping thread queue"); Serial.println(taskManager.checkAvailableSlots(slotData));
+	Serial.print("Dumping threads"); Serial.println(taskManager.checkAvailableSlots(slotData));
 
 	assertEqual(counts[5], 10); 	// should be 10 runs as it's manually repeating
-	assertMore(counts[0], 1600);	// should be at least 1600 runs it's scheduled every 10 millis
 	assertMore(counts[1], 160);		// should be at least 160 runs, scheduled every 100 millis, 
 	assertMore(counts[3], 16);		// should be at least 16 runs, as this test lasts about 20 seconds. 
+	assertMore(counts[0], 1600);	// should be at least 1600 runs it's scheduled every 10 millis
 	assertEqual(counts[4], 1); 		// these should both be 1, trigged exactly once.
 	assertNotEqual(counts[2], 0); 	// meaningless to count micros calls. check it happened
 }
