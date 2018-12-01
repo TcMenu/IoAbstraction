@@ -125,7 +125,7 @@ void oneSecondPulse() {
 void tenSecondsUp() {
 	log("Ten seconds up");
 	log(taskManager.checkAvailableSlots(slotString));
-	if(taskManager.scheduleOnce(10000, twentySecondsUp) == -1) {
+	if(taskManager.scheduleOnce(10000, twentySecondsUp) == 0xff) {
 		log("Failed to register twenty second task");
 	}
 }
