@@ -4,11 +4,12 @@
  * The multi IO abstraction defaults to Arduino pins using the range 0..99 and the
  * first expander (our 23017) will appear at pin 100 onwards.
  * 
- * THIS IS AN ADVANCED FEATURE OF THE LIBRARY, USE WITH CARE. Read the arduino guides
- * on working directly with ports first. 
- * 
  * IMPORTANT NOTE: This example assumes a MEGA2560 or other device that has a port
  * mapped to pins 42 to 49 and will need modification to work with any other board.
+ * 
+ * If using the Arduino direct pins, be very careful which port you choose, as some
+ * pins have special functions, and won't take kindly to being stamped on.. When using
+ * with i2c or shift registers there is no risk of this whatsoever.
  * 
  * To access a port, we simply provide a pin that is within the ports range.
  */

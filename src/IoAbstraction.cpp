@@ -92,7 +92,7 @@ uint8_t ShiftRegisterIoAbstraction::readValue(uint8_t pin) {
 	return ((lastRead & (1 << pin)) != 0) ? HIGH : LOW;
 }
 
-void ShiftRegisterIoAbstraction::runLoop() {
+bool ShiftRegisterIoAbstraction::runLoop() {
 	uint8_t i;
 	if (readDataPin != 0xff) {
 		digitalWrite(readLatchPin, LOW);
@@ -119,6 +119,7 @@ void ShiftRegisterIoAbstraction::runLoop() {
 		needsWrite = false;
 		digitalWrite(writeLatchPin, HIGH);
 	}
+	return true;
 }
 
 MultiIoAbstraction::MultiIoAbstraction(uint8_t arduinoPinsNeeded) {
@@ -209,10 +210,12 @@ void MultiIoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, 
 	}
 }
 
-void MultiIoAbstraction::runLoop() {
+bool MultiIoAbstraction::runLoop() {
+	bool runStatus = true;
 	for(uint8_t i=0; i<numDelegates; ++i) {
-		delegates[i]->runLoop();
+		runStatus = runStatus && delegates[i]->runLoop();
 	}
+	return runStatus;
 }
 
 // helper functions to create the abstractions. 

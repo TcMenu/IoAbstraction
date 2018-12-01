@@ -19,38 +19,41 @@ void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 	this->executionInfo = executionInfo;
 	this->callback = execCallback;
 	
-	this->scheduledAt = (executionInfo & TASK_MICROS) ? micros() : millis();
+	this->scheduledAt = (isJobMicros(executionInfo)) ? micros() : millis();
+	this->next = NULL;
 }
 
 bool TimerTask::isReady() {
 	if (!isInUse() || isRunning()) return false;
 
-	if ((executionInfo & TASK_MICROS) != 0) {
-		uint16_t delay = (executionInfo & TIMER_MASK);
+	if ((isJobMicros(executionInfo)) != 0) {
+		uint16_t delay = timeFromExecInfo(executionInfo);
 		return (micros() - scheduledAt) >= delay;
 	}
-	else if((executionInfo & TASK_SECONDS) != 0) {
-		uint32_t delay = (executionInfo & TIMER_MASK) * 1000L;
+	else if(isJobSeconds(executionInfo)) {
+		uint32_t delay = timeFromExecInfo(executionInfo) * 1000L;
 		return (millis() - scheduledAt) >= delay;
 	}
 	else {
-		uint16_t delay = (executionInfo & TIMER_MASK);
+		uint16_t delay = timeFromExecInfo(executionInfo);
 		return (millis() - scheduledAt) >= delay;
 	}
 }
 
 unsigned long TimerTask::microsFromNow() {
 	uint32_t microsFromNow;
-	if ((executionInfo & TASK_MICROS) != 0) {
-		uint16_t delay = (executionInfo & TIMER_MASK);
-		microsFromNow =  delay - (micros() - scheduledAt);
+	if (isJobMicros(executionInfo)) {
+		uint16_t delay = timeFromExecInfo(executionInfo);
+		int32_t alreadyTaken = (micros() - scheduledAt);
+		microsFromNow =  (delay < alreadyTaken) ? 0 : (delay - alreadyTaken);
 	}
 	else {
-		uint32_t startTm = (executionInfo & TIMER_MASK);
-		if ((executionInfo & TASK_SECONDS) != 0) {
-			startTm *= 1000;
+		uint32_t delay = timeFromExecInfo(executionInfo);
+		if (isJobSeconds(executionInfo)) {
+			delay *= ((uint32_t)1000);
 		}
-		microsFromNow = (startTm - (millis() - scheduledAt)) * 1000;
+		uint32_t alreadyTaken = (millis() - scheduledAt);
+		microsFromNow = (delay < alreadyTaken) ? 0 : ((delay - alreadyTaken) * 1000UL);
 	}
 	return microsFromNow;
 }
@@ -63,7 +66,7 @@ inline void TimerTask::execute() {
 	if (isRepeating()) {
 		markRunning();
 		callback();
-		this->scheduledAt = (executionInfo & TASK_MICROS) ? micros() : millis();
+		this->scheduledAt = isJobMicros(executionInfo) ? micros() : millis();
 		clearRunning();
 	}
 	else {
@@ -76,6 +79,7 @@ inline void TimerTask::execute() {
 void TimerTask::clear() {
 	executionInfo = 0;
 	callback = NULL;
+	next = NULL;
 }
 
 void TaskManager::markInterrupted(uint8_t interruptNo) {
@@ -99,31 +103,41 @@ int TaskManager::findFreeTask() {
 	return TASKMGR_INVALIDID;
 }
 
-inline int toTimerValue(int v, TimerUnit unit) {
+inline uint16_t toTimerValue(uint16_t v, TimerUnit unit) {
 	if (unit == TIME_MILLIS && v > TIMER_MASK) {
 		unit = TIME_SECONDS;
-		v = v / 1000;
+		v = v / 1000U;
 	}
-	v = min(v, TIMER_MASK);
-	return v | (((uint16_t)unit) << 12);
+	return (v & TIMER_MASK) | (((uint16_t)unit) << 12);
 }
 
-uint8_t TaskManager::scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit) {
+uint8_t TaskManager::scheduleOnce(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit) {
 	uint8_t taskId = findFreeTask();
 	if (taskId != TASKMGR_INVALIDID) {
-		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE, timerFunction);
+		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE, timerFunction);
 		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
 }
 
-uint8_t TaskManager::scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit) {
+uint8_t TaskManager::scheduleFixedRate(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit) {
 	uint8_t taskId = findFreeTask();
 	if (taskId != TASKMGR_INVALIDID) {
-		tasks[taskId].initialise(toTimerValue(millis, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
+		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
 		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
+}
+
+void TaskManager::addIdleTask(IdleTask* idleTask) {
+	if(this->firstIdleTask) {
+		IdleTask * idletask = firstIdleTask;
+		while(idletask->nextIdleTask) {
+			idletask = idletask->nextIdleTask;
+		}
+		idletask->nextIdleTask = idleTask;
+	}
+	else this->firstIdleTask = idleTask;
 }
 
 void TaskManager::cancelTask(uint8_t task) {
@@ -133,31 +147,25 @@ void TaskManager::cancelTask(uint8_t task) {
 	}
 }
 
-char* TaskManager::checkAvailableSlots(char* data) {
-	uint8_t i;
-	for (i = 0; i < numberOfSlots; ++i) {
-		data[i] = tasks[i].isRepeating() ? 'R' : (tasks[i].isInUse() ? 'U' : 'F');
-		if (tasks[i].isRunning()) data[i] = tolower(data[i]);
-	}
-	data[i] = 0;
-	return data;
-}
-
 void TaskManager::yieldForMicros(uint16_t microsToWait) {
 	yield();
 	
-	unsigned long microsEnd = micros() + microsToWait;
-	while(micros() < microsEnd) {
+	unsigned long microsStart = micros();
+	do {
 		runLoop();
-	}
+	} while((micros() - microsStart) < microsToWait);
 }
 
 void TaskManager::runLoop() {
+	// when there's an interrupt, we marshall it into a timer interrupt.
 	if (interrupted) {
 		interrupted = false;
 		interruptCallback(lastInterruptTrigger);
 	}
 
+	// go through the timer (scheduled) tasks in priority order. they are stored
+	// in a linked list ordered by first to be scheduled. So we only go through
+	// these until the first one that isn't ready.
 	TimerTask* tm = first;
 	while(tm != NULL) {
 		if (tm->isReady()) {
@@ -172,6 +180,14 @@ void TaskManager::runLoop() {
 		}
 
 		tm = tm->getNext();
+	}
+
+	// go through any idle tasks running them in turn. They are in a one way linked list.
+	// idle tasks must be very light weight indeed as they are run very frequently.
+	IdleTask *idle = firstIdleTask;
+	while(idle) {
+		idle->timerFn(idle->associatedData);
+		idle = idle->nextIdleTask;
 	}
 
 	// TODO, if not interrupted, and no task for a while sleep and set timer - go into low power.
@@ -217,6 +233,7 @@ void TaskManager::removeFromQueue(TimerTask* tm) {
 	// shortcut, if we are first, just remove us by getting the next and setting first.
 	if (first == tm) {
 		first = tm->getNext();
+		tm->setNext(NULL);
 		return;
 	}
 
@@ -321,3 +338,12 @@ void TaskManager::setInterruptCallback(InterruptFn handler) {
 	interruptCallback = handler;
 }
 
+char* TaskManager::checkAvailableSlots(char* data) {
+	uint8_t i;
+	for (i = 0; i < numberOfSlots; ++i) {
+		data[i] = tasks[i].isRepeating() ? 'R' : (tasks[i].isInUse() ? 'U' : 'F');
+		if (tasks[i].isRunning()) data[i] = tolower(data[i]);
+	}
+	data[i] = 0;
+	return data;
+}

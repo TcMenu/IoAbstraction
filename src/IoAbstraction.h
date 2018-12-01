@@ -60,7 +60,7 @@ public:
 	 * Interrupts are not supported on shift registers
 	 */
 	virtual void attachInterrupt(uint8_t, RawIntHandler, uint8_t) {;}
-	virtual void runLoop();
+	virtual bool runLoop();
 	
 	/**
 	 * writes to the output shift register - currently always port 0
@@ -148,7 +148,7 @@ public:
 	/**
 	 * will run through all delegate abstractions and sync them
 	 */
-	virtual void runLoop();
+	virtual bool runLoop();
 private:
 	uint8_t doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn fn);
 };

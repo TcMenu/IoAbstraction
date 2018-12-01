@@ -1,7 +1,7 @@
 /**
  * This sketch is part of IOAbstraction, it shows how to use the EEPROM abstraction,
  * for which you can choose from NoEeprom, AvrEeprom and I2cAt24C based eeproms.
- * Just uncomment the eeprom type you want and comment out the others.
+ * This example chooses AvrEeprom, but could equally be replaced by any of the others.
  *
  * This allows any libraries or code you write to work easily across 8 and 32 bit
  * machines by allowing you to decide what type of eeprom you have at compile / runtime.
@@ -13,30 +13,18 @@
  */
 
 // you always needs this include.
-#include <EepromAbstraction.h>
-
-const unsigned int romStart = 2000;
-
-// if you are using the I2c based eeprom you need the line below
 #include <EepromAbstractionWire.h>
 
-// when you don't want the eeprom writes / reads to do anything.
-// comment/ uncomment to select
-// NoEeprom anEeprom;
+const unsigned int romStart = 800;
 
 // When you want to use the AVR built in EEPROM support (only available on AVR)
 // comment / uncomment to select
-// AvrEeprom anEeprom;
-
-// When you wish to use AT24 based i2c EEPROMs (Uses Wire library)
-// comment / uncomment to select
 I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
-const char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
-char readBuffer[128]; // for reading back and comparing the above string.
+const char strData[15] = { "Hello Eeprom"};
 
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	while(!Serial);
 
 	// if you are using the i2c eeprom, you must include this line below, not needed otherwise.
@@ -44,45 +32,42 @@ void setup() {
 
 	Serial.println("Eeprom example starting");
 
-	// clear everything in the rom before proceeding.
-	for(EepromPosition pos = 0; pos < 100;pos++) {
-		anEeprom.write8(romStart + pos, 0);
-	}
-
-	Serial.println("Cleared ROM ready for re-writing the test values");
-	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
-	readBackValues();
-
+	// now write the values to the rom. 8, 16 and 32 bit
 	anEeprom.write8(romStart, (byte)42);
 	anEeprom.write16(romStart + 1, 0xface);
 	anEeprom.write32(romStart + 3, 0xf00dface);
+	
+	// lastly write an array to the rom.
 	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
+
 	Serial.println("Eeprom example written initial values");
+	
+	// we can check if there are any errors writing by calling hasErrorOccurred, for AVR there is never an error.
+	// but for i2c variants there may well be.
 	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
 }
 
 void loop() {
 
-	readBackValues();
-
-	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
-	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
-	bool same = strcmp(readBuffer, strData) == 0;
-	Serial.println(same ? "Array compare of ROM identical" : "Array compare of ROM is different");
-
-	delay(10000);
-}
-
-void readBackValues() {
 	Serial.print("Reading back byte: ");
 	Serial.println(anEeprom.read8(romStart));
 
 	Serial.print("Reading back word: 0x");
-	Serial.println(itoa(anEeprom.read16(romStart + 1), readBuffer, 16));
+	Serial.println(anEeprom.read16(romStart + 1), HEX);
 
 	Serial.print("Reading back long: 0x");
-	Serial.println(ltoa(anEeprom.read32(romStart + 3), readBuffer, 16));
+	Serial.println(anEeprom.read32(romStart + 3), HEX);
 
+	// finally we'll do hard comparisons against the array, as it's hard to check by hand.
+	char readBuffer[15];
 	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
+	Serial.print("Rom Array: ");
 	Serial.println(readBuffer);
+
+	// we can check if there are any errors writing by calling hasErrorOccurred, for AVR there is never an error.
+	// but for i2c variants there may well be.
+	Serial.println(anEeprom.hasErrorOccurred() ? "With bus timeouts" : "Successfully");
+
+	delay(10000);
 }
+

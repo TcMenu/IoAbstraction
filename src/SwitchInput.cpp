@@ -42,6 +42,7 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 			if (++counter > HOLD_THRESHOLD) {
 				state = BUTTON_HELD;
 				(*callback)(pin, true);
+				counter = 0;
 			}
 		}
 		else if (state == BUTTON_HELD && repeatInterval != NO_REPEAT) {
@@ -69,6 +70,7 @@ SwitchInput::SwitchInput() {
 void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
 	this->swFlags = 0;
+	this->numberOfKeys = 0;
 	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 	bitSet(swFlags, SW_FLAG_INTERRUPT_DRIVEN);
 
@@ -78,6 +80,7 @@ void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpS
 void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
 	this->swFlags = 0;
+	this->numberOfKeys = 0;
 	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 
 	taskManager.scheduleFixedRate(20, [] {
@@ -88,15 +91,20 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
-	ioDevice->pinDirection(pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
+	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
 
 	if(isInterruptDriven()) {
 		registerInterrupt(pin);
 	}
 }
 
-void SwitchInput::setEncoder(RotaryEncoder* theEncoder) {
-	encoder = theEncoder;
+void SwitchInput::pushSwitch(uint8_t pin, bool held) {
+	for(uint8_t i=0; i<numberOfKeys; ++i) {
+		if(keys[i].getPin() == pin) {
+			keys[i].trigger(held);
+			return;
+		}
+	}
 }
 
 void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentValue) {
@@ -108,11 +116,11 @@ void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentVal
 bool SwitchInput::runLoop() {
 	bool needAnotherGo = false;
 
-	ioDevice->runLoop();
+	ioDeviceSync(ioDevice);
 
 	for (int i = 0; i < numberOfKeys; ++i) {
 		// get the pins current state
-		uint8_t pinState = ioDevice->readValue(keys[i].getPin());
+		uint8_t pinState = ioDeviceDigitalRead(ioDevice, keys[i].getPin());
 		// if the switches are pull up, invert the state.
 		if(isPullupLogic()) {
 			pinState = !pinState;
@@ -151,10 +159,17 @@ void RotaryEncoder::increment(int8_t incVal) {
 HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) : RotaryEncoder(callback) {
 	this->pinA = pinA;
 	this->pinB = pinB;
-	this->aLast = this->cleanFromB = 0;
 
+	// set the pin directions to input with pull ups enabled
 	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
 	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
+
+	// read back the initial values.
+	ioDeviceSync(switches.getIoAbstraction());	
+	this->aLast = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
+	this->cleanFromB = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
+
+	registerInterrupt(pinA);
 }
 
 void checkRunLoopAndRepeat() {
@@ -170,13 +185,12 @@ void checkRunLoopAndRepeat() {
 		});
 	}
 	else {
-			// back to normal now - interrupt only
-			switches.setInterruptDebouncing(false);
+		// back to normal now - interrupt only
+		switches.setInterruptDebouncing(false);
 	}
 }
 
 void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
-
 	if(switches.isInterruptDriven() && !switches.isInterruptDebouncing()) {
 		checkRunLoopAndRepeat();
 	}
@@ -190,11 +204,12 @@ void HardwareRotaryEncoder::encoderChanged() {
 	ioDeviceSync(switches.getIoAbstraction());
 	uint8_t a = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
 	uint8_t b = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
+
 	if(a != aLast) {
 		aLast = a;
 		if(b != cleanFromB) {
 			cleanFromB = b;
-			if(a) {
+			if(a) {	
 				increment(a != b ? -1 : +1);
 			}
 		}
@@ -230,5 +245,4 @@ void registerInterrupt(uint8_t pin) {
 
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
-	registerInterrupt(pinA);
 }

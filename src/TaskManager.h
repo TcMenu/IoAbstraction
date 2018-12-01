@@ -57,19 +57,44 @@ typedef void (*InterruptFn)(uint8_t pin);
 
 #define TASKMGR_INVALIDID 0xff
 
-#define TASK_IN_USE     0x8000
-#define TASK_REPEATING  0x4000
-#define TASK_MILLIS     0x2000
-#define TASK_SECONDS    0x1000
-#define TASK_MICROS     0x0000
-#define TASK_RUNNING    0x0800
-#define TIMER_MASK      0x07ff
+#define TASK_IN_USE     0x8000U
+#define TASK_REPEATING  0x4000U
+#define TASK_MILLIS     0x2000U
+#define TASK_SECONDS    0x1000U
+#define TASK_MICROS     0x0000U
+#define TIMING_MASKING  0x3000U 
+#define TASK_RUNNING    0x0800U
+#define TIMER_MASK      0x07ffU
+
+#define isJobMicros(x)  ((x & TIMING_MASKING)==0)
+#define isJobMillis(x)  ((x & TIMING_MASKING)==0x2000U)
+#define isJobSeconds(x) ((x & TIMING_MASKING)==0x1000U)
+#define timeFromExecInfo(x) ((x & TIMER_MASK))
 
 /**
  * The time units that can be used with the schedule calls.
  */
 enum TimerUnit : byte {
 	TIME_MICROS = 0, TIME_SECONDS = 1, TIME_MILLIS=2
+};
+
+/**
+ * A timer callback for idle tasks
+ */
+typedef void (*TimerFnWithData)(void* data);
+
+/**
+ * Between tasks, when there's nothing to execute, Idle tasks will be run.
+ * These should be exceptionally short lived jobs that short circuit quickly
+ * when there's nothing for them to do. They are called very frequently.
+ */
+struct IdleTask {
+	/** An associated data item that will be passed back with the call */
+    void* associatedData;
+	/** the callback for the idle task. */
+    TimerFnWithData timerFn;
+	/** the next idle task in the chain if more than one is created. */
+    IdleTask *nextIdleTask;
 };
 
 /**
@@ -95,6 +120,9 @@ public:
 	bool isRunning() { return (executionInfo & TASK_RUNNING) != 0; }
 	TimerTask* getNext() { return next; }
 	void setNext(TimerTask* next) { this->next = next; }
+	bool isJobInMicros() {return isJobMicros(executionInfo);}
+	bool isJobInSeconds() {return isJobSeconds(executionInfo);}
+	bool isJobInMillis() {return isJobMillis(executionInfo);}
 };
 
 /**
@@ -105,9 +133,10 @@ public:
  * There is a globally defined variable called `taskManager`, do not create more instances of this class.
  */
 class TaskManager {
-private:
+protected:
 	TimerTask tasks[6];
 	TimerTask *first;
+	IdleTask *firstIdleTask;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
 	volatile uint8_t lastInterruptTrigger;
@@ -124,7 +153,7 @@ public:
 	 * @param timerFunction the function to run at that time
 	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
 	 */
-	uint8_t scheduleOnce(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+	uint8_t scheduleOnce(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
 
 	/**
 	 * Schedules a task for repeated execution at the frequency provided.
@@ -132,7 +161,14 @@ public:
 	 * @param timerFunction the function to run at that time
 	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
 	 */
-	uint8_t scheduleFixedRate(int millis, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+	uint8_t scheduleFixedRate(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+
+	/**
+	 * Adds an idle task to the chain of idle tasks, or creates the first one if there wasn't previously one. Note that
+	 * idle tasks are called very, very frequenlty and should be exceptionally short in duration and take very little
+	 * CPU under most circumstances.
+	 */
+	void addIdleTask(IdleTask* idleTask);
 
 	/**
 	 * Adds an interrupt that will be handled by task manager, such that it's marshalled into a task.
@@ -162,15 +198,7 @@ public:
 	 * not call back until at least `micros` time has passed.
 	 * @param micros the number of microseconds to wait.
 	 */  
-	void yieldForMicros(uint16_t micros);
-
-	/**
-	 * This method fills slotData with the current running conditions of each available task slot.
-	 * Useful to ensure that you're not overloading taskManager, or if the number of tasks need
-	 * be increased.
-	 * @param slotData the char array to fill in with task information. Must be as long as number of tasks.
-	 */
-	char* checkAvailableSlots(char* slotData);
+	virtual void yieldForMicros(uint16_t micros);
 
 	/**
 	 * This should be called in the loop() method of your sketch, ensure that your loop method does
@@ -182,6 +210,33 @@ public:
 	 * Used internally by the interrupt handlers to tell task manager an interrupt is waiting. Not for external use.
 	 */
 	static void markInterrupted(uint8_t interruptNo);
+
+	/**
+	 * Reset the task manager such that all current tasks are cleared, back to power on state.
+	 */
+    void reset() {
+		// all the slots should be cleared
+        for(int i =0; i<numberOfSlots; i++) {
+            tasks[i].clear();
+        }
+		// the queue must be completely cleared too.
+		first = NULL;
+    }
+
+	/**
+	 * This method fills slotData with the current running conditions of each available task slot.
+	 * Useful to ensure that you're not overloading taskManager, or if the number of tasks need
+	 * be increased.
+	 * @param slotData the char array to fill in with task information. Must be as long as number of tasks + 1.
+	 */
+	char* checkAvailableSlots(char* slotData);
+
+	/**
+	 * Gets the first task in the run queue. Not often useful outside of testing.
+	 */
+	TimerTask* getFirstTask() {
+		return first;
+	}
 private:
 	int findFreeTask();
 	void removeFromQueue(TimerTask* task);

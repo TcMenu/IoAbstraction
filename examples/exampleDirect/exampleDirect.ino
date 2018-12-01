@@ -7,14 +7,15 @@
 
 IoAbstractionRef arduinoPins = ioUsingArduino();
 
+const int pinInput = 2, pinLed = LED_BUILTIN;
+
 void setup() {
 	// and also on arduino pins
-	ioDevicePinMode(arduinoPins, 10, INPUT);
-	ioDevicePinMode(arduinoPins, 13, OUTPUT);
+	ioDevicePinMode(arduinoPins, pinInput, INPUT);
+	ioDevicePinMode(arduinoPins, pinLed, OUTPUT);
 }
 
 void loop() {
-	// read the arduino, write to IO expander.
-	uint8_t switchValue = ioDeviceDigitalReadS(arduinoPins, 30);
-	ioDeviceDigitalWrite(arduinoPins, 31, switchValue);
+	uint8_t switchValue = ioDeviceDigitalReadS(arduinoPins, pinInput);
+	ioDeviceDigitalWrite(arduinoPins, pinLed, switchValue);
 }
