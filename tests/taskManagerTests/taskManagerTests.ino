@@ -1,6 +1,6 @@
 #line 2 "taskManagerTests.ino"
 
-#include <AUnit.h>
+#include <AUnitVerbose.h>
 #include "IoAbstraction.h"
 #include "MockIoAbstraction.h"
 
@@ -12,10 +12,29 @@ using namespace aunit;
 void setup() {
     Serial.begin(115200);
     while(!Serial); // needed for some 32 bit boards.
+	TestRunner::setTimeout(60);
+
+	//TestRunner::exclude("HighThroughputFixture_taskManagerHighThroughputTest");
+	//TestRunner::include("TimingHelpFixture_cancellingAJobAfterCreation");
 }
 
 void loop() {
 	TestRunner::run();
+}
+
+void dumpTasks() {
+	Serial.println("Dumping the task queue contents");
+	TimerTask* task = taskManager.getFirstTask();
+	while(task) {
+		Serial.print(" - Task schedule "); Serial.print(task->microsFromNow());
+		Serial.print(task->isRepeating() ? " Repeating ":" Once ");
+		Serial.print(task->isJobInMicros() ? " Micros " : task->isJobInSeconds() ? " Seconds " : " Millis ");
+		Serial.println(task->isInUse() ? " InUse":" Free");
+		if(task->getNext() == task) {
+			Serial.println("!!!Infinite loop found!!!");
+		}
+		task = task->getNext();
+	}
 }
 
 // these variables are set during test runs to time and verify tasks are run.
@@ -54,11 +73,11 @@ protected:
 	}
 
 	void assertThatTaskRunsOnTime(uint32_t minExpected, uint32_t allowanceOver) {
-		unsigned long start = millis();
+		unsigned long startTime = millis();
 
 		// wait until the task is marked as scheduled.
-		while(!scheduled && (millis() - start) < 5000) {
-			taskManager.yieldForMicros(1);
+		while(!scheduled && (millis() - startTime) < 5000) {
+			taskManager.yieldForMicros(10000);
 		}
 
 		// we must have called the job.
@@ -139,12 +158,35 @@ testF(TimingHelpFixture, scheduleManyJobsAtOnce) {
 }
 
 testF(TimingHelpFixture, scheduleFixedRateTestCase) {
-	taskManager.scheduleFixedRate(1, recordingJob, TIME_MILLIS);
-	taskManager.scheduleFixedRate(100, recordingJob2, TIME_MICROS);
+	assertEqual(taskManager.getFirstTask(), NULL);
+
+	int taskId1 = taskManager.scheduleFixedRate(1, recordingJob, TIME_MILLIS);
+	int taskId2 = taskManager.scheduleFixedRate(100, recordingJob2, TIME_MICROS);
+
+
+	// now check the task registration in detail.
+	assertNotEqual(taskId1, TASKMGR_INVALIDID);
+	TimerTask* task = taskManager.getFirstTask();
+	assertNotEqual(task, NULL);
+	assertFalse(task->isJobInMillis());
+	assertTrue(task->isJobInMicros());
+	assertFalse(task->isJobInSeconds());
+	
+	// now check the task registration in detail.
+	assertNotEqual(taskId2, TASKMGR_INVALIDID);
+	task = task->getNext();
+	assertNotEqual(task, NULL);
+	assertTrue(task->isJobInMillis());
+	assertFalse(task->isJobInMicros());
+	assertFalse(task->isJobInSeconds());
+
+	dumpTasks();
 
 	uint32_t timeStartYield = millis();
 	taskManager.yieldForMicros(20000);
 	uint32_t timeTaken = millis() - timeStartYield;
+
+	dumpTasks();
 
 	// make sure the yield timings were in range.
 	assertLess(timeTaken, (uint32_t) 22);
@@ -174,61 +216,28 @@ testF(TimingHelpFixture, interruptSupportMarshalling) {
 }
 
 testF(TimingHelpFixture, cancellingAJobAfterCreation) {
-	int taskId = taskManager.scheduleFixedRate(1, recordingJob, TIME_MILLIS);
+	assertEqual(taskManager.getFirstTask(), NULL);
 
-	assertThatTaskRunsOnTime(1000, MILLIS_ALLOWANCE);
+	int taskId = taskManager.scheduleFixedRate(10, recordingJob, TIME_MILLIS);
+	
+	// now check the task registration in detail.
+	assertNotEqual(taskId, TASKMGR_INVALIDID);
+	TimerTask* task = taskManager.getFirstTask();
+	assertNotEqual(task, NULL);
+	assertTrue(task->isJobInMillis());
+	assertFalse(task->isJobInMicros());
+	assertFalse(task->isJobInSeconds());
+	assertMore(task->microsFromNow(), 8000UL);
 
+	assertThatTaskRunsOnTime(10000, MILLIS_ALLOWANCE);
+
+	// cancel the task and make sure everything is cleared down
 	assertTasksSpacesTaken(1);
-
 	taskManager.cancelTask(taskId);
-
 	assertTasksSpacesTaken(0);
+
+	assertEqual(taskManager.getFirstTask(), NULL);
 }
-
-// We can only reset the clock to a new value on AVR, this is very useful and allows us to ensure the
-// rollover cases work properly at least for milliseconds
-
-#ifdef __AVR__
-#include <util/atomic.h>
-void setMillis(unsigned long ms)
-{
-  extern unsigned long timer0_millis;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    timer0_millis = ms;
-  }
-}
-
-//
-// this test only runs on AVR - it sets the timer near to overflow and schedules some tasks
-//
-testF(TimingHelpFixture, testClockRollover) {
-	
-	// set the clock so that it will roll
-	uint32_t oldMillis = millis();
-    setMillis(((uint32_t)-200L));
-
-	taskManager.scheduleOnce(1, recordingJob, TIME_SECONDS);
-	taskManager.scheduleFixedRate(250, recordingJob2, TIME_MICROS);
-	
-	// make sure it's still to wrap.
-	assertTrue(millis() > 100000000L);
-
-	// now make sure it actually runs as expected
-	assertThatTaskRunsOnTime(1000000L, MILLIS_ALLOWANCE);
-	assertTasksSpacesTaken(1);
-
-	// make sure it has wrapped now.
-	assertTrue(millis() < 10000L);
-
-	// and make sure the microsecond job is still going..	
-	int count2Then = count2;
-	taskManager.yieldForMicros(10000);
-	assertTrue(count2Then != count2);
-
-	setMillis(oldMillis);
-}
-
-#endif // AVR test only
 
 int counts[6];
 
@@ -279,18 +288,14 @@ public:
 			unsigned long currentTaskMicros = task->microsFromNow();
 			// the task must be in use
 			inOrder = inOrder && task->isInUse();
-			// and it must have a higher or equal number of micros than the prior task.
-			unsigned long difference = (currentTaskMicros >= prevTaskMicros);
-			if(task->isMicrosecondJob()) {
-				// microsecond jobs must have absolute accuracy
-				inOrder = inOrder && difference >= 0;
+			
+			// we then compare it in order, obviously millis tick slower than micros
+			if(currentTaskMicros < prevTaskMicros && (prevTaskMicros - currentTaskMicros) > 1000) {
+				inOrder = false;
+				Serial.print("Failed prev "); Serial.print(prevTaskMicros); 
+				Serial.print(", current ");Serial.println(currentTaskMicros);
 			}
-			else {
-				// millisecond jobs should have about 1 millisecond accuracy.
-				inOrder = inOrder && difference > 1000;
-			}
-			Serial.println(inOrder);
-
+		
 			// get the next item and store this micros for next compare.
 			prevTaskMicros = currentTaskMicros;
 			task = task->getNext();
@@ -301,17 +306,6 @@ public:
 
 		// assert that it's in order.
 		assertTrue(inOrder);
-	}
-
-	void dumpTasks() {
-		Serial.println("Dumping the task queue contents");
-		TimerTask* task = taskManager.getFirstTask();
-		while(task) {
-			Serial.print(" - Task schedule "); Serial.print(task->microsFromNow());
-			Serial.print(task->isRepeating() ? " Repeating ":" Once ");
-			Serial.println(task->isInUse() ? " InUse":" Free");
-			task = task->getNext();
-		}
 	}
 
 	void clearCounts() {
@@ -343,10 +337,9 @@ testF(HighThroughputFixture, taskManagerHighThroughputTest) {
 	Serial.print("Dumping threads"); Serial.println(taskManager.checkAvailableSlots(slotData));
 
 	assertEqual(counts[5], 10); 	// should be 10 runs as it's manually repeating
-	assertMore(counts[1], 160);		// should be at least 160 runs, scheduled every 100 millis, 
-	assertMore(counts[3], 16);		// should be at least 16 runs, as this test lasts about 20 seconds. 
-	assertMore(counts[0], 1600);	// should be at least 1600 runs it's scheduled every 10 millis
-	assertEqual(counts[4], 1); 		// these should both be 1, trigged exactly once.
-	assertNotEqual(counts[2], 0); 	// meaningless to count micros calls. check it happened
+	assertMore(counts[1], 140);		// should be at least 140 runs, scheduled every 100 millis, 
+	assertMore(counts[3], 14);		// should be at least 14 runs, as this test lasts about 20 seconds. 
+	assertMore(counts[0], 1400);	// should be at least 1400 runs it's scheduled every 10 millis
+	assertEqual(counts[4], 1); 		// should have been triggered once
+	assertNotEqual(counts[2], 0); 	// meaningless to count micros calls. check it happened 
 }
-

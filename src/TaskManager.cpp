@@ -20,6 +20,7 @@ void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 	this->callback = execCallback;
 	
 	this->scheduledAt = (isJobMicros(executionInfo)) ? micros() : millis();
+	this->next = NULL;
 }
 
 bool TimerTask::isReady() {
@@ -43,7 +44,7 @@ unsigned long TimerTask::microsFromNow() {
 	uint32_t microsFromNow;
 	if (isJobMicros(executionInfo)) {
 		uint16_t delay = timeFromExecInfo(executionInfo);
-		uint16_t alreadyTaken = (micros() - scheduledAt);
+		int32_t alreadyTaken = (micros() - scheduledAt);
 		microsFromNow =  (delay < alreadyTaken) ? 0 : (delay - alreadyTaken);
 	}
 	else {
@@ -78,6 +79,7 @@ inline void TimerTask::execute() {
 void TimerTask::clear() {
 	executionInfo = 0;
 	callback = NULL;
+	next = NULL;
 }
 
 void TaskManager::markInterrupted(uint8_t interruptNo) {
@@ -106,8 +108,7 @@ inline uint16_t toTimerValue(uint16_t v, TimerUnit unit) {
 		unit = TIME_SECONDS;
 		v = v / 1000U;
 	}
-	v = min(v, TIMER_MASK);
-	return v | (((uint16_t)unit) << 12);
+	return (v & TIMER_MASK) | (((uint16_t)unit) << 12);
 }
 
 uint8_t TaskManager::scheduleOnce(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit) {
@@ -232,6 +233,7 @@ void TaskManager::removeFromQueue(TimerTask* tm) {
 	// shortcut, if we are first, just remove us by getting the next and setting first.
 	if (first == tm) {
 		first = tm->getNext();
+		tm->setNext(NULL);
 		return;
 	}
 

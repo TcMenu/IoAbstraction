@@ -120,7 +120,9 @@ public:
 	bool isRunning() { return (executionInfo & TASK_RUNNING) != 0; }
 	TimerTask* getNext() { return next; }
 	void setNext(TimerTask* next) { this->next = next; }
-	bool isMicrosecondJob() {return isJobMicros(executionInfo);}
+	bool isJobInMicros() {return isJobMicros(executionInfo);}
+	bool isJobInSeconds() {return isJobSeconds(executionInfo);}
+	bool isJobInMillis() {return isJobMillis(executionInfo);}
 };
 
 /**
@@ -213,9 +215,12 @@ public:
 	 * Reset the task manager such that all current tasks are cleared, back to power on state.
 	 */
     void reset() {
+		// all the slots should be cleared
         for(int i =0; i<numberOfSlots; i++) {
             tasks[i].clear();
         }
+		// the queue must be completely cleared too.
+		first = NULL;
     }
 
 	/**

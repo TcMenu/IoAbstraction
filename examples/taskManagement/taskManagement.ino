@@ -43,10 +43,10 @@ void setup() {
 	// connect a switch to pin 2, so you can raise interrupts.
 	pinMode(2, INPUT);
 
-  //
-  // Now we register some taks, note that on AVR by default there are 6 slots, all others have 10 slots.
-  // this can be changed in TaskManager.h to your preferred setting.
-  //
+	//
+	// Now we register some taks, note that on AVR by default there are 6 slots, all others have 10 slots.
+	// this can be changed in TaskManager.h to your preferred setting.
+	//
 
 	// We schedule the function tenSecondsUp() to be called in 10,000 milliseconds.
 	taskManager.scheduleOnce(10000, tenSecondsUp);
@@ -124,9 +124,9 @@ void oneSecondPulse() {
  */
 void tenSecondsUp() {
 	log("Ten seconds up");
-  log(taskManager.checkAvailableSlots(slotString));
+	log(taskManager.checkAvailableSlots(slotString));
 	if(taskManager.scheduleOnce(10000, twentySecondsUp) == -1) {
-	  log("Failed to register twenty second task");
+		log("Failed to register twenty second task");
 	}
 }
 

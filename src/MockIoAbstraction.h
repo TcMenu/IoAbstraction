@@ -7,8 +7,6 @@
 #define _MOCK_IO_ABSTRACTION_H_
 
 #include <IoAbstraction.h>
-#include <AUnit.h>
-using namespace aunit;
 
 /**
  * During any call to the mock version of IoAbstraction, any error detected
