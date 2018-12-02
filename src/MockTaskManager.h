@@ -5,11 +5,19 @@
 #ifndef _MOCKED_TASK_MANAGER_H_
 #define _MOCKED_TASK_MANAGER_H_
 
+/**
+ * @ file MockTaskManager.h
+ * 
+ * This file contains a version of task manager that is useful for dev & testing.
+ * None of the implementations in this file are designed for production use.
+ */
+
 #include <TaskManager.h>
 
 /** 
  * This adds a bit of extra stuff to task manager for testing. Never call the runLoop
- * method, as it will try and schedule directly. Instead manually use the helpers.
+ * method, as it will try and schedule directly. Instead manually use the helper methods
+ * to run the scheduled tasks manaually during test running.
  */
 class SimulatedTaskManager : public TaskManager {
 private:
@@ -25,6 +33,7 @@ public:
         for(int i =0; i<numberOfSlots; i++) {
             tasks[i].clear();
         }
+        TaskManager::reset();
     }
 
     void yieldForMicros(uint16_t micros) override {

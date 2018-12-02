@@ -20,6 +20,10 @@ AvrEeprom	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 ioDevicePinMode	KEYWORD2
+ioDeviceDigitalReadPort	KEYWORD2
+ioDeviceDigitalReadPortS	KEYWORD2
+ioDeviceDigitalWritePort	KEYWORD2
+ioDeviceDigitalWritePort	KEYWORD2
 ioDeviceDigitalRead	KEYWORD2
 ioDeviceDigitalWrite	KEYWORD2
 ioDeviceDigitalReadS	KEYWORD2
