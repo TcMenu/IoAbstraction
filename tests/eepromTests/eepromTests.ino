@@ -80,7 +80,7 @@ testF(EepromFixtures, testI2cEeprom) {
 	assertFalse(anEeprom.hasErrorOccurred());
 }
 
-const char* helloText[6] = {"Hello"};
+const char helloText[6] = {"Hello"};
 
 testF(EepromFixtures, testTheMockEeeprom) {
 	romStart = 0;
@@ -94,7 +94,7 @@ testF(EepromFixtures, testTheMockEeeprom) {
 	mockRom.writeArrayToRom(romStart + 7, (const unsigned char*)helloText, sizeof helloText);
 	char readBuffer[6];
 	mockRom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, 6);
-	assertEqual(helloText, strData);
+	assertEqual(readBuffer, helloText);
 
 	assertFalse(mockRom.hasErrorOccurred());
 }
