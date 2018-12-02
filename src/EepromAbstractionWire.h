@@ -3,9 +3,14 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-
 #ifndef _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_
 #define _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_
+
+/**
+ * @file EepromAbstractionWire.h
+ * 
+ * Contains the i2c variants of the EepromAbstraction
+ */
 
 #include <Arduino.h>
 #include "EepromAbstraction.h"

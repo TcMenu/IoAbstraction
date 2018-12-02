@@ -6,6 +6,13 @@
 #ifndef _MOCK_IO_ABSTRACTION_H_
 #define _MOCK_IO_ABSTRACTION_H_
 
+/**
+ * @file MockIoAbstraction.h
+ * 
+ * This file contains implementations of IoAbstraction that are very useful for dev & testing.
+ * Neither of the implementations in this file are designed for use in production.
+ */
+
 #include <IoAbstraction.h>
 
 /**
@@ -67,6 +74,9 @@ public:
          delete writeValues;
     }
 
+    /**
+     * Resets this abstraction back to its initial state, ready for the next test.
+     */
     void resetIo() {
         for(int i=0; i<numberOfCycles; i++) {
             readValues[i] = 0;
@@ -94,6 +104,9 @@ public:
         return bitRead(readValues[runLoopCalls], pin);
     }
 
+    /**
+     * Overrides the usual interrupt handler to just record the details of the interrupt requested
+     */
   	void attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode) override {
         this->intHandler = interruptHandler;
         this->intPin = pin;

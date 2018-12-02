@@ -14,7 +14,7 @@ void setup() {
     while(!Serial); // needed for some 32 bit boards.
 	TestRunner::setTimeout(60);
 
-	//TestRunner::exclude("HighThroughputFixture_taskManagerHighThroughputTest");
+	TestRunner::exclude("HighThroughputFixture_taskManagerHighThroughputTest");
 	//TestRunner::include("TimingHelpFixture_cancellingAJobAfterCreation");
 }
 

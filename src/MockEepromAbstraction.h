@@ -3,9 +3,18 @@
 
 #include "EepromAbstraction.h"
 
+/**
+ * @ file MockEepromAbstraction.h
+ * 
+ * This file contains implementations of the EepromAbstraction that are useful for dev & testing.
+ * None of the implementations in this file are designed for production use.
+ */
+
 #define EEPROM_MOCK_SIZE 128
 
 /**
+ * @ file MockEepromAbstraction.h
+ * 
  * An in memory eeprom implementation that can be used in unit tests the verify the behaviour
  * of your application without needing to write to an actual eeprom. It by default allocates
  * 128 bytes for storage, but can be changed by adjusting the defined size in the header file
