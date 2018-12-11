@@ -29,7 +29,7 @@ void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repea
 	previousState = NOT_PRESSED;
 }
 
-void KeyboardItem::onRelease(KeyReleasedCallbackFn callbackOnRelease) {
+void KeyboardItem::onRelease(KeyCallbackFn callbackOnRelease) {
 	this->callbackOnRelease = callbackOnRelease;
 }
 
@@ -43,15 +43,15 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 		else if (isDebouncing()) {
 			state = PRESSED;
 			if (callbackOnRelease != NULL) previousState = PRESSED;
-			if (callback != NULL) {
-				counter = 0; 
-				(*callback)(pin, false);
-			} 		
+			counter = 0; 
+			if (callback != NULL ) (*callback)(pin, false);
+				
 		}
-		else if (state == PRESSED && callback != NULL) {
+		else if (state == PRESSED) {
 			if (++counter > HOLD_THRESHOLD) {
 				state = BUTTON_HELD;
-				(*callback)(pin, true);
+				if (callbackOnRelease != NULL) previousState = BUTTON_HELD;
+				if (callback != NULL ) (*callback)(pin, true);
 				counter = 0;
 			}
 		}
@@ -69,7 +69,10 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 		state = NOT_PRESSED;
 		if (previousState == PRESSED) {
 			previousState = NOT_PRESSED;
-			(*callbackOnRelease)(pin);
+			(*callbackOnRelease)(pin,false);
+		} else if (previousState == BUTTON_HELD){
+			previousState = NOT_PRESSED;
+			(*callbackOnRelease)(pin,true);
 		}
 	}
 }
@@ -112,7 +115,7 @@ void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) 
 	}
 }
 
-void SwitchInput::onRelease(uint8_t pin, KeyReleasedCallbackFn callbackOnRelease) {
+void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {
 	for(uint8_t i=0; i<numberOfKeys; ++i) {
 		if(keys[i].getPin() == pin) {
 			keys[i].onRelease(callbackOnRelease);
