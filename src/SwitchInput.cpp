@@ -17,6 +17,8 @@ KeyboardItem::KeyboardItem() {
 	this->callback = NULL;
 	this->counter = 0;
 	this->state = NOT_PRESSED;
+	this->previousState = NOT_PRESSED;
+	this->callbackOnRelease = NULL;
 }
 
 void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval) {
@@ -24,10 +26,15 @@ void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repea
 	this->pin = pin;
 	this->repeatInterval = repeatInterval;
 	state = NOT_PRESSED;
+	previousState = NOT_PRESSED;
+}
+
+void KeyboardItem::onRelease(KeyReleasedCallbackFn callbackOnRelease) {
+	this->callbackOnRelease = callbackOnRelease;
 }
 
 void KeyboardItem::checkAndTrigger(uint8_t buttonState){
-	if (callback == NULL) return;
+	if (callback == NULL && callbackOnRelease == NULL) return; 
 	
 	if (buttonState == HIGH) {
 		if (state == NOT_PRESSED) {
@@ -35,17 +42,20 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 		}
 		else if (isDebouncing()) {
 			state = PRESSED;
-			counter = 0;
-			(*callback)(pin, false);
+			if (callbackOnRelease != NULL) previousState = PRESSED;
+			if (callback != NULL) {
+				counter = 0; 
+				(*callback)(pin, false);
+			} 		
 		}
-		else if (state == PRESSED) {
+		else if (state == PRESSED && callback != NULL) {
 			if (++counter > HOLD_THRESHOLD) {
 				state = BUTTON_HELD;
 				(*callback)(pin, true);
 				counter = 0;
 			}
 		}
-		else if (state == BUTTON_HELD && repeatInterval != NO_REPEAT) {
+		else if (state == BUTTON_HELD && repeatInterval != NO_REPEAT && callback != NULL) {
 			if (++counter > repeatInterval) {
 				(*callback)(pin, true);
 				counter = 0;
@@ -57,6 +67,10 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 	}
 	else {
 		state = NOT_PRESSED;
+		if (previousState == PRESSED) {
+			previousState = NOT_PRESSED;
+			(*callbackOnRelease)(pin);
+		}
 	}
 }
 
@@ -95,6 +109,15 @@ void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) 
 
 	if(isInterruptDriven()) {
 		registerInterrupt(pin);
+	}
+}
+
+void SwitchInput::onRelease(uint8_t pin, KeyReleasedCallbackFn callbackOnRelease) {
+	for(uint8_t i=0; i<numberOfKeys; ++i) {
+		if(keys[i].getPin() == pin) {
+			keys[i].onRelease(callbackOnRelease);
+			return;
+		}
 	}
 }
 

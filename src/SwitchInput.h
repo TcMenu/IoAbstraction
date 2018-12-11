@@ -50,6 +50,12 @@ enum KeyPressState : byte {
  */ 
 typedef void(*KeyCallbackFn)(uint8_t key, bool heldDown);
 
+/** 
+ * The signature for a callback on release function
+ * @param key the pin associated with the pin
+ */ 
+typedef void(*KeyReleasedCallbackFn)(uint8_t key);
+
 /**
  * The signature of a callback function for rotary encoders, registered when initialising the encoder setupUpDownButtonEncoder
  * @param newValue the value the encoder changed to
@@ -62,15 +68,18 @@ typedef void(*EncoderCallbackFn)(int newValue);
 class KeyboardItem {
 private:
 	KeyPressState state;
+	KeyPressState previousState;
 	uint8_t pin;
 	uint8_t counter;
 	uint8_t repeatInterval;
 	KeyCallbackFn callback;
+	KeyReleasedCallbackFn callbackOnRelease;
 public:
 	KeyboardItem();
 
 	void initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT);
 	void checkAndTrigger(uint8_t pin);
+	void onRelease(KeyReleasedCallbackFn callbackOnRelease);
 
 	bool isDebouncing() { return state == DEBOUNCING1 || state == DEBOUNCING2; }
 	bool isPressed() { return state == PRESSED || state == BUTTON_HELD; }
@@ -204,6 +213,13 @@ public:
 	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
 	 */
 	void addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
+
+		/**
+	 * Set callback the function to be called back upon key release
+	 * @param pin the pin on which the switch is attached
+	 * @param callbackOnRelease the function to be called back upon key release
+	 */
+	void onRelease(uint8_t pin, KeyReleasedCallbackFn callbackOnRelease);
 
 	/**
 	 * Sets the rotary encoder to use, unless you have a custom one, prefer to use the setup methods
