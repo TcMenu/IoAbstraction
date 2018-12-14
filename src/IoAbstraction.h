@@ -74,7 +74,9 @@ public:
 };
 
 // this defines the number of IOExpanders can be put into a multi IO expander.
+#ifndef MAX_ALLOWABLE_DELEGATES
 #define MAX_ALLOWABLE_DELEGATES 8
+#endif // defined MAX_ALLOWABLE_DELEGATES
 
 typedef uint8_t (*ExpanderOpFn)(IoAbstractionRef ref, uint8_t pin, uint8_t val);
 
