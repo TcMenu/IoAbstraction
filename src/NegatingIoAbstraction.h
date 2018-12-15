@@ -8,6 +8,11 @@
 #include "BasicIoAbstraction.h"
 
 /**
+ * @file NegatingIoAbstraction.h
+ * This file contains an implementation of BasicIoAbstraction that negates whatever read or write would normally be returned
+ */
+
+/**
  * This implementation of IoAbstraction negates all the pin operations on the given abstraction, both for read and write.
  * Useful when there is a need to invert the meaning such as when dealing with both PULL UP and PULL DOWN switches at the
  * same time on different IO devices.

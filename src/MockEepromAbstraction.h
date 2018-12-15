@@ -35,6 +35,10 @@ public:
 		}
 	}
 
+	void reset() {
+		memset(data, 0, sizeof data);
+	}
+
 	uint8_t read8(EepromPosition position) override {
 		checkBounds(position, 1);
 		return data[position];
