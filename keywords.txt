@@ -49,6 +49,7 @@ cancelTask	KEYWORD2
 runLoop	KEYWORD2
 readPort	KEYWORD2
 writePort	KEYWORD2
+onRelease	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
