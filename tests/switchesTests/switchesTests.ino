@@ -5,6 +5,7 @@
 #include "SwitchInput.h"
 
 bool pressed;
+bool keyReleased;
 uint8_t key;
 bool held;
 int callsMade;
@@ -36,6 +37,11 @@ void onSwitchPressed(uint8_t k, bool h) {
     pressed = true;
 }
 
+void onSwitchReleased(uint8_t k, bool h) {
+    keyReleased = true;
+    held = h;
+}
+
 class SwitchesFixture : public TestOnce {
 protected:
     MockedIoAbstraction mockIo;
@@ -48,6 +54,7 @@ public:
         taskManager.reset();
 
         pressed = false;
+        keyReleased = false;
         held = false;
         callsMade = 0;
         encoderCurrentVal = 0;
@@ -62,6 +69,7 @@ public:
         }    
         // now check if we are pressed, and if there are any errors.
         assertEqual(pressed, shouldBePressed);
+        assertFalse(keyReleased);
         assertEqual(mockIo.getErrorMode(), NO_ERROR);
     }
 
@@ -73,7 +81,17 @@ public:
 
         // now check if we are held and for any errors
         assertEqual(held, shouldBeHeld);
+        assertFalse(keyReleased);
         assertEqual(mockIo.getErrorMode(), NO_ERROR);
+    }
+
+    void assertReleasedState(bool expectedHeldState) {
+        int loopCount = 0;
+        while(!keyReleased && ++loopCount < 500) {
+            taskManager.yieldForMicros(1000);
+        }
+        assertTrue(keyReleased);
+        assertEqual(held, expectedHeldState);
     }
 
     void runInterruptLoopTimes(int times) {
@@ -87,6 +105,7 @@ public:
 testF(SwitchesFixture, testPressingASingleButton) {
     switches.initialise(&mockIo, true);
     switches.addSwitch(2, onSwitchPressed, NO_REPEAT);
+    switches.onRelease(2, onSwitchReleased);
     assertFalse(switches.isInterruptDriven());
 
     // simulate the button being pressed (with a bounce).
@@ -98,6 +117,7 @@ testF(SwitchesFixture, testPressingASingleButton) {
     // we now simulate the button being pressed down.
     for(int i=3; i<25;i++)  mockIo.setValueForReading(i, 0x0000);
     assertPressedState(true);
+    assertFalse(keyReleased);
 
     long millisStart = millis();
 
@@ -105,6 +125,12 @@ testF(SwitchesFixture, testPressingASingleButton) {
     mockIo.resetIo();
     for(int i=0; i<25;i++)  mockIo.setValueForReading(i, 0x0000);
     assertHeldState(true);
+
+    // we now simulate the button being released.
+    mockIo.resetIo();
+    for(int i=0; i<25;i++)  mockIo.setValueForReading(i, 0x0004);
+    assertReleasedState(true);
+
 
     // make sure getting to held took near to 400 millis.
     assertMoreOrEqual(millis() - millisStart, (uint32_t)380);
