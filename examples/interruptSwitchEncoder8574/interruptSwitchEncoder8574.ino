@@ -15,18 +15,18 @@
 #include<IoAbstractionWire.h>
 
 // The pin onto which we connected the rotary encoders switch
-const int spinwheelClickPin = 4;
+const int spinwheelClickPin = 5;
 
 // The pin onto which we connected the repeat button switch
-const int repeatButtonPin = 0;
+const int repeatButtonPin = 4;
 
 // the led pin on the IO ioDevice
 const int ledPin = 1;
 
 // The two pins where we connected the A and B pins of the encoder. I recomend you dont change these
 // as the pin must support interrupts.
-const int encoderAPin = 2;
-const int encoderBPin = 3;
+const int encoderAPin = 6;
+const int encoderBPin = 7;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
@@ -56,6 +56,11 @@ void onRepeatButtonClicked(uint8_t pin, bool heldDown) {
   ioDeviceDigitalWriteS(switches.getIoAbstraction(), ledPin, currentLedState);
 }
 
+void onRepeatButtonReleased(uint8_t pin, bool heldDown) {
+  Serial.print("Released repeat button - previously ");
+  Serial.println(heldDown ? "Held" : "Pressed");
+}
+
 //
 // Each time the encoder value changes, this function runs, as we registered it as a callback
 //
@@ -72,8 +77,8 @@ void setup() {
 
   // First we set up the switches library, giving it the task manager and tell it where the pins are located
   // We could also of chosen IO through an i2c device that supports interrupts.
-  // If you want to use PULL UP instead of PULL DOWN logic, uncomment the additional parameter below
-  switches.initialiseInterrupt(ioFrom8574(0x20, 2), true);
+  // the second parameter is a flag to use pull up switching, (true is pull up).
+  switches.initialiseInterrupt(ioFrom8574(0x20, 0), true);
 
   ioDevicePinMode(switches.getIoAbstraction(), ledPin, OUTPUT);
 
@@ -81,6 +86,7 @@ void setup() {
   // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.
   switches.addSwitch(spinwheelClickPin, onSpinwheelClicked);
   switches.addSwitch(repeatButtonPin, onRepeatButtonClicked, 25);
+  switches.onRelease(repeatButtonPin, onRepeatButtonReleased);
 
   // now we set up the rotary encoder, first we give the A pin and the B pin.
   // we give the encoder a max value of 128, always minumum of 0.
