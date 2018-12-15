@@ -14,11 +14,13 @@
  * Task manager is a simple co-routine style implementation for Arduino which supports basic task scheduling.
  */
 
+#ifndef DEFAULT_TASK_SIZE
 #ifdef __AVR__
 #define DEFAULT_TASK_SIZE 6
 #else
 #define DEFAULT_TASK_SIZE 10
-#endif
+#endif // AVR platform
+#endif // defined DEFAULT_TASK_SIZE
 
 //
 // Only define this if you have libraries you are using that have long delays that you cannot control. Be aware this
