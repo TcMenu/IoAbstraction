@@ -12,7 +12,7 @@
 #ifndef _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 #define _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 
-#include <IoAbstraction.h>
+#include "IoAbstraction.h"
 #include <Wire.h>
 
 /**
@@ -33,6 +33,9 @@ public:
 	/** Construct a 8574 expander on i2c address and with interrupts connected to a given pin (0xff no interrupts) */
 	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin);
 	virtual ~PCF8574IoAbstraction() { }
+
+	/** Forces the device to start reading back state during syncs even if no pins are configured as read */
+	void overrideReadFlag() { pinsConfiguredRead = true; }
 
 	/** 
 	 * sets the pin direction on the device, notice that on this device input is achieved by setting the port to high 
