@@ -136,7 +136,7 @@ public:
  */
 class TaskManager {
 protected:
-	TimerTask tasks[6];
+	TimerTask tasks[DEFAULT_TASK_SIZE];
 	TimerTask *first;
 	IdleTask *firstIdleTask;
 	uint8_t numberOfSlots;
