@@ -8,6 +8,7 @@ Along with ths quick start guide and the examples also see:
 
 * [IoAbstraction documentation pages](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/)
 * [IoAbstraction reference documentation](https://www.thecoderscorner.com/ref-docs/ioabstraction/html)
+* [TCC Libraries community discussion forum](https://www.thecoderscorner.com/jforum/)
 
 ## Installation for Arduino IDE
 
