@@ -343,3 +343,4 @@ testF(HighThroughputFixture, taskManagerHighThroughputTest) {
 	assertEqual(counts[4], 1); 		// should have been triggered once
 	assertNotEqual(counts[2], 0); 	// meaningless to count micros calls. check it happened 
 }
+
