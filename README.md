@@ -56,7 +56,12 @@ At the global level (outside of any function) we create an i2c expander on addre
 
 Or for Arduino pins instead..
 	
-	IoAbstractionRef ioUsingArduino();	
+	IoAbstractionRef ioUsingArduino();
+
+And lastly for DfRobot LCD shield input we use (requires library V1.3.2 at least):
+
+	IoAbstractionRef inputFromDfRobotShield();   // for all other versions
+	IoAbstractionRef inputFromDfRobotShieldV1(); // for version 1
 
 In setup we set it's first IO pin to input and start the Wire library:
 	
@@ -76,7 +81,7 @@ Let's now say we wanted to write one value and read two items on the same device
 
 ## SwitchInput - buttons that are debounced with event based callbacks
 
-This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this library also uses the above on task manager.
+This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this component also uses task manager.
 
 Before doing anything else, you must add taskManager's run loop to your loop method, and your loop method must not do any long delay calls.
 
