@@ -24,7 +24,7 @@ IoAbstractionRef dfRobotKeys = inputFromDfRobotShield();
 void logKeyPressed(const char* whichKey, bool heldDown) {
     Serial.print("Key ");
     Serial.print(whichKey);
-    Serial.println(heldDown ? " Pressed" : " Held");
+    Serial.println(heldDown ? " Held" : " Pressed");
 }
 
 void setup() {

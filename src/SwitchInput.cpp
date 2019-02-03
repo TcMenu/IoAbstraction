@@ -44,20 +44,25 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 			state = PRESSED;
 			if (callbackOnRelease != NULL) previousState = PRESSED;
 			counter = 0; 
+			acceleration = 1;
 			if (callback != NULL ) (*callback)(pin, false);
 				
 		}
 		else if (state == PRESSED) {
-			if (++counter > HOLD_THRESHOLD) {
+			counter++;
+			if (counter > HOLD_THRESHOLD) {
 				state = BUTTON_HELD;
 				if (callbackOnRelease != NULL) previousState = BUTTON_HELD;
 				if (callback != NULL ) (*callback)(pin, true);
 				counter = 0;
+				acceleration = 1;
 			}
 		}
 		else if (state == BUTTON_HELD && repeatInterval != NO_REPEAT && callback != NULL) {
-			if (++counter > repeatInterval) {
-				(*callback)(pin, true);
+			counter = counter + (acceleration >> 2) + 1;
+			if (counter > repeatInterval) {
+				acceleration = min(255, acceleration + 1);
+				if(callback != NULL) (*callback)(pin, true);
 				counter = 0;
 			}
 		}
@@ -122,6 +127,15 @@ void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {
 			return;
 		}
 	}
+}
+
+bool SwitchInput::isSwitchPressed(uint8_t pin) {
+	for(uint8_t i=0; i<numberOfKeys; ++i) {
+		if(keys[i].getPin() == pin) {
+			return keys[i].isPressed();
+		}
+	}
+	return false;
 }
 
 void SwitchInput::pushSwitch(uint8_t pin, bool held) {

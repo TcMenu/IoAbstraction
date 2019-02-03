@@ -68,6 +68,7 @@ private:
 	KeyPressState previousState;
 	uint8_t pin;
 	uint8_t counter;
+	uint8_t acceleration;
 	uint8_t repeatInterval;
 	KeyCallbackFn callback;
 	KeyCallbackFn callbackOnRelease;
@@ -155,7 +156,7 @@ public:
  */
 class EncoderUpDownButtons : public RotaryEncoder {
 public:
-	EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 5);
+	EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 20);
 };
 
 #define SW_FLAG_PULLUP_LOGIC 0
@@ -268,6 +269,12 @@ public:
 	 * Returns true if in interrupt mode and current attempting a debounce
 	 */
 	bool isInterruptDebouncing() {return bitRead(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE);}
+
+	/**
+	 * Returns true if the switch at the defined pin is pressed, otherwise false
+	 * @param pin the pin to check if pressed
+	 */
+	bool isSwitchPressed(uint8_t pin);
 
 	/** 
 	 * Sets the debounce state - only really for internal use.
