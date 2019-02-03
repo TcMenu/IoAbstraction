@@ -140,6 +140,7 @@ public:
  */  
 class HardwareRotaryEncoder : public RotaryEncoder {
 private:
+	unsigned long lastChange;
 	uint8_t pinA;
 	uint8_t pinB;
 	uint8_t aLast;
@@ -148,6 +149,8 @@ private:
 public:
 	HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
 	virtual void encoderChanged();
+private:
+	int amountFromChange(unsigned long change);
 };
 
 /**

@@ -7,6 +7,8 @@
 #include <Arduino.h>
 #include "SwitchInput.h"
 
+#define ONE_TURN_OF_ENCODER 32
+
 SwitchInput switches;
 
 void registerInterrupt(uint8_t pin);
@@ -192,13 +194,24 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 }
 
 void RotaryEncoder::increment(int8_t incVal) {
-	if (((currentReading) == 0 && (incVal < 0)) || ((currentReading + incVal) > maximumValue)) return;
-	currentReading += incVal; callback(currentReading);
+	if(incVal >= 0) {
+		currentReading = min(currentReading + incVal, maximumValue);
+		callback(currentReading);
+	}
+	else if(currentReading != 0 && currentReading < abs(incVal)) {
+		currentReading = 0;
+		callback(currentReading);
+	}
+	else if(currentReading != 0) {
+		currentReading += incVal; 
+		callback(currentReading);
+	}	
 }
 
 HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) : RotaryEncoder(callback) {
 	this->pinA = pinA;
 	this->pinB = pinB;
+	this->lastChange = micros();
 
 	// set the pin directions to input with pull ups enabled
 	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
@@ -240,6 +253,15 @@ void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
 	}
 }
 
+int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
+	if(change > 250000 || maximumValue < ONE_TURN_OF_ENCODER) return 1;
+
+	if(change > 120000) return 2;
+	else if (change > 70000) return 4;
+	else if (change > 30000) return 6;
+	else return 10;
+}
+
 void HardwareRotaryEncoder::encoderChanged() {
 	ioDeviceSync(switches.getIoAbstraction());
 	uint8_t a = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
@@ -250,7 +272,10 @@ void HardwareRotaryEncoder::encoderChanged() {
 		if(b != cleanFromB) {
 			cleanFromB = b;
 			if(a) {	
-				increment(a != b ? -1 : +1);
+				unsigned long timeNow = micros();
+				int amt = amountFromChange(timeNow - lastChange);
+				increment(a != b ? -amt : amt);
+				lastChange = timeNow;
 			}
 		}
 	}
