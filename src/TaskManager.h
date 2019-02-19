@@ -100,19 +100,36 @@ struct IdleTask {
 };
 
 /**
+ * Any class extending from executable can be passed by reference to task manager
+ * and the exec() method will be called when the scheduled time is reached.
+ */
+class Executable {
+public:
+	/**
+	 * Called when the schedule is reached
+	 */
+	virtual void exec();
+};
+
+/**
  * Internal class only that represents a single task slot.
  */
 class TimerTask {
 private:
 	uint16_t executionInfo;
 	uint32_t scheduledAt;
-	TimerFn callback;
+	union {
+		TimerFn callback;
+		Executable* taskRef;
+	};
 	TimerTask* next;
+	bool executableJob;
 public:
 	TimerTask();
 	bool isReady();
 	unsigned long microsFromNow();
 	void initialise(uint16_t executionInfo, TimerFn execCallback);
+	void initialise(uint16_t executionInfo, Executable* executable);
 	inline void execute();
 	bool isInUse() { return (executionInfo & TASK_IN_USE) != 0; }
 	bool isRepeating() { return (executionInfo & TASK_REPEATING) != 0; }
@@ -158,12 +175,30 @@ public:
 	uint8_t scheduleOnce(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
 
 	/**
+	 * Schedules a task for one shot execution in the timeframe provided calling back the exec
+	 * function on the provided class extending Executable.
+	 * @param millis the time frame in which to schedule the task
+	 * @param execRef a reference to a class extending Executable
+	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
+	 */
+	uint8_t scheduleOnce(uint16_t when, Executable* execRef, TimerUnit timeUnit = TIME_MILLIS);
+
+	/**
 	 * Schedules a task for repeated execution at the frequency provided.
 	 * @param millis the frequency at which to execute
 	 * @param timerFunction the function to run at that time
 	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
 	 */
 	uint8_t scheduleFixedRate(uint16_t when, TimerFn timerFunction, TimerUnit timeUnit = TIME_MILLIS);
+
+	/**
+	 * Schedules a task for repeated execution at the frequency provided calling back the exec
+	 * method on the provided class extending Executable.
+	 * @param millis the frequency at which to execute
+	 * @param execRef a reference to a class extending Executable
+	 * @param timeUnit defaults to TIME_MILLIS but can be any of the possible values.
+	 */
+	uint8_t scheduleFixedRate(uint16_t when, Executable* execRef, TimerUnit timeUnit = TIME_MILLIS);
 
 	/**
 	 * Adds an idle task to the chain of idle tasks, or creates the first one if there wasn't previously one. Note that

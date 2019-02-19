@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
+ */
+
 #ifndef _DF_ROBOT_INPUT_ABSTRACTION_H
 #define _DF_ROBOT_INPUT_ABSTRACTION_H
 
@@ -112,11 +117,11 @@ const PROGMEM DfRobotAnalogRanges dfRobotAvrRanges { 50, 250, 450, 650, 850};
  */
 const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 50, 195, 380, 555, 790};
 
-IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0) {
+inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0) {
     return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin);
 }
 
-IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0) {
+inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0) {
     return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin);
 }
 

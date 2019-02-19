@@ -18,6 +18,16 @@ TimerTask::TimerTask() {
 void TimerTask::initialise(uint16_t executionInfo, TimerFn execCallback) {
 	this->executionInfo = executionInfo;
 	this->callback = execCallback;
+	this->executableJob = false;
+	
+	this->scheduledAt = (isJobMicros(executionInfo)) ? micros() : millis();
+	this->next = NULL;
+}
+
+void TimerTask::initialise(uint16_t executionInfo, Executable* execCallback) {
+	this->executionInfo = executionInfo;
+	this->taskRef = execCallback;
+	this->executableJob = true;
 	
 	this->scheduledAt = (isJobMicros(executionInfo)) ? micros() : millis();
 	this->next = NULL;
@@ -65,14 +75,24 @@ inline void TimerTask::execute() {
 	// handle repeating tasks - reschedule.
 	if (isRepeating()) {
 		markRunning();
-		callback();
+		if(executableJob) {
+			taskRef->exec();
+		}
+		else {
+			callback();
+		}
 		this->scheduledAt = isJobMicros(executionInfo) ? micros() : millis();
 		clearRunning();
 	}
 	else {
-		TimerFn savedCallback = callback;
+		void* savedCallback = callback;
 		clear();
-		savedCallback();
+		if(executableJob) {
+			((Executable*)savedCallback)->exec();
+		}
+		else {
+			((TimerFn)savedCallback)();
+		}
 	}
 }
 
@@ -124,6 +144,24 @@ uint8_t TaskManager::scheduleFixedRate(uint16_t when, TimerFn timerFunction, Tim
 	uint8_t taskId = findFreeTask();
 	if (taskId != TASKMGR_INVALIDID) {
 		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE | TASK_REPEATING, timerFunction);
+		putItemIntoQueue(&tasks[taskId]);
+	}
+	return taskId;
+}
+
+uint8_t TaskManager::scheduleOnce(uint16_t when, Executable* execRef, TimerUnit timeUnit) {
+	uint8_t taskId = findFreeTask();
+	if (taskId != TASKMGR_INVALIDID) {
+		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE, execRef);
+		putItemIntoQueue(&tasks[taskId]);
+	}
+	return taskId;
+}
+
+uint8_t TaskManager::scheduleFixedRate(uint16_t when, Executable* execRef, TimerUnit timeUnit) {
+	uint8_t taskId = findFreeTask();
+	if (taskId != TASKMGR_INVALIDID) {
+		tasks[taskId].initialise(toTimerValue(when, timeUnit) | TASK_IN_USE | TASK_REPEATING, execRef);
 		putItemIntoQueue(&tasks[taskId]);
 	}
 	return taskId;
