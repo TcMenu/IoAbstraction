@@ -294,3 +294,4 @@ __pycache__/
 **/__vm/*
 **/*.vcxproj*
 **/*.vcxitems
+vs-readme.txt
