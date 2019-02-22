@@ -85,7 +85,7 @@ inline void TimerTask::execute() {
 		clearRunning();
 	}
 	else {
-		void* savedCallback = callback;
+		void* savedCallback = (void*)callback;
 		clear();
 		if(executableJob) {
 			((Executable*)savedCallback)->exec();

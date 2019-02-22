@@ -3,6 +3,7 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include <Arduino.h>
 #include "IoAbstraction.h"
 
 #define LATCH_TIME 5
@@ -238,7 +239,12 @@ IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t read
 	return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, 1, 1);
 }
 
-
+IoAbstractionRef arduinoAbstraction = NULL;
 IoAbstractionRef ioUsingArduino() { 
-	return new BasicIoAbstraction(); 
+	noInterrupts();
+	if (arduinoAbstraction == NULL) {
+		arduinoAbstraction = new BasicIoAbstraction();
+	}
+	interrupts();
+	return arduinoAbstraction;
 }
