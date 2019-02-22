@@ -207,7 +207,7 @@ void TaskManager::runLoop() {
 	TimerTask* tm = first;
 	while(tm != NULL) {
 		if (tm->isReady()) {
-			first = tm->getNext(); // shortcut remove from head of queue.
+			removeFromQueue(tm);
 			tm->execute();
 			if (tm->isRepeating()) {
 				putItemIntoQueue(tm);
