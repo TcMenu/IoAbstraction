@@ -128,6 +128,28 @@ protected:
 	}
 };
 
+class TestingExec : public Executable {
+public:
+	int noOfTimesRun;
+
+	TestingExec() {
+		noOfTimesRun = 0;
+	}
+
+	void exec() override {
+		noOfTimesRun++;
+	}
+};
+
+TestingExec exec;
+
+testF(TimingHelpFixture, testRunningUsingExecutorClass) {
+	taskManager.scheduleFixedRate(10, &exec);
+	taskManager.scheduleOnce(250, recordingJob);
+	assertThatTaskRunsOnTime(250000L, MILLIS_ALLOWANCE);
+	assertMore(exec.noOfTimesRun, 10);
+}
+
 testF(TimingHelpFixture, schedulingTaskOnceInMicroseconds) {
 	taskManager.scheduleOnce(800, recordingJob, TIME_MICROS);
 	assertThatTaskRunsOnTime(800, MICROS_ALLOWANCE);
@@ -344,3 +366,66 @@ testF(HighThroughputFixture, taskManagerHighThroughputTest) {
 	assertNotEqual(counts[2], 0); 	// meaningless to count micros calls. check it happened 
 }
 
+//
+// This test cleans down task manager and then tries to cancel a job within a running task,
+// it then waits for the other jobs scheduled after the cancelled to run. See github #38
+// Kindly isolated and reported by @martin-klima
+//
+uint8_t taskId1;
+bool taskCancelled;
+int storedCount1;
+int storedCount2;
+testF(HighThroughputFixture, testCancellingsTasksWithinAnotherTask) {
+	char slotData[15];
+
+	// set up for the run by clearing down state.
+	taskManager.reset();
+	counts[0] = counts[1] = counts[2] = 0;
+	storedCount1 = storedCount2 = 0;
+	taskCancelled = false;
+
+	// register three tasks, the first is to be cancelled.
+	taskId1 = taskManager.scheduleFixedRate(100, testCall1);
+	taskManager.scheduleFixedRate(100, testCall2);
+	taskManager.scheduleFixedRate(100, testCall3);
+
+	// schedule the job to cancel the first registered task.
+	taskManager.scheduleOnce(500, [] {
+		taskManager.cancelTask(taskId1);
+		taskCancelled = true;
+		storedCount1 = counts[1];
+		storedCount2 = counts[2];
+	});
+
+	assertTasksAreInOrder();
+
+	// now run the task manager until the job gets cancelled (or it times out)
+	int count = 1000;
+	while ((--count != 0) && !taskCancelled) {
+		taskManager.yieldForMicros(1000L);
+	}
+
+	// the cancelled job should have run at least once before cancellation
+	// and then must have been cancelled. Tasks should be in order
+	assertNotEqual(0, counts[0]);
+	assertTrue(taskCancelled);
+	
+	count = 500;
+	while (--count != 0) {
+		taskManager.yieldForMicros(1000L);
+	}
+
+	// once the task manager has been scheduled again, the call counts should not be the same and the tasks
+	// should remain in order
+	assertTasksAreInOrder();
+	
+	// in this case we dump the queue, something is wrong.
+	if (counts[1] == storedCount1) {
+		dumpTasks();
+		Serial.print("Dumping threads"); Serial.println(taskManager.checkAvailableSlots(slotData));
+	}
+	
+	assertNotEqual(counts[1], storedCount1);
+	assertNotEqual(counts[2], storedCount1);
+
+}

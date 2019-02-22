@@ -180,8 +180,8 @@ void TaskManager::addIdleTask(IdleTask* idleTask) {
 
 void TaskManager::cancelTask(uint8_t task) {
 	if (task < numberOfSlots) {
-		tasks[task].clear();
 		removeFromQueue(&tasks[task]);
+		tasks[task].clear();
 	}
 }
 
@@ -207,7 +207,7 @@ void TaskManager::runLoop() {
 	TimerTask* tm = first;
 	while(tm != NULL) {
 		if (tm->isReady()) {
-			removeFromQueue(tm);
+			first = tm->getNext(); // shortcut remove from head of queue.
 			tm->execute();
 			if (tm->isRepeating()) {
 				putItemIntoQueue(tm);
