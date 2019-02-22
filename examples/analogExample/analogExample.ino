@@ -18,6 +18,13 @@ ArduinoAnalogDevice analog; // by default it assumes 10 bit read, 8 bit write
 int ledCycleValue = 0;
 
 void setup() {
+    while(!Serial);
+    Serial.begin(115200);
+
+    // set up the device pin directions upfront.
+    analog.initPin(A1, DIR_IN);
+    analog.initPin(PWM_OR_DAC_PIN, DIR_OUT);
+
     // we schedule a task to run every 500 millis that reads the value from A1 and prints it output
     // along with the largest possible value
     taskManager.scheduleFixedRate(500, [] {
@@ -31,7 +38,7 @@ void setup() {
     // on A0 of most MKR boards. Change to PWM for AVR boards.
     taskManager.scheduleFixedRate(25, [] {
         ledCycleValue++;
-        if(ledCycleValue > analog.getMaximumRange(DIR_OUT, PWM_OR_DAC_PIN)) {
+        if(ledCycleValue >= analog.getMaximumRange(DIR_OUT, PWM_OR_DAC_PIN)) {
             ledCycleValue = 0;
         }
         analog.setCurrentValue(PWM_OR_DAC_PIN, ledCycleValue);

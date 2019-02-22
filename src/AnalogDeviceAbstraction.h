@@ -65,10 +65,15 @@ public:
 	 * For example SAMD: 12 bit (4096) input and output.
 	 */
 	ArduinoAnalogDevice(uint8_t readBitResolution = 10, uint8_t writeBitResolution = 8) {
+#ifdef ARDUINO_ARCH_SAMD
 		analogReadResolution(readBitResolution);
 		analogWriteResolution(writeBitResolution);
 		this->readBitResolution = readBitResolution;
 		this->writeBitResolution = writeBitResolution;
+#else
+		this->readBitResolution = 10;
+		this->writeBitResolution = 8;
+#endif
 	}
 
 	int getMaximumRange(AnalogDirection dir, uint8_t pin) override {

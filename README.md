@@ -16,9 +16,7 @@ To install this library, simply download a zip (or source as preferred) and inst
 
 ## TaskManager - simple, event based programming for Arduino 
 
-Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or co-routine frameworks 
-in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction
-with this library is not to call delay() or do any operations that block for more than a few microseconds. 
+Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or co-routine frameworks in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
 
 A simple example:
 
@@ -29,14 +27,28 @@ In the setup method, add an event that gets fired once in the future:
 		// some work to be done.
 	});
 ```
+
+You can also create a class that extends from `Executable` and schedule that instead. For example:
+
+```
+    class MyClassToSchedule : public Executable {
+        //... your other stuff
+
+        void exec() override {
+            // your code to be executed upon schedule.
+        }
+    };
+    MyClassToSchedule myClass;
+    taskManager.scheduleFixedRate(1, &myClass, TIME_SECONDS);
+```
+
 Then in the loop method you need to call: 
 
   	taskManager.runLoop();
 
 ### Advanced usage of TaskManager
 
-If you want to improve task manager performance in code that frequently calls delayMicroseconds(..), you can enable the flag `_TASKMGR_OVERRIDE_DELAY_` by opening TaskManager.h
-and reading the comment in the user definable section. At the moment, it's only enabled where I've personally tested it, SAMD (MKR, Zero etc) and AVR (Uno, Mega etc).
+If you want to improve task manager performance in code that frequently calls delayMicroseconds(..), you can enable the flag `_TASKMGR_OVERRIDE_DELAY_` by opening TaskManager.h, it has major limitations and it's better to avoid it's use and change code to use `taskManager.yieldForMicros`.
 
 ## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
 
@@ -195,7 +207,33 @@ Writing arrays and strings
 	char data[20]; // example array to work with
 	anEeprom.readIntoMemArray((unsigned char*)data, romStart, sizeof data);
 	anEeprom.writeArrayToRom(romStart, (const unsigned char*)data, sizeof data);
-	
+
+### Analog device abstraction
+
+Since 1.4 a new abstraction for analog devices has been added, it allows for an interchangable interface between most analog read and write devices such as ADC, DAC, PWM, Volume controls and Digital Potentiometers. At the moment the only available one is the Arduino pin based implementation. See the `analogExample` for usage.
+
+Note that although the Arduino constructor allows the bit depth to be set, it only has any effect on SAMD boards. 
+
+```
+    // create the analog device
+    ArduinoAnalogDevice analog;
+
+    // to make A1 an input
+    analog.initPin(A1, DIR_IN);
+    
+    // and make the PWM_PIN output.
+    analog.initPin(PWM_PIN, DIR_OUT);
+
+    // returns the range of the pin requested in the direction specified.
+	int range = getMaximumRange(DIR_IN, A1);
+
+    // to read from A1
+    int reading = analog.getCurrentValue(A1);
+
+    // to write to PWM_PIN
+    analog.setCurrentValue(PWM_PIN, newValue);
+```
+
 ## Other links
 
 [https://www.thecoderscorner.com/electronics/microcontrollers/switches-inputs/basic-io-abstraction-library-pins-or-8574/]
