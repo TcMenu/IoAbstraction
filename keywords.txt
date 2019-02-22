@@ -15,6 +15,9 @@ EepromAbstraction	KEYWORD1
 I2cAt24Eeprom	KEYWORD1
 NoEeprom	KEYWORD1
 AvrEeprom	KEYWORD1
+Executable	KEYWORD1
+AnalogDevice	KEYWORD1
+ArduinoAnalogDevice	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -52,6 +55,10 @@ writePort	KEYWORD2
 onRelease	KEYWORD2
 inputFromDfRobotShield	KEYWORD2
 inputFromDfRobotShieldV1	KEYWORD2
+getMaximumRange	KEYWORD2
+initPin	KEYWORD2
+getCurrentValue	KEYWORD2
+setCurrentValue	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
@@ -77,3 +84,6 @@ DF_KEY_UP	LITERAL1
 DF_KEY_LEFT	LITERAL1
 DF_KEY_RIGHT	LITERAL1
 DF_KEY_SELECT	LITERAL1
+DIR_IN	LITERAL1
+DIR_OUT	LITERAL1
+
