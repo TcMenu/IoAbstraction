@@ -88,6 +88,9 @@ SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
 	this->ioDevice = NULL;
 	this->swFlags = 0;
+	for (int i = 0; i < MAX_ROTARY_ENCODERS; ++i) {
+		encoder[i] = NULL;
+	}
 }
 
 void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
@@ -154,11 +157,16 @@ void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentVal
 	}
 }
 
-void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* encoder) {
-	if (slot > 7) {
-		return;
+void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue) {
+	if (encoder[slot] != NULL) {
+		encoder[slot]->changePrecision(precision, currentValue);
 	}
-	this->encoder[slot] = encoder;
+}
+
+void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* encoder) {
+	if (slot < MAX_ROTARY_ENCODERS) {
+		this->encoder[slot] = encoder;
+	}
 }
 
 
@@ -255,7 +263,7 @@ void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
 		checkRunLoopAndRepeat();
 	}
 
-  for(int i = 0; i < 8; i++) {
+  for(int i = 0; i < MAX_ROTARY_ENCODERS; ++i) {
 		if(switches.encoder[i]) {
 			switches.encoder[i]->encoderChanged();
 		}

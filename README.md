@@ -140,12 +140,22 @@ For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstr
 	HardwareRotaryEncoder* firstEncoder = new HardwareRotaryEncoder(firstEncoderAPin, firstEncoderBPin, onFirstEncoderChange);
 	HardwareRotaryEncoder* secondEncoder = new HardwareRotaryEncoder(secondEncoderAPin, secondEncoderBPin, onSecondEncoderChange);
 
-  switches.setEncoder(0, firstEncoder);
-  switches.setEncoder(1, secondEncoder);
+	switches.setEncoder(0, firstEncoder);
+	switches.setEncoder(1, secondEncoder);
 
 	// After initialising, we set the maximum value (from 0) that the encoder represents
 	// along with the current value
 	switches.changeEncoderPrecision(maximumEncoderValue, 100);
+
+	// then if you want to change the precision of other than the first encoder
+	switches.changeEncoderPrecision(1, maximumValue, currentValue);
+
+### Notes for using more than rotary encoder at the same time
+
+There are a few limitations with multiple encoders. Firstly, the encoders must all be on the same input device, such that the interrupt
+comes from a device that is shared by them all. For example the they should all share an IO device such as a 23017 or an 8574, or if on 
+arduino pins, all the A pins must be interrupt driven. Secondly, there is a hard limit on the number defined by `MAX_ROTARY_ENCODERS` which 
+you can change by altering the file `SwitchInput.h` should you need more (or less) than 4.
 
 ## EepromAbstraction - support for both AVR and i2c AT24 EEPROMs with a common interface
 

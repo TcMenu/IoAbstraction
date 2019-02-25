@@ -32,6 +32,15 @@
 #define MAX_KEYS 5
 #endif // MAX_KEYS defined
 
+/** 
+ * If you want to adjust the maximum number of rotary encoders from the default of 4 just either
+ * change the definition below or set this define during compilation.
+ */
+#ifndef MAX_ROTARY_ENCODERS
+#define MAX_ROTARY_ENCODERS 4
+#endif // MAX_ROTARY_ENCODERS
+
+
 // END user adjustable section
 
 /** For buttons that should not repeat, and instead just indicate they are HELD down */
@@ -179,7 +188,7 @@ public:
  */ 
 class SwitchInput {
 private:
-	RotaryEncoder* encoder[0];
+	RotaryEncoder* encoder[MAX_ROTARY_ENCODERS];
 	IoAbstractionRef ioDevice;
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
@@ -230,9 +239,12 @@ public:
 	void setEncoder(RotaryEncoder* encoder) { this->encoder[0] = encoder; };
 
 	/**
-	 * Use this method if you want to work with serveral encoders. This lib can handle up to 8 encoders,
-	 * but the actual number of encoders depends on the hardware you are using. If your port expander is
-	 * 8-bit it supports up to 4 rotary encoders. To use all 8 encoders you need to use a 16-bit encoder.
+	 * Use this method if you want to work with serveral encoders. This lib defaults to 4 (value of MAX_ROTARY_ENCODERS)
+	 * encoders, but the actual number of encoders depends on the hardware you are using and the value of that define. If your port 
+	 * expander is 8-bit it supports up to 4 rotary encoders. To use more than 4, you set MAX_ROTARY_ENCODERS to the value you need and
+	 * use a 16-bit encoder.
+	 * @param slot the index of the encoder to set, zero based.
+	 * @param encoder the encoder to be added.
 	 */
 	void setEncoder(uint8_t slot, RotaryEncoder* encoder);
 
@@ -248,6 +260,16 @@ public:
 	 * @param currentValue the current value to be set.
 	 */
 	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
+
+	/**
+	 * Use this version of changeEncoderPrecision if you are working with more than one rotary encoder.
+	 * This is helper function that calls the rotary encoders change precision function. It changes the
+	 * maximum value that can be represented and also the current value of the encoder.
+	 * @param slot the index of the desired encoder, zero based
+	 * @param precision the maximum value to be set
+	 * @param currentValue the current value to be set.
+	 */
+	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue);
 
 	/**
 	 * Simulates a switch press by calling the callback directly without changing the internal state
