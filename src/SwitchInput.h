@@ -179,7 +179,7 @@ public:
  */ 
 class SwitchInput {
 private:
-	RotaryEncoder* encoder;
+	RotaryEncoder* encoder[0];
 	IoAbstractionRef ioDevice;
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
@@ -227,12 +227,19 @@ public:
 	 * @see setupRotaryEncoderWithInterrupt
 	 * @see setupUpDownButtonEncoder
 	 */
-	void setEncoder(RotaryEncoder* encoder) { this->encoder = encoder; };
+	void setEncoder(RotaryEncoder* encoder) { this->encoder[0] = encoder; };
+
+	/**
+	 * Use this method if you want to work with serveral encoders. This lib can handle up to 8 encoders,
+	 * but the actual number of encoders depends on the hardware you are using. If your port expander is
+	 * 8-bit it supports up to 4 rotary encoders. To use all 8 encoders you need to use a 16-bit encoder.
+	 */
+	void setEncoder(uint8_t slot, RotaryEncoder* encoder);
 
 	/**
 	 * Gets a pointer to the current encoder, or NULL if there is not one
 	 */
-	RotaryEncoder* getEncoder() {return encoder; }
+	RotaryEncoder* getEncoder() {return encoder[0]; }
 
 	/**
 	 * This is helper function that calls the rotary encoders change precision function. It changes the
@@ -306,6 +313,7 @@ extern SwitchInput switches;
  * @param callback the function that will receive the new state of the encoder on changes.
  */
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
+
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
  * This function automatically adds the encoder to the global switches instance.
