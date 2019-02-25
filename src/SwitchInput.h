@@ -179,7 +179,7 @@ public:
  */ 
 class SwitchInput {
 private:
-	RotaryEncoder* encoder[0];
+	RotaryEncoder* encoder[8];
 	IoAbstractionRef ioDevice;
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
