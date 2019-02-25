@@ -259,7 +259,7 @@ public:
 	 * @param precision the maximum value to be set
 	 * @param currentValue the current value to be set.
 	 */
-	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue);
+	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue) { changeEncoderPrecision(0, precision, currentValue); }
 
 	/**
 	 * Use this version of changeEncoderPrecision if you are working with more than one rotary encoder.

@@ -151,14 +151,8 @@ void SwitchInput::pushSwitch(uint8_t pin, bool held) {
 	}
 }
 
-void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentValue) {
-	if(encoder[0] != NULL) {
-		encoder[0]->changePrecision(precision, currentValue);
-	}
-}
-
 void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue) {
-	if (encoder[slot] != NULL) {
+	if (slot < MAX_ROTARY_ENCODERS && encoder[slot] != NULL) {
 		encoder[slot]->changePrecision(precision, currentValue);
 	}
 }
@@ -168,7 +162,6 @@ void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* encoder) {
 		this->encoder[slot] = encoder;
 	}
 }
-
 
 bool SwitchInput::runLoop() {
 	bool needAnotherGo = false;
