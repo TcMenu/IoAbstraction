@@ -87,7 +87,6 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
 	this->ioDevice = NULL;
-	this->encoder = NULL;
 	this->swFlags = 0;
 }
 
@@ -150,10 +149,18 @@ void SwitchInput::pushSwitch(uint8_t pin, bool held) {
 }
 
 void SwitchInput::changeEncoderPrecision(uint16_t precision, uint16_t currentValue) {
-	if(encoder != NULL) {
-		encoder->changePrecision(precision, currentValue);
+	if(encoder[0] != NULL) {
+		encoder[0]->changePrecision(precision, currentValue);
 	}
 }
+
+void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* encoder) {
+	if (slot > 7) {
+		return;
+	}
+	this->encoder[slot] = encoder;
+}
+
 
 bool SwitchInput::runLoop() {
 	bool needAnotherGo = false;
@@ -248,8 +255,10 @@ void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
 		checkRunLoopAndRepeat();
 	}
 
-	if(switches.encoder) {
-		switches.encoder->encoderChanged();
+  for(int i = 0; i < 8; i++) {
+		if(switches.encoder[i]) {
+			switches.encoder[i]->encoderChanged();
+		}
 	}
 }
 
@@ -284,11 +293,11 @@ void HardwareRotaryEncoder::encoderChanged() {
 /******** UP DOWN BUTTON ENCODER *******/
 
 void switchEncoderUp(__attribute((unused)) uint8_t key, __attribute((unused)) bool heldDown) {
-	switches.encoder->increment(1);
+	switches.encoder[0]->increment(1);
 }
 
 void switchEncoderDown(__attribute((unused)) uint8_t key, __attribute((unused)) bool heldDown) {
-	switches.encoder->increment(-1);
+	switches.encoder[0]->increment(-1);
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed) : RotaryEncoder(callback) {

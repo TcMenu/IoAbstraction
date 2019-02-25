@@ -135,7 +135,14 @@ For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstr
 	
 	// Example 2, Up / down buttons acting like an encoder
 	setupUpDownButtonEncoder(pinUpBtn, pinDownBtn, onEncoderChange);
-	
+
+	// Example 3, same as example 1, but with two encoders
+	HardwareRotaryEncoder* firstEncoder = new HardwareRotaryEncoder(firstEncoderAPin, firstEncoderBPin, onFirstEncoderChange);
+	HardwareRotaryEncoder* secondEncoder = new HardwareRotaryEncoder(secondEncoderAPin, secondEncoderBPin, onSecondEncoderChange);
+
+  switches.setEncoder(0, firstEncoder);
+  switches.setEncoder(1, secondEncoder);
+
 	// After initialising, we set the maximum value (from 0) that the encoder represents
 	// along with the current value
 	switches.changeEncoderPrecision(maximumEncoderValue, 100);
