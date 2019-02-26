@@ -126,9 +126,13 @@ will switch on pull up resistors too, but you may need lower resistance pull ups
 
 For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-switches-handled-as-events/.
 
+First we must register the callback function that will be called when there's a change
+
 	void onEncoderChange(int newValue) {
 		// do something with new value..
 	}
+
+Then we must create an encoder using one of the three examples below
 
 	// Example 1, Real encoder, we need to set up the pins that the encoder uses and provide a callback
 	setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
@@ -136,18 +140,19 @@ For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstr
 	// Example 2, Up / down buttons acting like an encoder
 	setupUpDownButtonEncoder(pinUpBtn, pinDownBtn, onEncoderChange);
 
-	// Example 3, same as example 1, but with two encoders
+	// Example 3, advanced usage, same as example 1, but with two encoders
 	HardwareRotaryEncoder* firstEncoder = new HardwareRotaryEncoder(firstEncoderAPin, firstEncoderBPin, onFirstEncoderChange);
 	HardwareRotaryEncoder* secondEncoder = new HardwareRotaryEncoder(secondEncoderAPin, secondEncoderBPin, onSecondEncoderChange);
-
 	switches.setEncoder(0, firstEncoder);
 	switches.setEncoder(1, secondEncoder);
+
+Then lastly we set the precision of the encoder (IE the range)
 
 	// After initialising, we set the maximum value (from 0) that the encoder represents
 	// along with the current value
 	switches.changeEncoderPrecision(maximumEncoderValue, 100);
 
-	// then if you want to change the precision of other than the first encoder
+	// advanced usage: if you want to change the precision of other than the first encoder
 	switches.changeEncoderPrecision(1, maximumValue, currentValue);
 
 ### Notes for using more than rotary encoder at the same time
