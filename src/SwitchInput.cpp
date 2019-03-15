@@ -116,6 +116,8 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 }
 
 void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
+	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
+
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
 	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
 
@@ -125,6 +127,8 @@ void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) 
 }
 
 void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {
+	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
+
 	for(uint8_t i=0; i<numberOfKeys; ++i) {
 		if(keys[i].getPin() == pin) {
 			keys[i].onRelease(callbackOnRelease);
@@ -309,6 +313,8 @@ EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, Encod
 /******** ENCODER SETUP METHODS ***********/
 
 void setupUpDownButtonEncoder(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback) {
+	if (switches.getIoAbstraction() == NULL) switches.initialise(ioUsingArduino(), true);
+
 	EncoderUpDownButtons* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
 	switches.setEncoder(enc);
 }
@@ -319,5 +325,7 @@ void registerInterrupt(uint8_t pin) {
 }
 
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
+	if (switches.getIoAbstraction() == NULL) switches.initialise(ioUsingArduino(), true);
+
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
 }
