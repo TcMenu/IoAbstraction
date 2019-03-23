@@ -29,7 +29,7 @@ void I2cAt24Eeprom::waitForReady(uint8_t eeprom) {
 	do {
 		// when not on the first time around, introduce a small delay while the eeprom settles.
 		// this gives us more certainty that we'll wait long enough before timing out.
-		if(triesLeft != READY_TRIES_COUNT) delayMicroseconds(50);
+		if(triesLeft != READY_TRIES_COUNT) taskManager.yieldForMicros(50);
 		Wire.beginTransmission(eeprom);
 		--triesLeft;
 	} while(Wire.endTransmission() != 0 && triesLeft != 0);
@@ -37,7 +37,7 @@ void I2cAt24Eeprom::waitForReady(uint8_t eeprom) {
 	// if we timed out (triesLeft = 0) then we set the error condition.
 	if(triesLeft == 0) {
         errorOccurred = true;
-        serdebugF("Timed out of tries"); 
+        serdebugF("EEPROM: Out of retries"); 
     }
 }
 
