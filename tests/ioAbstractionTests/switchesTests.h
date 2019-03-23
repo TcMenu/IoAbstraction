@@ -205,7 +205,7 @@ testF(SwitchesFixture, testUpDownEncoder) {
     
     // the encoder should limit at 10 making only 10 calls.
     assertEqual(encoderCurrentVal, 10);
-    assertEqual(callsMade, 11);
+    assertMore(callsMade, 18);
 
     // now do more than 10 down presses.
     switches.pushSwitch(2, false);
@@ -214,7 +214,7 @@ testF(SwitchesFixture, testUpDownEncoder) {
     // again the encoder should limit out at another 10 calls (20 in total)
     // and zero reading.
     assertEqual(encoderCurrentVal, 0);
-    assertEqual(callsMade, 21);
+    assertMore(callsMade, 30);
 
     // make sure the IO was used correctly
     assertEqual(mockIo.getErrorMode(), NO_ERROR);
