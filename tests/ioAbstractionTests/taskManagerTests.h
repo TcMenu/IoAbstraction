@@ -1,6 +1,5 @@
-#line 2 "taskManagerTests.ino"
+#line 2 "taskManagerTests.h"
 
-#include <AUnitVerbose.h>
 #include "IoAbstraction.h"
 #include "MockIoAbstraction.h"
 
@@ -8,19 +7,6 @@
 #define MICROS_ALLOWANCE 200
 
 using namespace aunit;
-
-void setup() {
-    Serial.begin(115200);
-    while(!Serial); // needed for some 32 bit boards.
-	TestRunner::setTimeout(60);
-
-	//TestRunner::exclude("HighThroughputFixture_taskManagerHighThroughputTest");
-	//TestRunner::include("TimingHelpFixture_cancellingAJobAfterCreation");
-}
-
-void loop() {
-	TestRunner::run();
-}
 
 void dumpTasks() {
 	Serial.println("Dumping the task queue contents");

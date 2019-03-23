@@ -1,19 +1,10 @@
-#line 2 "negatingIoAbstractionTests.ino"
+#line 2 "negatingIoAbstractionTests.h"
 
 #include <AUnit.h>
 #include "MockIoAbstraction.h"
 #include "NegatingIoAbstraction.h"
 
 using namespace aunit;
-
-void setup() {
-    Serial.begin(115200);
-    while(!Serial);
-}
-
-void loop() {
-    TestRunner::run();
-}
 
 test(negatingIoAbstractionRead) {
     MockedIoAbstraction mockIo;

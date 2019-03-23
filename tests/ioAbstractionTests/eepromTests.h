@@ -1,27 +1,14 @@
-#line 2 "eepromTests.ino"
+#line 2 "eepromTests.h"
 
 // This test requires an At24C eeprom to be installed at 0x50, setup for a 128kbit unit. 
 // Also this test needs to run on AVR as it checks the AVR eeprom code too.
 // Any changes to the eeprom code require this test to be run before release.
 
-#include <AUnit.h>
 #include <EepromAbstraction.h>
 #include <EepromAbstractionWire.h>
 #include <MockEepromAbstraction.h>
 
-using namespace aunit;
-
 const char strData[128] = { "this is a really long string that has to be written to eeprom and read back without losing anything at all in the process!"};
-
-void setup() {
-	Serial.begin(115200);
-	while(!Serial);
-	Wire.begin();
-}
-
-void loop() {
-	TestRunner::run();
-}
 
 class EepromFixtures : public TestOnce {
 protected:
@@ -55,6 +42,8 @@ public:
 	}
 };
 
+#ifdef __AVR__
+
 testF(EepromFixtures, testAvrEeprom) {
 	AvrEeprom anEeprom;
 	romStart = 500;
@@ -66,6 +55,8 @@ testF(EepromFixtures, testAvrEeprom) {
 	arrayRomChecks();
 	assertFalse(anEeprom.hasErrorOccurred());
 }
+
+#endif
 
 testF(EepromFixtures, testI2cEeprom) {
 	I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);

@@ -234,5 +234,6 @@ inline void multiIoAddExpander(MultiIoAbstractionRef multiIo, IoAbstractionRef e
 
 #include "TaskManager.h"
 #include "SwitchInput.h"
+#include "IoLogging.h"
 
 #endif

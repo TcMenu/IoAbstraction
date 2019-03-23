@@ -5,12 +5,14 @@
 
 #include <EepromAbstractionWire.h>
 #include <Wire.h>
+#include <IoLogging.h>
 
 #define READY_TRIES_COUNT 100
 
 I2cAt24Eeprom::I2cAt24Eeprom(uint8_t address, uint8_t pageSize) {
 	this->eepromAddr = address;
 	this->pageSize = pageSize;
+    this->errorOccurred = false;
 }
 
 void I2cAt24Eeprom::writeAddressWire(uint16_t memAddr) {
@@ -33,7 +35,10 @@ void I2cAt24Eeprom::waitForReady(uint8_t eeprom) {
 	} while(Wire.endTransmission() != 0 && triesLeft != 0);
 
 	// if we timed out (triesLeft = 0) then we set the error condition.
-	errorOccurred |= (triesLeft == 0); 
+	if(triesLeft == 0) {
+        errorOccurred = true;
+        serdebugF("Timed out of tries"); 
+    }
 }
 
 bool I2cAt24Eeprom::hasErrorOccurred() {

@@ -24,6 +24,10 @@ private:
 	bool errorFlag;
 	uint8_t data[EEPROM_MOCK_SIZE];
 public:
+    MockEepromAbstraction() {
+        errorFlag = false;
+        memset(data, 0, sizeof data);
+    }
 	virtual ~MockEepromAbstraction() {}
 
 	bool hasErrorOccurred() override { return errorFlag;}

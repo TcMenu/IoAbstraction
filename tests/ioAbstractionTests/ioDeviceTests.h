@@ -1,19 +1,9 @@
-#line 2 "ioDeviceTests.ino"
+#line 2 "ioDeviceTests.h"
 
-#include <AUnit.h>
-#include "IoAbstractionWire.h"
-#include "MockIoAbstraction.h"
+#include <IoAbstractionWire.h>
+#include <MockIoAbstraction.h>
 
 using namespace aunit;
-
-void setup() {
-    Serial.begin(115200);
-    while(!Serial);
-}
-
-void loop() {
-    TestRunner::run();
-}
 
 test(testMockIoAbstractionRead) {
     MockedIoAbstraction ioDevice;

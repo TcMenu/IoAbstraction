@@ -1,6 +1,5 @@
-#line 2 "switchesTests.ino"
+#line 2 "switchesTests.h"
 
-#include <AUnit.h>
 #include "MockIoAbstraction.h"
 #include "SwitchInput.h"
 
@@ -15,15 +14,6 @@ using namespace aunit;
 
 // this allows us to call the switches interrupt handler
 extern void onSwitchesInterrupt(uint8_t);
-
-void setup() {
-    Serial.begin(115200);
-    while(!Serial); // needed for some 32 bit boards.
-}
-
-void loop() {
-	TestRunner::run();
-}
 
 void encoderCallback(int newValue) {
     encoderCurrentVal = newValue;
