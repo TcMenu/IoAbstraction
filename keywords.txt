@@ -59,6 +59,14 @@ getMaximumRange	KEYWORD2
 initPin	KEYWORD2
 getCurrentValue	KEYWORD2
 setCurrentValue	KEYWORD2
+serdebug	KEYWORD2
+serdebug2	KEYWORD2
+serdebugHex	KEYWORD2
+serdebugF	KEYWORD2
+serdebugF2	KEYWORD2
+serdebugF3	KEYWORD2
+serdebugFHex	KEYWORD2
+serdebugFHex2	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
