@@ -8,8 +8,8 @@
  * the IO_LOGGING_ON define.
  */
 
-// comment out the line below to stop logging
-#define IO_LOGGING_DEBUG
+// When line below commented out - no logging, when uncommented - logging.
+//#define IO_LOGGING_DEBUG
 
 #ifdef IO_LOGGING_DEBUG
 
