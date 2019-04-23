@@ -8,8 +8,12 @@
  * the IO_LOGGING_ON define.
  */
 
+// START user adjustable section.
+
 // When line below commented out - no logging, when uncommented - logging.
 //#define IO_LOGGING_DEBUG
+
+// END user adjustable section.
 
 #ifdef IO_LOGGING_DEBUG
 

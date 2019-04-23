@@ -24,6 +24,13 @@ public:
 	 */
 	virtual int getMaximumRange(AnalogDirection direction, uint8_t pin)=0;
 
+    /**
+     * @param pin the pin for which the bit depth is required.
+     * @param direction the direction in which the depth is queried (DIR_IN, DIR_OUT)
+     * @return the number of bits
+     */
+    virtual int getBitDepth(AnalogDirection direction, uint8_t pin);
+
 	/**
 	 * initialises a pin as either an input or output of analog signals. No validation to check if
 	 * that pin can support input or output is performed.
@@ -76,9 +83,13 @@ public:
 #endif
 	}
 
-	int getMaximumRange(AnalogDirection dir, uint8_t pin) override {
+	int getMaximumRange(AnalogDirection dir, uint8_t /*pin*/) override {
 		return (dir == DIR_OUT) ? (1 << writeBitResolution) : (1 << readBitResolution);
 	}
+
+    int getBitDepth(AnalogDirection direction, uint8_t /*pin*/) override {
+        return (direction == DIR_IN) ? readBitResolution : writeBitResolution;
+    }
 
 	void initPin(uint8_t pin, AnalogDirection direction) override {
 		pinMode(pin, (direction == DIR_IN) ? INPUT : OUTPUT);
