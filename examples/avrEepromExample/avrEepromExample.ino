@@ -14,6 +14,7 @@
 
 // you always needs this include.
 #include <EepromAbstraction.h>
+#include <ArduinoEEPROMAbstraction.h>
 
 const unsigned int romStart = 800;
 
@@ -24,7 +25,7 @@ AvrEeprom anEeprom;
 const char strData[15] = { "Hello Eeprom"};
 
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	while(!Serial);
 
 	Serial.println("Eeprom example starting");
@@ -37,10 +38,26 @@ void setup() {
 	// lastly write an array to the rom.
 	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
 
-	Serial.println("Eeprom example written initial values");
+	Serial.println("Eeprom example written initial values, starting on EEPROM proxy example");
+
+    // here I show another way to wrap the EEPROM class into an IO abstraction, prefer local instantiation, it's small.
+
+    ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
+    anEeprom.write8(romStart + 30, 99);
+    anEeprom.write16(romStart + 31, 0xf00d);
+    anEeprom.write32(romStart + 33, 0xfade0ff);
+    anEeprom.writeArrayToRom(romStart + 37, (const unsigned char*)strData, sizeof strData);
+    //and if your device needs a commit operation, do it here. For example:
+    //EEPROM.commit(); 
+
+	Serial.println("All values written out");
 }
 
 void loop() {
+
+    //
+    // First we read back using the AVR eeprom directly.
+    //
 
 	Serial.print("Reading back byte: ");
 	Serial.println(anEeprom.read8(romStart));
@@ -54,6 +71,26 @@ void loop() {
 	Serial.print("Rom Array: ");
 	char readBuffer[15];
 	anEeprom.readIntoMemArray((unsigned char*)readBuffer, romStart + 7, sizeof readBuffer);
+	Serial.println(readBuffer);
+
+    //
+    // Now we read back using the EEPROM class wrapper
+    //
+
+    Serial.println("Now reading back using ArduinoEEPROMAbstraction");
+    ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
+
+	Serial.print("Reading back byte: ");
+	Serial.println(eepromWrapper.read8(romStart + 30));
+
+	Serial.print("Reading back word: 0x");
+	Serial.println(eepromWrapper.read16(romStart + 31), HEX);
+
+	Serial.print("Reading back long: 0x");
+	Serial.println(eepromWrapper.read32(romStart + 33), HEX);
+
+    Serial.print("Rom array: ");
+	eepromWrapper.readIntoMemArray((unsigned char*)readBuffer, romStart + 37, sizeof readBuffer);
 	Serial.println(readBuffer);
 
 	delay(10000);
