@@ -1,7 +1,8 @@
 /**
  * This sketch is part of IOAbstraction, it shows how to use the EEPROM abstraction,
  * for which you can choose from NoEeprom, AvrEeprom and I2cAt24C based eeproms.
- * This example chooses AvrEeprom, but could equally be replaced by any of the others.
+ * This example shows both AvrEeprom and wrapping the standard EEPROM, but could 
+ * equally be replaced by any of the others.
  *
  * This allows any libraries or code you write to work easily across 8 and 32 bit
  * machines by allowing you to decide what type of eeprom you have at compile / runtime.
@@ -43,10 +44,10 @@ void setup() {
     // here I show another way to wrap the EEPROM class into an IO abstraction, prefer local instantiation, it's small.
 
     ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
-    anEeprom.write8(romStart + 30, 99);
-    anEeprom.write16(romStart + 31, 0xf00d);
-    anEeprom.write32(romStart + 33, 0xfade0ff);
-    anEeprom.writeArrayToRom(romStart + 37, (const unsigned char*)strData, sizeof strData);
+    eepromWrapper.write8(romStart + 30, 99);
+    eepromWrapper.write16(romStart + 31, 0xf00d);
+    eepromWrapper.write32(romStart + 33, 0xfade0ff);
+    eepromWrapper.writeArrayToRom(romStart + 37, (const unsigned char*)strData, sizeof strData);
     //and if your device needs a commit operation, do it here. For example:
     //EEPROM.commit(); 
 
