@@ -207,8 +207,10 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 
 void RotaryEncoder::increment(int8_t incVal) {
 	if(incVal >= 0) {
-		currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
-		callback(currentReading);
+		if(currentReading + incVal <= maximumValue) {
+			currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
+			callback(currentReading);
+		}
 	}
 	else if(currentReading != 0 && currentReading < abs(incVal)) {
 		currentReading = 0;
