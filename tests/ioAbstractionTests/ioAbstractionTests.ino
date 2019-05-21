@@ -10,7 +10,9 @@ using namespace aunit;
 #include "taskManagerTests.h"
 
 // always run this last as it adjusts the millisecond counter, to test rolling.
+#ifdef __AVR__
 #include "avrTaskManagerClockRoll.h"
+#endif 
 
 void setup() {
 	Serial.begin(115200);
