@@ -10,7 +10,7 @@
 
 // START user adjustable section.
 
-// When line below commented out - no logging, when uncommented - logging.
+// When line below commented out - no logging, when un-commented - logging.
 //#define IO_LOGGING_DEBUG
 
 // END user adjustable section.

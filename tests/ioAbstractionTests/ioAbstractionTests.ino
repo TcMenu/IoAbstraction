@@ -1,5 +1,6 @@
 #include <AUnit.h>
 //#include <AUnitVerbose.h>
+#include <Wire.h>
 
 using namespace aunit;
 
