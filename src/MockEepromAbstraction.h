@@ -10,8 +10,6 @@
  * None of the implementations in this file are designed for production use.
  */
 
-#define EEPROM_MOCK_SIZE 128
-
 /**
  * @ file MockEepromAbstraction.h
  * 
@@ -22,11 +20,14 @@
 class MockEepromAbstraction : public EepromAbstraction {
 private:
 	bool errorFlag;
-	uint8_t data[EEPROM_MOCK_SIZE];
+	uint8_t *data;
+    unsigned int memSize;
 public:
-    MockEepromAbstraction() {
+    MockEepromAbstraction(unsigned int size = 128) {
+        data = new uint8_t[size];
         errorFlag = false;
-        memset(data, 0, sizeof data);
+        memSize = size;
+        memset(data, 0, memSize);
     }
 	virtual ~MockEepromAbstraction() {}
 
@@ -34,13 +35,14 @@ public:
 	void clearError() {errorFlag = false;}
 
 	void checkBounds(EepromPosition pos, int len) {
-		if(pos + len >= EEPROM_MOCK_SIZE) {
+		if(pos + len >= memSize) {
+            serdebugF2("checkbounds exceeded: ", pos+len);
 			errorFlag = true;
 		}
 	}
 
 	void reset() {
-		memset(data, 0, sizeof data);
+		memset(data, 0, memSize);
 	}
 
 	uint8_t read8(EepromPosition position) override {
