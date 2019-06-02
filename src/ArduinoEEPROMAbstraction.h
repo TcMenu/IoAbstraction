@@ -6,6 +6,18 @@
 #include "EEPROM.h"
 #include "EepromAbstraction.h"
 
+/**
+ * Provides a wrapper around the EEPROM class available on some Arduino boards. For AVR 8bit boards
+ * such as Uno and Mega, there are no notes, it neatly wraps the class.
+ * 
+ * Extra notes for ESP8266, ESP32 and any other FLASH emulated implementation:
+ * When the ESP EEPROM wrapper is used, then you need to ensure that you call begin(size) before use and
+ * commit() before shutting down, otherwise changes will not be saved. Be very aware that you must not
+ * commit too frequently; otherwise your board's FLASH will be damaged. I recommend the very cheap i2c
+ * AT24Cxxx EEPROM devices which cost about $1 and you will not risk damaging your FLASH. Me having 
+ * implemented this is not an indicator that I agree with using FLASH as EEPROM, I personally wouldn't
+ * do that on a production board.
+ */
 class ArduinoEEPROMAbstraction : public EepromAbstraction {
 private:
     EEPROMClass* eepromProxy;
