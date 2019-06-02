@@ -2,6 +2,7 @@
 #define _MOCK_EEPROM_ABSTRACTION_H_
 
 #include "EepromAbstraction.h"
+#include "IoLogging.h"
 
 /**
  * @ file MockEepromAbstraction.h
