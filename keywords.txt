@@ -67,6 +67,7 @@ serdebugF2	KEYWORD2
 serdebugF3	KEYWORD2
 serdebugFHex	KEYWORD2
 serdebugFHex2	KEYWORD2
+serdebugHexDump KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
