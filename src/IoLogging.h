@@ -31,6 +31,7 @@
 #define serdebug2(x1, x2) logTime(x1); LoggingPort.println(x2);
 #define serdebug3(x1, x2, x3) logTime(x1); LoggingPort.print(x2); LoggingPort.print(' '); LoggingPort.println(x3);
 #define serdebugHex(x1, x2) logTime(x1); LoggingPort.println(x2, HEX);
+#define serdebugHexDump(x, str, strlen) logTime(x); for(int ii=0;ii<strlen;ii++) { Serial.print((int)str[ii], HEX); }; Serial.println();
 #else
 // all loging to no operations (commenting out the above define of IO_LOGGING_DEBUG to remove in production builds).
 #define serdebugF(x) 
@@ -43,6 +44,7 @@
 #define serdebug2(x, y) 
 #define serdebug3(x, y, z) 
 #define serdebugHex(x, y) 
+#define serdebugHexDump(x, str, strlen)
 #endif // Logging enabled
 
 #endif // header include
