@@ -1,0 +1,23 @@
+{
+    "name": "IoAbstraction",
+    "keywords": "PCF8574,MCP23017,Rotary Encoder,Switches,Buttons,Debounced,Keyboard,TaskManager,Interrupt,EEPROM,AT24CX",
+    "description": "Simple efficient task management with interrupt marshalling. Interchange between PCF8574, MCP23017, 74HC595, and regular pins (or even ports) changing only one line of code. Fully debounced switches and matrix keypads (KeyboardManager) on any IO device (including on DfRobot) and one or more rotary encoders (even over i2c) that require no extra components in most cases and an EEPROM abstraction that works with AVR & I2C AT24x ROMs.",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/davetcc/IoAbstraction"
+    },
+    "authors":
+    [
+      {
+        "name": "DaveTcc",
+        "url": "https://www.thecoderscorner.com",
+        "maintainer": true
+      }
+    ],
+    "version": "1.4.9",
+    "license": "Apache-2.0",
+    "frameworks": "arduino",
+    "platforms": "atmelavr, atmelsam, espressif8266, intel_arc32, nordicnrf51, nxplpc, ststm32, teensy"
+  }
+  
