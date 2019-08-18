@@ -127,7 +127,7 @@ private:
     void setToOuput(int i);
 };
 
-#define MAKE_KEYBOARD_LAYOUT_3X4(varName) const char KEYBOARD_STD_3X4_KEYS[] PROGMEM = "123456789#0*"; KeyboardLayout varName(4, 3, KEYBOARD_STD_3X4_KEYS);
+#define MAKE_KEYBOARD_LAYOUT_3X4(varName) const char KEYBOARD_STD_3X4_KEYS[] PROGMEM = "123456789*0#"; KeyboardLayout varName(4, 3, KEYBOARD_STD_3X4_KEYS);
 #define MAKE_KEYBOARD_LAYOUT_4X4(varName) const char KEYBOARD_STD_4X4_KEYS[] PROGMEM = "123A456B789C*0#D"; KeyboardLayout varName(4, 4, KEYBOARD_STD_4X4_KEYS);
 
 #endif // _KEYBOARD_MANGER_H_
