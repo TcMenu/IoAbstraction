@@ -246,6 +246,10 @@ void MCP23017IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandle
 	toggleBitInRegister(DEFVAL_ADDR, pin, mode == FALLING);
 }
 
+void MCP23017IoAbstraction::setInvertInputPin(uint8_t pin, bool shouldInvert) {
+    toggleBitInRegister(IPOL_ADDR, pin, shouldInvert);
+}
+
 IoAbstractionRef ioFrom23017(uint8_t addr) {
 	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff);
 }

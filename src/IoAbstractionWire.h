@@ -171,6 +171,18 @@ public:
 	 */ 
 	virtual uint8_t readPort(uint8_t pin);
 
+    /**
+     * This MCP23017 only function inverts the meaning of a given input pin. The pins for this
+     * are 0..15 and true will invert the meaning, whereas false will leave as is. regardless if
+     * you are using any other IO expanders, using this function requires that you have an actual
+     * MCP23017IoAbstraction reference. If you want to use this feature, instead of the variable
+     * being of type IoAbstractionRef, it should be of type MCP23017IoAbstraction*
+     * 
+     * @param pin the input pin between 0..15
+     * @param shouldInvert true to invert the given pin, otherwise false.
+     */
+    void setInvertInputPin(uint8_t pin, bool shouldInvert);
+
 	void debugData();
 private:
 	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
