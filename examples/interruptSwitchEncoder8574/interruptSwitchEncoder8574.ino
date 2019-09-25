@@ -23,7 +23,7 @@ const int repeatButtonPin = 4;
 // the led pin on the IO ioDevice
 const int ledPin = 1;
 
-// The two pins where we connected the A and B pins of the encoder. I recomend you dont change these
+// The two pins where we connected the A and B pins of the encoder. I recommend you dont change these
 // as the pin must support interrupts.
 const int encoderAPin = 6;
 const int encoderBPin = 7;

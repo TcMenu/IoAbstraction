@@ -16,70 +16,92 @@ void registerInterrupt(uint8_t pin);
 KeyboardItem::KeyboardItem() {
 	this->repeatInterval = NO_REPEAT;
 	this->pin = -1;
-	this->callback = NULL;
+	this->notify.callback = NULL;
 	this->counter = 0;
-	this->state = NOT_PRESSED;
+	this->stateFlags = NOT_PRESSED;
 	this->previousState = NOT_PRESSED;
 	this->callbackOnRelease = NULL;
 }
 
 void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval) {
-	this->callback = callback;
+	this->notify.callback = callback;
 	this->pin = pin;
 	this->repeatInterval = repeatInterval;
-	state = NOT_PRESSED;
 	previousState = NOT_PRESSED;
+	stateFlags = NOT_PRESSED;
+	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 0);
+}
+
+void KeyboardItem::initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval) {
+	this->notify.listener = switchListener;
+	this->pin = pin;
+	this->repeatInterval = repeatInterval;
+	previousState = NOT_PRESSED;
+	stateFlags = NOT_PRESSED;
+	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 1);
 }
 
 void KeyboardItem::onRelease(KeyCallbackFn callbackOnRelease) {
 	this->callbackOnRelease = callbackOnRelease;
 }
 
+void KeyboardItem::trigger(bool held) {
+	if (!notify.callback) return;
+
+	if (isUsingListener()) notify.listener->onPressed(pin, held);
+	else notify.callback(pin, held);
+}
+
+void KeyboardItem::triggerRelease(bool held) {
+	if (isUsingListener()) notify.listener->onReleased(pin, held);
+	else if(callbackOnRelease) callbackOnRelease(pin, held);
+}
+
 void KeyboardItem::checkAndTrigger(uint8_t buttonState){
-	if (callback == NULL && callbackOnRelease == NULL) return; 
+	if (notify.callback == NULL && callbackOnRelease == NULL) return; 
 	
 	if (buttonState == HIGH) {
-		if (state == NOT_PRESSED) {
-			state = DEBOUNCING1;
+		if (getState() == NOT_PRESSED) {
+			setState(DEBOUNCING1);
 		}
 		else if (isDebouncing()) {
-			state = PRESSED;
-			if (callbackOnRelease != NULL) previousState = PRESSED;
+			setState(PRESSED);
+			previousState = PRESSED;
 			counter = 0; 
 			acceleration = 1;
-			if (callback != NULL ) (*callback)(pin, false);
+			trigger(false);
 				
 		}
-		else if (state == PRESSED) {
+		else if (getState() == PRESSED) {
 			counter++;
 			if (counter > HOLD_THRESHOLD) {
-				state = BUTTON_HELD;
-				if (callbackOnRelease != NULL) previousState = BUTTON_HELD;
-				if (callback != NULL ) (*callback)(pin, true);
+				setState(BUTTON_HELD);
+				previousState = BUTTON_HELD;
+				trigger(true);
 				counter = 0;
 				acceleration = 1;
 			}
 		}
-		else if (state == BUTTON_HELD && repeatInterval != NO_REPEAT && callback != NULL) {
+		else if (getState() == BUTTON_HELD && repeatInterval != NO_REPEAT && notify.callback != NULL) {
 			counter = counter + (acceleration >> 2) + 1;
 			if (counter > repeatInterval) {
 				acceleration = min(255, acceleration + 1);
-				if(callback != NULL) (*callback)(pin, true);
+				trigger(true);
 				counter = 0;
 			}
 		}
 	}
-	else if(state == DEBOUNCING1) {
-		state = DEBOUNCING2;
+	else if(getState() == DEBOUNCING1) {
+		setState(DEBOUNCING2);
 	}
 	else {
-		state = NOT_PRESSED;
+		setState(NOT_PRESSED);
 		if (previousState == PRESSED) {
 			previousState = NOT_PRESSED;
-			(*callbackOnRelease)(pin,false);
+			triggerRelease(false);
 		} else if (previousState == BUTTON_HELD){
 			previousState = NOT_PRESSED;
-			(*callbackOnRelease)(pin,true);
+			triggerRelease(true);
 		}
 	}
 }
@@ -115,7 +137,8 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 }
 
-void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
+bool  SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
+	if (numberOfKeys >= MAX_KEYS) return false;
 	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
 
 	keys[numberOfKeys++].initialise(pin, callback, repeat);
@@ -124,6 +147,20 @@ void SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) 
 	if(isInterruptDriven()) {
 		registerInterrupt(pin);
 	}
+	return true;
+}
+
+bool SwitchInput::addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat) {
+	if (numberOfKeys >= MAX_KEYS) return false;
+	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
+
+	keys[numberOfKeys++].initialise(pin, listener, repeat);
+	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
+
+	if (isInterruptDriven()) {
+		registerInterrupt(pin);
+	}
+	return true;
 }
 
 void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {

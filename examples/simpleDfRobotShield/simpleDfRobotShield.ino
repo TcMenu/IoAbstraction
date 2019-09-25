@@ -27,6 +27,35 @@ void logKeyPressed(const char* whichKey, bool heldDown) {
     Serial.println(heldDown ? " Held" : " Pressed");
 }
 
+/**
+ * Along with using functions to receive callbacks when a button is pressed, we can
+ * also use a class that implements the SwitchListener interface. Here is an example
+ * of implementing that interface. You have both choices, function callback or
+ * interface implementation.
+ */
+class MyKeyListener : public SwitchListener {
+private:
+    const char* whatKey;
+public:
+    // This is the constructor where we configure our instance
+    MyKeyListener(const char* what) {
+        whatKey = what;
+    }
+
+    // when a key is pressed, this is called
+    void onPressed(uint8_t /*pin*/, bool held) override {
+        logKeyPressed(whatKey, held);
+    }
+
+    // when a key is released this is called.
+    void onReleased(uint8_t /*pin*/, bool held) override {
+        Serial.print("Release ");
+        logKeyPressed(whatKey, held);
+    }
+};
+
+MyKeyListener selectKeyListener("SELECT");
+
 void setup() {
     // start up the serial port in a way compatible with 32 bit boards.
     while(!Serial);
@@ -37,14 +66,14 @@ void setup() {
 
     // now we add the switches, each one just logs the key press, the last parameter to addSwitch
     // is the repeat frequency is optional, when not set it implies not repeating.
-    switches.addSwitch(DF_KEY_DOWN, [](uint8_t key, bool held) { logKeyPressed("DOWN", held);}, 20);
-    switches.addSwitch(DF_KEY_UP, [](uint8_t key, bool held) { logKeyPressed("UP", held);}, 20);
-    switches.addSwitch(DF_KEY_LEFT, [](uint8_t key, bool held) { logKeyPressed("LEFT", held);}, 20);
-    switches.addSwitch(DF_KEY_RIGHT, [](uint8_t key, bool held) { logKeyPressed("RIGHT", held);}, 20);
-    switches.addSwitch(DF_KEY_SELECT, [](uint8_t key, bool held) { logKeyPressed("SELECT", held);});
+    switches.addSwitch(DF_KEY_DOWN, [](uint8_t /*pin*/, bool held) { logKeyPressed("DOWN", held);}, 20);
+    switches.addSwitch(DF_KEY_UP, [](uint8_t /*pin*/, bool held) { logKeyPressed("UP", held);}, 20);
+    switches.addSwitch(DF_KEY_LEFT, [](uint8_t /*pin*/, bool held) { logKeyPressed("LEFT", held);}, 20);
+    switches.addSwitch(DF_KEY_RIGHT, [](uint8_t /*pin*/, bool held) { logKeyPressed("RIGHT", held);}, 20);
+    switches.onRelease(DF_KEY_RIGHT, [](uint8_t /*pin*/, bool) { Serial.println("RIGHT has been released");});
     
-    // and for the select button, lets add a release handler too.
-    switches.onRelease(DF_KEY_SELECT, [](uint8_t, bool) { Serial.println("SELECT has been released");});
+    switches.addSwitchListener(DF_KEY_SELECT, &selectKeyListener);
+    
 }
 
 void loop() {

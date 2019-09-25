@@ -54,6 +54,32 @@ enum KeyPressState : byte {
 	BUTTON_HELD
 };
 
+#define KEY_PRESS_STATE_MASK 0x0f
+#define KEY_LISTENER_MODE_BIT 7
+
+/**
+ * Used to register a class that has an interest in the state of a switch.
+ * Implement the two virtual functions that will be called back
+ * instead of the KeyCallbackFn callback function. This is generally passed
+ * addSwitch(...) and the onPressed / onReleased methods are called upon
+ * each event.
+ */
+class SwitchListener {
+public:
+	/**
+	 * called when a key is pressed or held down
+	 * @param pin the pin number
+	 * @param held true if held down
+	 */
+	virtual void onPressed(uint8_t pin, bool held) = 0;
+	/**
+	 * called when a key is released
+	 * @param pin the key number
+	 * @param held true if key was held down
+	 */
+	virtual void onReleased(uint8_t pin, bool held) = 0;
+};
+
 /** 
  * The signature for a callback function that is registered with addSwitch
  * @param key the pin associated with the pin
@@ -73,26 +99,39 @@ typedef void(*EncoderCallbackFn)(int newValue);
  */
 class KeyboardItem {
 private:
-	KeyPressState state;
+	uint8_t stateFlags;
 	KeyPressState previousState;
 	uint8_t pin;
 	uint8_t counter;
 	uint8_t acceleration;
 	uint8_t repeatInterval;
-	KeyCallbackFn callback;
+	union {
+		KeyCallbackFn callback;
+		SwitchListener* listener;
+	} notify;
 	KeyCallbackFn callbackOnRelease;
 public:
 	KeyboardItem();
 
 	void initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT);
+	void initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT);
 	void checkAndTrigger(uint8_t pin);
 	void onRelease(KeyCallbackFn callbackOnRelease);
 
-	bool isDebouncing() { return state == DEBOUNCING1 || state == DEBOUNCING2; }
-	bool isPressed() { return state == PRESSED || state == BUTTON_HELD; }
-	bool isHeld() { return state == BUTTON_HELD; }
+	bool isDebouncing() { return getState() == DEBOUNCING1 || getState() == DEBOUNCING2; }
+	bool isPressed() { return getState() == PRESSED || getState() == BUTTON_HELD; }
+	bool isHeld() { return getState() == BUTTON_HELD; }
 	uint8_t getPin() { return pin;  }
-	void trigger(bool held) { callback(pin, held); }
+	
+	void trigger(bool held);
+	void triggerRelease(bool held);
+
+	KeyPressState getState() { return (KeyPressState)(stateFlags & KEY_PRESS_STATE_MASK); }
+	void setState(KeyPressState state) { 
+		stateFlags &= ~KEY_PRESS_STATE_MASK; 
+		stateFlags |= (state & KEY_PRESS_STATE_MASK);
+	}
+	bool isUsingListener() { return bitRead(stateFlags, KEY_LISTENER_MODE_BIT);  }
 };
 
 /**
@@ -221,8 +260,19 @@ public:
 	 * @param pin the pin on which the switch is attached
 	 * @param callback the function to be called back upon change
 	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
+	 * @return true if successful, false if the pin could not be registered.
 	 */
-	void addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
+	bool addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
+
+	/**
+	 * Add a switch to be managed by switches using an implementation of the
+	 * SwitchListener interface to receive events instead of function callbacks.
+	 * @param pin the pin on which the switch is attached
+	 * @param listener reference to a listener that will be notified of press and release.
+	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
+	 * @return true if successful, false if the pin could not be registered.
+	 */
+	bool addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat = NO_REPEAT);
 
 	/**
 	 * Set callback the function to be called back upon key release
