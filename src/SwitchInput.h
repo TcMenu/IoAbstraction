@@ -56,6 +56,7 @@ enum KeyPressState : byte {
 
 #define KEY_PRESS_STATE_MASK 0x0f
 #define KEY_LISTENER_MODE_BIT 7
+#define KEY_LOGIC_IS_INVERTED 6
 
 /**
  * Used to register a class that has an interest in the state of a switch.
@@ -113,8 +114,8 @@ private:
 public:
 	KeyboardItem();
 
-	void initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT);
-	void initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT);
+	void initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
+	void initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
 	void checkAndTrigger(uint8_t pin);
 	void onRelease(KeyCallbackFn callbackOnRelease);
 
@@ -131,7 +132,8 @@ public:
 		stateFlags &= ~KEY_PRESS_STATE_MASK; 
 		stateFlags |= (state & KEY_PRESS_STATE_MASK);
 	}
-	bool isUsingListener() { return bitRead(stateFlags, KEY_LISTENER_MODE_BIT);  }
+	bool isUsingListener() { return bitRead(stateFlags, KEY_LISTENER_MODE_BIT); }
+	bool isLogicInverted() { return bitRead(stateFlags, KEY_LOGIC_IS_INVERTED); }
 };
 
 /**
@@ -259,20 +261,22 @@ public:
 	 * Add a switch to be managed by switches, it can optionally be a repeat key
 	 * @param pin the pin on which the switch is attached
 	 * @param callback the function to be called back upon change
+	 * @param invertLogic optional - inverts the logic between active high and active low for one switch
 	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
 	 * @return true if successful, false if the pin could not be registered.
 	 */
-	bool addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT);
+	bool addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT, bool invertLogic = false);
 
 	/**
 	 * Add a switch to be managed by switches using an implementation of the
 	 * SwitchListener interface to receive events instead of function callbacks.
 	 * @param pin the pin on which the switch is attached
 	 * @param listener reference to a listener that will be notified of press and release.
+	 * @param invertLogic optional - inverts the logic between active high and active low for one switch
 	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
 	 * @return true if successful, false if the pin could not be registered.
 	 */
-	bool addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat = NO_REPEAT);
+	bool addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat = NO_REPEAT, bool invertLogic = false);
 
 	/**
 	 * Set callback the function to be called back upon key release

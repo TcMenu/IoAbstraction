@@ -23,22 +23,24 @@ KeyboardItem::KeyboardItem() {
 	this->callbackOnRelease = NULL;
 }
 
-void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval) {
+void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval, bool keyLogicIsInverted) {
 	this->notify.callback = callback;
 	this->pin = pin;
 	this->repeatInterval = repeatInterval;
 	previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 0);
+	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
 }
 
-void KeyboardItem::initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval) {
+void KeyboardItem::initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval, bool keyLogicIsInverted) {
 	this->notify.listener = switchListener;
 	this->pin = pin;
 	this->repeatInterval = repeatInterval;
 	previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 1);
+	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
 }
 
 void KeyboardItem::onRelease(KeyCallbackFn callbackOnRelease) {
@@ -59,6 +61,8 @@ void KeyboardItem::triggerRelease(bool held) {
 
 void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 	if (notify.callback == NULL && callbackOnRelease == NULL) return; 
+
+	if (isLogicInverted()) buttonState = !buttonState;
 	
 	if (buttonState == HIGH) {
 		if (getState() == NOT_PRESSED) {
@@ -137,11 +141,11 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 }
 
-bool  SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat) {
+bool  SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat, bool invertLogic) {
 	if (numberOfKeys >= MAX_KEYS) return false;
 	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
 
-	keys[numberOfKeys++].initialise(pin, callback, repeat);
+	keys[numberOfKeys++].initialise(pin, callback, repeat, invertLogic);
 	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
 
 	if(isInterruptDriven()) {
@@ -150,11 +154,11 @@ bool  SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat)
 	return true;
 }
 
-bool SwitchInput::addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat) {
+bool SwitchInput::addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat, bool invertLogic) {
 	if (numberOfKeys >= MAX_KEYS) return false;
 	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
 
-	keys[numberOfKeys++].initialise(pin, listener, repeat);
+	keys[numberOfKeys++].initialise(pin, listener, repeat, invertLogic);
 	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
 
 	if (isInterruptDriven()) {
