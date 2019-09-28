@@ -342,9 +342,15 @@ public:
 	IoAbstractionRef getIoAbstraction() { return ioDevice; }
 
 	/**
-	 * Returns true if using pull up button logic, otherwise false.
+	 * Returns true if the logic should be pull up, otherwise false.
+     * @param invertedLogic indicates if the key we are checking for is invertedLogic
+     * @return true if pull up style switching, otherwise false.
 	 */
-	bool isPullupLogic() {return bitRead(swFlags, SW_FLAG_PULLUP_LOGIC);}
+	bool isPullupLogic(bool invertedLogic) {
+        bool pullUp bitRead(swFlags, SW_FLAG_PULLUP_LOGIC);
+    	// check if we need to invert the state, basically when the two states don't match.
+        return (pullUp && !invertedLogic) || (!pullUp && invertedLogic);
+    }
 	
 	/**
 	 * Returns true when the library is running in interrupt driven mode - IE not polling 
@@ -369,6 +375,8 @@ public:
 	void setInterruptDebouncing(bool debounce) { bitWrite(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE, debounce);}
 
 private:
+    bool internalAddSwitch(uint8_t pin, bool invertLogic);
+    
 	friend void onSwitchesInterrupt(uint8_t);
 	friend void switchEncoderUp(uint8_t, bool);
 	friend void switchEncoderDown(uint8_t, bool);

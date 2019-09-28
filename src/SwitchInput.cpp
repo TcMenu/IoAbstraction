@@ -62,8 +62,6 @@ void KeyboardItem::triggerRelease(bool held) {
 void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 	if (notify.callback == NULL && callbackOnRelease == NULL) return; 
 
-	if (isLogicInverted()) buttonState = !buttonState;
-	
 	if (buttonState == HIGH) {
 		if (getState() == NOT_PRESSED) {
 			setState(DEBOUNCING1);
@@ -141,30 +139,35 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 }
 
-bool  SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat, bool invertLogic) {
-	if (numberOfKeys >= MAX_KEYS) return false;
-	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
-
-	keys[numberOfKeys++].initialise(pin, callback, repeat, invertLogic);
-	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
-
-	if(isInterruptDriven()) {
-		registerInterrupt(pin);
-	}
-	return true;
+bool SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat, bool invertLogic) {
+	if(internalAddSwitch(pin, invertLogic)) {
+    	keys[numberOfKeys++].initialise(pin, callback, repeat, invertLogic);
+    	return true;
+    }
+    
+    return false;
 }
 
 bool SwitchInput::addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat, bool invertLogic) {
+	if(internalAddSwitch(pin, invertLogic)) {
+        keys[numberOfKeys++].initialise(pin, listener, repeat, invertLogic);
+    	return true;
+    }
+    
+    return false;
+}
+
+bool SwitchInput::internalAddSwitch(uint8_t pin, bool invertLogic) {
 	if (numberOfKeys >= MAX_KEYS) return false;
 	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
 
-	keys[numberOfKeys++].initialise(pin, listener, repeat, invertLogic);
-	ioDevicePinMode(ioDevice, pin, isPullupLogic() ? INPUT_PULLUP : INPUT);
+	ioDevicePinMode(ioDevice, pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
 
-	if (isInterruptDriven()) {
+    if (isInterruptDriven()) {
 		registerInterrupt(pin);
 	}
-	return true;
+
+    return true;
 }
 
 void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {
@@ -216,8 +219,7 @@ bool SwitchInput::runLoop() {
 	for (int i = 0; i < numberOfKeys; ++i) {
 		// get the pins current state
 		uint8_t pinState = ioDeviceDigitalRead(ioDevice, keys[i].getPin());
-		// if the switches are pull up, invert the state.
-		if(isPullupLogic()) {
+		if(isPullupLogic(keys[i].isLogicInverted())) {
 			pinState = !pinState;
 		}
 		// and pass to the key handler.
