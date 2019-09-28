@@ -190,11 +190,11 @@ void TaskManager::yieldForMicros(uint16_t microsToWait) {
 	
 	unsigned long microsStart = micros();
 	do {
-		runLoop();
+		runLoop(false);
 	} while((micros() - microsStart) < microsToWait);
 }
 
-void TaskManager::runLoop() {
+void TaskManager::runLoop(bool runIdles) {
 	// when there's an interrupt, we marshall it into a timer interrupt.
 	if (interrupted) {
 		interrupted = false;
@@ -219,6 +219,8 @@ void TaskManager::runLoop() {
 
 		tm = tm->getNext();
 	}
+
+    if(!runIdles) return;
 
 	// go through any idle tasks running them in turn. They are in a one way linked list.
 	// idle tasks must be very light weight indeed as they are run very frequently.

@@ -241,7 +241,7 @@ public:
 	 * This should be called in the loop() method of your sketch, ensure that your loop method does
 	 * not do anything that will unduly delay calling this method.
 	 */
-	void runLoop();
+	void runLoop(bool runIdleTasks = true);
 
 	/**
 	 * Used internally by the interrupt handlers to tell task manager an interrupt is waiting. Not for external use.
@@ -274,6 +274,16 @@ public:
 	TimerTask* getFirstTask() {
 		return first;
 	}
+
+    /**
+     * Gets the number of microseconds as an unsigned long to the next task execution.
+     * To convert to milliseconds: divide by 1000, to seconds divide by 1,000,000.
+     * @return the microseconds from now to next execution
+     */
+    long microsToNextTask() {
+        if(first == NULL) return 0xffffffff;
+        else return first->microsFromNow();
+    }
 private:
 	int findFreeTask();
 	void removeFromQueue(TimerTask* task);
