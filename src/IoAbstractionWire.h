@@ -23,6 +23,7 @@
  */
 class PCF8574IoAbstraction : public BasicIoAbstraction {
 private:
+	TwoWire* wireImpl;
 	uint8_t address;
 	uint8_t lastRead;
 	uint8_t toWrite;
@@ -30,8 +31,13 @@ private:
 	bool pinsConfiguredRead;
 	uint8_t interruptPin;
 public:
-	/** Construct a 8574 expander on i2c address and with interrupts connected to a given pin (0xff no interrupts) */
-	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin);
+	/** 
+	 * Construct a 8574 expander on i2c address and with interrupts connected to a given pin (0xff no interrupts) 
+	 * @param addr the I2C address on the bus
+	 * @param interruptPin the pin on the Arduino that the interrupt line is connected to
+	 * @param wireInstance the instance of wire to use for this device, for example &Wire.
+	 */
+	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, TwoWire* wireInstance);
 	virtual ~PCF8574IoAbstraction() { }
 
 	/** Forces the device to start reading back state during syncs even if no pins are configured as read */
@@ -121,6 +127,7 @@ enum Mcp23xInterruptMode {
  */
 class MCP23017IoAbstraction : public BasicIoAbstraction {
 private:
+	TwoWire* wireImpl;
 	uint8_t  address;
 	uint8_t  intPinA;
 	uint8_t  intPinB;
@@ -135,7 +142,7 @@ public:
 	 * @see iofrom23017
 	 * @see iofrom23017IntPerPort
 	 */
-	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  uint8_t intPinA, uint8_t intPinB);
+	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  uint8_t intPinA, uint8_t intPinB, TwoWire* wireImpl);
 	virtual ~MCP23017IoAbstraction() {;}
 
 	/**
@@ -183,7 +190,6 @@ public:
      */
     void setInvertInputPin(uint8_t pin, bool shouldInvert);
 
-	void debugData();
 private:
 	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
 	void initDevice();
@@ -201,9 +207,10 @@ private:
  * has support for interrupts should it be needed. Note that only interrupt mode CHANGE is support, 
  * and a change on any pin raises an interrupt. All inputs are by default INPUT_PULLUP by device design.
  * @param addr the i2c address of the device
- * @param interruptPin (optional) the pin on the Arduino side that is used for interrupt handling if needed.
+ * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
+ * @param wireImpl (optional default = &Wire) pointer to a TwoWire class to use, for example &Wire
  */
-IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff);
+IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff, TwoWire* wireImpl = &Wire);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
@@ -211,7 +218,7 @@ IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff);
  * capabilities. See the other helper methods if you want interrupts.
  * @param addr the i2c address of the device
  */
-IoAbstractionRef ioFrom23017(uint8_t addr);
+IoAbstractionRef ioFrom23017(uint8_t addr, TwoWire* wireImpl = &Wire);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
@@ -221,7 +228,7 @@ IoAbstractionRef ioFrom23017(uint8_t addr);
  * @param intMode the interrupt mode the device will operate in
  * @param interruptPin the pin on the Arduino that will be used to detect the interrupt condition.
  */
-IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin);
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin, TwoWire* wireImpl = &Wire);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest include
@@ -232,6 +239,6 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t 
  * @param interruptPinA the pin on the Arduino that will be used to detect the PORTA interrupt condition.
  * @param interruptPinB the pin on the Arduino that will be used to detect the PORTB interrupt condition.
  */
-IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB);
+IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB, TwoWire* wireImpl = &Wire);
 
 #endif /* _IOABSTRACTION_IOABSTRACTIONWIRE_H_ */

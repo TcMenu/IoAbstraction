@@ -49,15 +49,16 @@
 #endif
 
 class I2cAt24Eeprom : public EepromAbstraction {
-	uint8_t eepromAddr;
-	uint8_t pageSize;
-	bool    errorOccurred;
+	TwoWire* wireImpl;
+	uint8_t  eepromAddr;
+	uint8_t  pageSize;
+	bool     errorOccurred;
 public:
 	/**
 	 * Create an I2C EEPROM object giving it's address and the page size of the device.
 	 * Page sizes are defined in this header file.
 	 */
-	I2cAt24Eeprom(uint8_t address, uint8_t pageSize);
+	I2cAt24Eeprom(uint8_t address, uint8_t pageSize, TwoWire* wireImpl = &Wire);
 	virtual ~I2cAt24Eeprom() {}
 
 	/** 
