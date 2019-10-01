@@ -208,7 +208,8 @@ private:
  * and a change on any pin raises an interrupt. All inputs are by default INPUT_PULLUP by device design.
  * @param addr the i2c address of the device
  * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
- * @param wireImpl (optional default = &Wire) pointer to a TwoWire class to use, for example &Wire
+ * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
+ * @return an IoAbstactionRef for the device
  */
 IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff, TwoWire* wireImpl = &Wire);
 
@@ -217,6 +218,8 @@ IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff, TwoWire* 
  * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
  * capabilities. See the other helper methods if you want interrupts.
  * @param addr the i2c address of the device
+ * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another TwoWire
+ * @return an IoAbstactionRef for the device
  */
 IoAbstractionRef ioFrom23017(uint8_t addr, TwoWire* wireImpl = &Wire);
 
@@ -227,6 +230,8 @@ IoAbstractionRef ioFrom23017(uint8_t addr, TwoWire* wireImpl = &Wire);
  * @param addr the i2c address of the device
  * @param intMode the interrupt mode the device will operate in
  * @param interruptPin the pin on the Arduino that will be used to detect the interrupt condition.
+ * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another TwoWire
+ * @return an IoAbstactionRef for the device
  */
 IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin, TwoWire* wireImpl = &Wire);
 
@@ -238,6 +243,8 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t 
  * @param intMode the interrupt mode the device will operate in
  * @param interruptPinA the pin on the Arduino that will be used to detect the PORTA interrupt condition.
  * @param interruptPinB the pin on the Arduino that will be used to detect the PORTB interrupt condition.
+ * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another TwoWire
+ * @return an IoAbstactionRef for the device
  */
 IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB, TwoWire* wireImpl = &Wire);
 

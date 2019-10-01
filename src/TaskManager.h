@@ -15,11 +15,15 @@
  */
 
 #ifndef DEFAULT_TASK_SIZE
-#ifdef __AVR__
-#define DEFAULT_TASK_SIZE 6
-#else
-#define DEFAULT_TASK_SIZE 10
-#endif // AVR platform
+
+#ifdef __AVR_ATmega2560__
+# define DEFAULT_TASK_SIZE 10
+#elif defined(__AVR__)
+# define DEFAULT_TASK_SIZE 6
+#else 
+# define DEFAULT_TASK_SIZE 20
+#endif // platform
+
 #endif // defined DEFAULT_TASK_SIZE
 
 //
