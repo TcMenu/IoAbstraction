@@ -21,7 +21,7 @@
 #elif defined(__AVR__)
 # define DEFAULT_TASK_SIZE 6
 #else 
-# define DEFAULT_TASK_SIZE 20
+# define DEFAULT_TASK_SIZE 16
 #endif // platform
 
 #endif // defined DEFAULT_TASK_SIZE
