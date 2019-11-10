@@ -120,6 +120,7 @@ int TaskManager::findFreeTask() {
 			return i;
 		}
 	}
+    serdebugF("No task slot found");
 	return TASKMGR_INVALIDID;
 }
 
