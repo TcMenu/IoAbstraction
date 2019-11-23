@@ -180,8 +180,18 @@ public:
 	virtual void encoderChanged() {;}
 };
 
-#define DEBOUNCE_ALAST = 0x01
-#define DEBOUNCE_CLEAN = 0x02
+/**
+ * This enumeration is used to control how acceleration is handled within a particular instance
+ * of a HardwareRotaryEncoder.
+ */
+enum HWAccelerationMode : byte {
+    /** No acceleration, no matter how fast the encoder is turned */
+    HWACCEL_NONE,
+    /** The default, accelerates based on how fast the encoder is turned */
+    HWACCEL_REGULAR,
+    /** Slower acceleration than above is applied */ 
+    HWACCEL_SLOWER
+};
 
 /**
  * An implementation of RotaryEncoder that supports the most common types of rotary encoder, needed no additional hardware
@@ -195,10 +205,12 @@ private:
 	uint8_t pinB;
 	uint8_t aLast;
 	uint8_t cleanFromB;
+    HWAccelerationMode accelerationMode;
 	
 public:
 	HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
 	virtual void encoderChanged();
+    void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
 private:
 	int amountFromChange(unsigned long change);
 };

@@ -270,6 +270,8 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, Encoder
 	this->pinB = pinB;
 	this->lastChange = micros();
 
+    accelerationMode = HWACCEL_REGULAR;
+
 	// set the pin directions to input with pull ups enabled
 	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
 	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
@@ -315,10 +317,22 @@ void onSwitchesInterrupt(__attribute__((unused)) uint8_t pin) {
 int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
 	if(change > 250000 || maximumValue < ONE_TURN_OF_ENCODER) return 1;
 
-	if(change > 120000) return 2;
-	else if (change > 70000) return 4;
-	else if (change > 30000) return 6;
-	else return 10;
+    if(accelerationMode == HWACCEL_NONE) {
+        return 1;
+    }
+    else if(accelerationMode == HWACCEL_REGULAR) {
+        if(change > 120000) return 2;
+        else if (change > 70000) return 4;
+        else if (change > 30000) return 6;
+        else return 10;
+    }
+    else { // slower, very slight acceleration..
+        
+        if(change > 100000) return 2;
+        else if (change > 30000) return 3;
+        else return 4;
+    }
+
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
