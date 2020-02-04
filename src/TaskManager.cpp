@@ -8,6 +8,15 @@
 #include "IoAbstraction.h"
 #include "TaskManager.h"
 
+#undef ISR_ATTR
+#if defined(ESP8266)
+# define ISR_ATTR ICACHE_RAM_ATTR
+#elif defined(ESP32)
+# define ISR_ATTR IRAM_ATTR
+#else
+# define ISR_ATTR
+#endif
+
 TaskManager taskManager;
 
 TimerTask::TimerTask() {
@@ -102,7 +111,7 @@ void TimerTask::clear() {
 	next = NULL;
 }
 
-void TaskManager::markInterrupted(uint8_t interruptNo) {
+ISR_ATTR void TaskManager::markInterrupted(uint8_t interruptNo) {
 	taskManager.lastInterruptTrigger = interruptNo;
 	taskManager.interrupted = true;
 }
@@ -299,55 +308,55 @@ void TaskManager::removeFromQueue(TimerTask* tm) {
 
 typedef void ArdunioIntFn(void);
 
-void interruptHandler1() {
+ISR_ATTR void interruptHandler1() {
 	taskManager.markInterrupted(1);
 }
-void interruptHandler2() {
+ISR_ATTR void interruptHandler2() {
 	taskManager.markInterrupted(2);
 }
-void interruptHandler3() {
+ISR_ATTR void interruptHandler3() {
 	taskManager.markInterrupted(3);
 }
-void interruptHandler4() {
+ISR_ATTR void interruptHandler4() {
 	taskManager.markInterrupted(4);
 }
-void interruptHandler5() {
+ISR_ATTR void interruptHandler5() {
 	taskManager.markInterrupted(5);
 }
-void interruptHandler6() {
+ISR_ATTR void interruptHandler6() {
 	taskManager.markInterrupted(6);
 }
-void interruptHandler7() {
+ISR_ATTR void interruptHandler7() {
 	taskManager.markInterrupted(7);
 }
-void interruptHandler8() {
+ISR_ATTR void interruptHandler8() {
 	taskManager.markInterrupted(8);
 }
-void interruptHandler9() {
+ISR_ATTR void interruptHandler9() {
 	taskManager.markInterrupted(9);
 }
-void interruptHandler10() {
+ISR_ATTR void interruptHandler10() {
 	taskManager.markInterrupted(10);
 }
-void interruptHandler11() {
+ISR_ATTR void interruptHandler11() {
 	taskManager.markInterrupted(11);
 }
-void interruptHandler12() {
+ISR_ATTR void interruptHandler12() {
 	taskManager.markInterrupted(12);
 }
-void interruptHandler13() {
+ISR_ATTR void interruptHandler13() {
 	taskManager.markInterrupted(13);
 }
-void interruptHandler14() {
+ISR_ATTR void interruptHandler14() {
 	taskManager.markInterrupted(14);
 }
-void interruptHandler15() {
+ISR_ATTR void interruptHandler15() {
 	taskManager.markInterrupted(15);
 }
-void interruptHandler18() {
+ISR_ATTR void interruptHandler18() {
 	taskManager.markInterrupted(18);
 }
-void interruptHandlerOther() {
+ISR_ATTR void interruptHandlerOther() {
 	taskManager.markInterrupted(0xff);
 }
 
