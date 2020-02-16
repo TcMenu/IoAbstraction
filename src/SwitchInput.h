@@ -146,6 +146,7 @@ protected:
 	uint16_t maximumValue;
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
+    bool lastSyncStatus;
 public:
 	RotaryEncoder(EncoderCallbackFn callback);
 	virtual ~RotaryEncoder() {;}
@@ -178,6 +179,13 @@ public:
 	 * internal method not for external use..
 	 */
 	virtual void encoderChanged() {;}
+
+    /**
+     * Used to get the last sync status of the underlying IoAbstraction. Useful when working
+     * with devices over i2c to check if the comms worked.
+     * @return true if the sync was successful, otherwise.
+     */
+    bool didLastSyncSucceed() { return lastSyncStatus; }
 };
 
 /**
@@ -246,6 +254,7 @@ private:
 	KeyboardItem keys[MAX_KEYS];
 	uint8_t numberOfKeys;
 	volatile uint8_t swFlags;
+    bool lastSyncStatus;
 public:
 	/** 
 	 * always use the global switches instance.
@@ -385,6 +394,12 @@ public:
 	 * @param debounce true if debouncing.
 	 */
 	void setInterruptDebouncing(bool debounce) { bitWrite(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE, debounce);}
+
+    /**
+     * Gets the last sync status of the IoAbstraction being used by switches.
+     * @return the last sync status as an bool, true for success, otherwise false.
+     */
+    bool didLastSyncSucceed() { return lastSyncStatus; }
 
 private:
     bool internalAddSwitch(uint8_t pin, bool invertLogic);

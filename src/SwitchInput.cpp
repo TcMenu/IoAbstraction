@@ -112,6 +112,7 @@ SwitchInput::SwitchInput() {
 	this->numberOfKeys = 0;	
 	this->ioDevice = NULL;
 	this->swFlags = 0;
+    this->lastSyncStatus = true;
 	for (int i = 0; i < MAX_ROTARY_ENCODERS; ++i) {
 		encoder[i] = NULL;
 	}
@@ -214,7 +215,7 @@ void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* encoder) {
 bool SwitchInput::runLoop() {
 	bool needAnotherGo = false;
 
-	ioDeviceSync(ioDevice);
+	lastSyncStatus = ioDeviceSync(ioDevice);
 
 	for (int i = 0; i < numberOfKeys; ++i) {
 		// get the pins current state
@@ -240,6 +241,7 @@ RotaryEncoder::RotaryEncoder(EncoderCallbackFn callback) {
 	this->callback = callback;
 	this->currentReading = 0;
 	this->maximumValue = 0;
+    this->lastSyncStatus = true;
 }
 
 void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
@@ -277,7 +279,7 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, Encoder
 	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
 
 	// read back the initial values.
-	ioDeviceSync(switches.getIoAbstraction());	
+	lastSyncStatus = ioDeviceSync(switches.getIoAbstraction());	
 	this->aLast = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
 	this->cleanFromB = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
 
@@ -336,7 +338,7 @@ int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
-	ioDeviceSync(switches.getIoAbstraction());
+	lastSyncStatus = ioDeviceSync(switches.getIoAbstraction());
 	uint8_t a = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
 	uint8_t b = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
 
