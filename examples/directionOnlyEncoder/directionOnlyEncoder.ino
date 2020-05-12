@@ -55,7 +55,8 @@ void setup() {
   switches.addSwitch(spinwheelClickPin, onSpinwheelClicked);
 
   // now we set up the rotary encoder, first we give the A pin and the B pin.
-  // we give the encoder a max value of 128, always minumum of 0.
+  // we only want directional indications so we set the precision to max 0, current 0.
+  // when we do this, the callback either gets 0 no change, -1 down or 1 up.
   setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
   switches.changeEncoderPrecision(0, 0);
 }
