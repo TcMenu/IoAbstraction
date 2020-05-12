@@ -251,6 +251,13 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 }
 
 void RotaryEncoder::increment(int8_t incVal) {
+    // first check if we are in direction only mode (max = 0)
+    if(maximumValue == 0) {
+        callback(incVal);
+        return;
+    }
+
+    // otherwise run through all the possibilities
 	if(incVal >= 0) {
 		if(currentReading + incVal <= maximumValue) {
 			currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
