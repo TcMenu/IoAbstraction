@@ -152,9 +152,11 @@ public:
 	virtual ~RotaryEncoder() {;}
 
 	/**
-	 * Change the precision of the rotary encoder, setting the maximum allowable value and the current value
-	 * @param maxValue the largest value allowed
-	 * @param currentValue the current value 
+	 * Change the precision of the rotary encoder, setting the maximum allowable value and the current value. If you set the maximum value
+     * to a positive value, then the encoder will work like a potentiometer between 0 and the maximum value. However, if you set maximum to
+     * zero, then the encoder works in direction mode, where you'll get called back with either 0-unchanged, 1-up, -1-down.
+	 * @param maxValue the largest value allowed or zero for direction only mode
+	 * @param currentValue the current value (zero for direction mode)
 	 */
 	void changePrecision(uint16_t maxValue, int currentValue);
 
