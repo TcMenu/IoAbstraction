@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include <AUnit.h>
 //#include <AUnitVerbose.h>
 #include <Wire.h>

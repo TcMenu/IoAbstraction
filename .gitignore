@@ -295,3 +295,7 @@ __pycache__/
 **/*.vcxproj*
 **/*.vcxitems
 vs-readme.txt
+
+# platform io directories and files that should not be committed
+**/.pio
+
