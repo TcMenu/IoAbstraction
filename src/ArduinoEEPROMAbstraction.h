@@ -1,5 +1,5 @@
 
-#ifndef _ARDUNIO_EEPROM_ABS_H
+#if !defined(_ARDUNIO_EEPROM_ABS_H) && !defined(_NO_EEPROM_CLASS_)
 #define _ARDUNIO_EEPROM_ABS_H
 
 #include <Arduino.h>
@@ -35,7 +35,7 @@ public:
     }
 
    	uint32_t read32(EepromPosition pos) override {
-        return (uint32_t)eepromProxy->read(pos + 3) << 24 | (uint32_t)eepromProxy->read(pos + 2) << 16 | 
+        return (uint32_t)eepromProxy->read(pos + 3) << 24 | (uint32_t)eepromProxy->read(pos + 2) << 16 |
                (uint32_t)eepromProxy->read(pos + 1) << 8 | (uint32_t)eepromProxy->read(pos + 0);
     }
 
@@ -74,4 +74,4 @@ public:
     }
 };
 
-#endif // _ARDUNIO_EEPROM_ABS_H
+#endif // !defined(_ARDUNIO_EEPROM_ABS_H) && !defined(_NO_EEPROM_CLASS_)

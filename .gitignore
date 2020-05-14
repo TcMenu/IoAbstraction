@@ -5,8 +5,6 @@
 
 .DS_Store
 
-.development
-
 # User-specific files
 *.suo
 *.user
@@ -296,6 +294,8 @@ __pycache__/
 **/*.vcxitems
 vs-readme.txt
 
-# platform io directories and files that should not be committed
+# Arduino and platform io directories and files that should not be committed
 **/.pio
-
+.development
+CMakeLists*
+cmake-build-*
