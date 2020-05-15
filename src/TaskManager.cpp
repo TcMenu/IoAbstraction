@@ -177,17 +177,6 @@ uint8_t TaskManager::scheduleFixedRate(uint16_t when, Executable* execRef, Timer
 	return taskId;
 }
 
-void TaskManager::addIdleTask(IdleTask* idleTask) {
-	if(this->firstIdleTask) {
-		IdleTask * idletask = firstIdleTask;
-		while(idletask->nextIdleTask) {
-			idletask = idletask->nextIdleTask;
-		}
-		idletask->nextIdleTask = idleTask;
-	}
-	else this->firstIdleTask = idleTask;
-}
-
 void TaskManager::cancelTask(uint8_t task) {
 	if (task < numberOfSlots) {
 		removeFromQueue(&tasks[task]);
@@ -200,11 +189,11 @@ void TaskManager::yieldForMicros(uint16_t microsToWait) {
 	
 	unsigned long microsStart = micros();
 	do {
-		runLoop(false);
+		runLoop();
 	} while((micros() - microsStart) < microsToWait);
 }
 
-void TaskManager::runLoop(bool runIdles) {
+void TaskManager::runLoop() {
 	// when there's an interrupt, we marshall it into a timer interrupt.
 	if (interrupted) {
 		interrupted = false;
@@ -229,18 +218,6 @@ void TaskManager::runLoop(bool runIdles) {
 
 		tm = tm->getNext();
 	}
-
-    if(!runIdles) return;
-
-	// go through any idle tasks running them in turn. They are in a one way linked list.
-	// idle tasks must be very light weight indeed as they are run very frequently.
-	IdleTask *idle = firstIdleTask;
-	while(idle) {
-		idle->timerFn(idle->associatedData);
-		idle = idle->nextIdleTask;
-	}
-
-	// TODO, if not interrupted, and no task for a while sleep and set timer - go into low power.
 }
 
 void TaskManager::putItemIntoQueue(TimerTask* tm) {
@@ -397,3 +374,18 @@ char* TaskManager::checkAvailableSlots(char* data) {
 	data[i] = 0;
 	return data;
 }
+
+#ifdef __MBED__
+#include "mbed-hal/us_ticker_api.h"
+
+void yield() {
+    Thread.yield();
+}
+unsigned long millis(x) {
+    ms_tick.;
+}
+unsigned long micros(x) {
+    return us_ticker_read();
+}
+
+#endif

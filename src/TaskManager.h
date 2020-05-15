@@ -26,6 +26,12 @@
 
 #endif // defined DEFAULT_TASK_SIZE
 
+#ifdef __MBED__
+void yield();
+void millis(x);
+void micros(x);
+#endif // __MBED__
+
 //
 // Only define this if you have libraries you are using that have long delays that you cannot control. Be aware this
 // comes with a lot of side effects, and you should check carefully that it works for you before using.
@@ -90,20 +96,6 @@ enum TimerUnit : byte {
 typedef void (*TimerFnWithData)(void* data);
 
 /**
- * Between tasks, when there's nothing to execute, Idle tasks will be run.
- * These should be exceptionally short lived jobs that short circuit quickly
- * when there's nothing for them to do. They are called very frequently.
- */
-struct IdleTask {
-	/** An associated data item that will be passed back with the call */
-    void* associatedData;
-	/** the callback for the idle task. */
-    TimerFnWithData timerFn;
-	/** the next idle task in the chain if more than one is created. */
-    IdleTask *nextIdleTask;
-};
-
-/**
  * Any class extending from executable can be passed by reference to task manager
  * and the exec() method will be called when the scheduled time is reached.
  */
@@ -159,7 +151,6 @@ class TaskManager {
 protected:
 	TimerTask tasks[DEFAULT_TASK_SIZE];
 	TimerTask *first;
-	IdleTask *firstIdleTask;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
 	volatile uint8_t lastInterruptTrigger;
@@ -205,13 +196,6 @@ public:
 	uint8_t scheduleFixedRate(uint16_t when, Executable* execRef, TimerUnit timeUnit = TIME_MILLIS);
 
 	/**
-	 * Adds an idle task to the chain of idle tasks, or creates the first one if there wasn't previously one. Note that
-	 * idle tasks are called very, very frequenlty and should be exceptionally short in duration and take very little
-	 * CPU under most circumstances.
-	 */
-	void addIdleTask(IdleTask* idleTask);
-
-	/**
 	 * Adds an interrupt that will be handled by task manager, such that it's marshalled into a task.
 	 * This registers an interrupt with any IoAbstractionRef.
 	 * @param ref the IoAbstractionRef that we want to register the interrupt for
@@ -245,7 +229,7 @@ public:
 	 * This should be called in the loop() method of your sketch, ensure that your loop method does
 	 * not do anything that will unduly delay calling this method.
 	 */
-	void runLoop(bool runIdleTasks = true);
+	void runLoop();
 
 	/**
 	 * Used internally by the interrupt handlers to tell task manager an interrupt is waiting. Not for external use.

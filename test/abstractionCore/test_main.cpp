@@ -1,4 +1,5 @@
 
+#include <Arduino.h>
 #include <unity.h>
 #include <util/atomic.h>
 #include <MockEepromAbstraction.h>
@@ -7,6 +8,7 @@
 #include "negatingIoAbstractionTests.h"
 #include "switchesTests.h"
 #include "ioDeviceTests.h"
+#include "SimpleCollectionsTest.h"
 
 const char * memToWrite = "This is a very large string to write into the rom to ensure it crosses memory boundaries in the rom";
 
@@ -75,6 +77,13 @@ void setup() {
     RUN_TEST(testMockIoAbstractionRead);
     RUN_TEST(testMockIoAbstractionWrite);
     RUN_TEST(testMultiIoPassThrough);
+
+    // rom tests
+    RUN_TEST(testMockEeprom);
+    RUN_TEST(testI2cEeepromOnGoodAddress);
+
+    // collection tests
+    RUN_TEST(testNearestLocationEdgeCases);
 }
 
 void loop() {

@@ -23,19 +23,19 @@ private:
 public:
     NegatingIoAbstraction(IoAbstractionRef toInvert) { delegate = toInvert; }
    	
-    void pinDirection(uint8_t pin, uint8_t mode) override { 
+    void pinDirection(pinid_t pin, uint8_t mode) override {
         delegate->pinDirection(pin, mode); 
     }
 	
-    void writeValue(uint8_t pin, uint8_t value) override {
+    void writeValue(pinid_t pin, uint8_t value) override {
         delegate->writeValue(pin, !value); 
     }
 	
-    uint8_t readValue(uint8_t pin) override {
+    uint8_t readValue(pinid_t pin) override {
         return !delegate->readValue(pin);
     }
 	
-    void attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode) override {
+    void attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) override {
         delegate->attachInterrupt(pin, interruptHandler, mode); 
     }
   	
@@ -43,11 +43,11 @@ public:
         return delegate->runLoop();
     }
 
-    void writePort(uint8_t pin, uint8_t portVal) override {
+    void writePort(pinid_t pin, uint8_t portVal) override {
         delegate->writePort(pin, ~portVal);
     }
 
-    uint8_t readPort(uint8_t pin) override {
+    uint8_t readPort(pinid_t pin) override {
         return ~(delegate->readPort(pin));
     }
 };

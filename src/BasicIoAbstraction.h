@@ -8,9 +8,32 @@
 
 /**
  * @file BasicIoAbstraction.h
- * 
+ *
  * Provides the core IoAbstraction interface and Arduino implementation of that interface.
  */
+
+#ifdef __MBED__
+
+#include <mbed.h>
+#include <stdint.h>
+#include <map>
+
+typedef uint32_t pinid_t;
+
+// the following defines allow you to pass regular arduino pin modes in mbed
+
+#define INPUT PullNone
+#define INPUT_PULLUP PullUp
+#define OUTPUT 0x87654321
+
+#else // NOT MBED
+
+#include <Arduino.h>
+
+typedef uint8_t pinid_t;
+
+#endif //__MBED__
+
 
 
 /** 
@@ -29,28 +52,32 @@ typedef void (*RawIntHandler)(void);
  * the helper function is `ioUsingArduino`
  */
 class BasicIoAbstraction {
+private:
+#ifdef __MBED__
+    std::map<uint32_t, gpio_t*> pinCache;
+#endif //__MBED__
 public:
 	virtual ~BasicIoAbstraction() { }
 
 	/**
 	 * sets the pin direction for a pin controlled by this abstraction - as per `pinMode`
 	 * @param pin the pin to be changed
-	 * @param mode the new mode, as per pinMode
+	 * @param mode the new mode, as per pinMode (or on Mbed you can use PinMode enum values)
 	 */
-	virtual void pinDirection(uint8_t pin, uint8_t mode);
+	virtual void pinDirection(pinid_t pin, uint8_t mode);
 
 	/**
 	 * Writes a value to a pin on this abstraction, as per `digitalWrite`. For serial devices, may need a sync first.
 	 * @param pin the pin to be written to 
 	 * @param value the new value such as HIGH / LOW
 	 */
-	virtual void writeValue(uint8_t pin, uint8_t value);
+	virtual void writeValue(pinid_t pin, uint8_t value);
 
 	/**
 	 * Reads a value from a pin for this abstraction as per `digitalRead`. For serial devices may need a sync first.
 	 * @param pin the pin to be read 
 	 */
-	virtual uint8_t readValue(uint8_t pin);
+	virtual uint8_t readValue(pinid_t pin);
 	
 	/**
 	 * Attach an interrupt to this abstraction, regardless of the device location this will perform the required tasks to register
@@ -59,7 +86,7 @@ public:
 	 * @param intHandler a void function with no parameters, used to handle interrupts. THIS IS A RAW INTERRUPT AND NOT MARSHALLED
 	 * @param mode standard Arduino interrupt modes: CHANGE, RISING, FALLING
 	 */
-	virtual void attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode);
+	virtual void attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode);
 
 	/**
 	 * This method is not needed on Arduino pins, but for most serial implementations it causes the device and abstraction to be synced.
@@ -73,7 +100,7 @@ public:
 	 * @param pin the pin determines the hardware port to use.
 	 * @param portVal the 8 bit value to write to the port. Use with care. 
 	 */
-	virtual void writePort(uint8_t pin, uint8_t portVal);
+	virtual void writePort(pinid_t pin, uint8_t portVal);
 
 	/**
 	 * Reads a whole port at once, on Arduino pins this is achieved by providing any pin within that port.
@@ -81,7 +108,11 @@ public:
 	 * @param pin the pin determines the hardware port to use.
 	 * @return the 8 bit value read from the port.
 	 */
-	virtual uint8_t readPort(uint8_t pin);
+	virtual uint8_t readPort(pinid_t pin);
+private:
+#ifdef __MBED__
+    gpio_t *allocatePinIfNeedBe(uint8_t pinToAlloc);
+#endif // __MBED__
 };
 
 /** 
@@ -93,7 +124,12 @@ typedef BasicIoAbstraction* IoAbstractionRef;
 /**
  * Gives a reference to the Arduino pin implementation of IoAbstraction.
  */
+#ifdef __MBED__
+IoAbstractionRef ioUsingDevicePins();
+#else
 IoAbstractionRef ioUsingArduino();
+#endif
+
 
 /**
  * Works in the same way as regular `pinMode` but this works for any IoAbstractionRef that you wish to set the pin mode on. 
