@@ -21,7 +21,7 @@
 #elif defined(__AVR__)
 # define DEFAULT_TASK_SIZE 6
 #else 
-# define DEFAULT_TASK_SIZE 16
+# define DEFAULT_TASK_SIZE 10
 #endif // platform
 
 #endif // defined DEFAULT_TASK_SIZE
@@ -149,7 +149,7 @@ public:
  */
 class TaskManager {
 protected:
-	TimerTask tasks[DEFAULT_TASK_SIZE];
+	TimerTask* tasks;
 	TimerTask *first;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
@@ -160,6 +160,7 @@ public:
 	 * Do not construct this class manually, there is a global instance called `taskManager`
 	 */
 	TaskManager();
+	~TaskManager() { delete[] tasks; }
 
 	/**
 	 * Schedules a task for one shot execution in the timeframe provided.

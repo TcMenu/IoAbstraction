@@ -10,21 +10,23 @@
 #include "ioDeviceTests.h"
 #include "SimpleCollectionsTest.h"
 
-const char * memToWrite = "This is a very large string to write into the rom to ensure it crosses memory boundaries in the rom";
+const char memToWrite[110] = { "This is a very large string to write into the rom to ensure it crosses memory boundaries in the rom" };
 
 void testI2cEeepromOnGoodAddress() {
     I2cAt24Eeprom eeprom(0x50, PAGESIZE_AT24C128);
     eeprom.write8(700, 0xfe);
     eeprom.write16(701, 0xf00d);
     eeprom.write32(703, 0xbeeff00d);
-    auto memLen = strlen(memToWrite) + 1;
-    eeprom.writeArrayToRom(710, (const uint8_t*)memToWrite, memLen);
+    serdebug("I2C eeprom writing array.");
+
+    eeprom.writeArrayToRom(710, (const uint8_t*)memToWrite, sizeof(memToWrite));
+    serdebug("I2C eeprom writes complete.");
 
     char readBuffer[128];
     TEST_ASSERT_EQUAL(0xfe, eeprom.read8(700));
     TEST_ASSERT_EQUAL(0xf00d, eeprom.read16(701));
     TEST_ASSERT_EQUAL(0xbeeff00d, eeprom.read32(703));
-    eeprom.readIntoMemArray((uint8_t*)readBuffer, 710, memLen);
+    eeprom.readIntoMemArray((uint8_t*)readBuffer, 710, sizeof(memToWrite));
     TEST_ASSERT_EQUAL_STRING(memToWrite, readBuffer);
 
     // now try other values to ensure the prior test worked
@@ -42,14 +44,13 @@ void testMockEeprom() {
     eeprom.write8(0, 0xfe);
     eeprom.write16(1, 0xf00d);
     eeprom.write32(3, 0xbeeff00d);
-    auto memLen = strlen(memToWrite) + 1;
-    eeprom.writeArrayToRom(10, (const uint8_t*)memToWrite, memLen);
+    eeprom.writeArrayToRom(10, (const uint8_t*)memToWrite, sizeof(memToWrite));
 
     char readBuffer[128];
     TEST_ASSERT_EQUAL(0xfe, eeprom.read8(0));
     TEST_ASSERT_EQUAL(0xf00d, eeprom.read16(1));
     TEST_ASSERT_EQUAL(0xbeeff00d, eeprom.read32(3));
-    eeprom.readIntoMemArray((uint8_t*)readBuffer, 10, memLen);
+    eeprom.readIntoMemArray((uint8_t*)readBuffer, 10, sizeof(memToWrite));
     TEST_ASSERT_EQUAL_STRING(memToWrite, readBuffer);
 
     // now try other values to ensure the prior test worked
@@ -63,15 +64,11 @@ void testMockEeprom() {
 }
 
 void setup() {
+    Wire.begin();
     delay(2000);
     UNITY_BEGIN();
     // negating abstraction tests
     RUN_TEST(testNegatingIoAbstractionRead);
-
-    // switches tests
-    RUN_TEST(testPressingASingleButton);
-    RUN_TEST(testInterruptButtonRepeating);
-    RUN_TEST(testUpDownEncoder);
 
     // device abstraction tests.
     RUN_TEST(testMockIoAbstractionRead);
@@ -84,6 +81,14 @@ void setup() {
 
     // collection tests
     RUN_TEST(testNearestLocationEdgeCases);
+    RUN_TEST(testAddingWithoutSortOrResize);
+    RUN_TEST(testAddingWithSortNoResize);
+    RUN_TEST(testAddingWithSortAndResizeBy5);
+
+    // switches tests
+    RUN_TEST(testPressingASingleButton);
+    RUN_TEST(testInterruptButtonRepeating);
+    RUN_TEST(testUpDownEncoder);
 }
 
 void loop() {

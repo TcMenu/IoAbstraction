@@ -60,7 +60,8 @@ public:
     BtreeList(bsize_t size = DEFAULT_LIST_SIZE, GrowByMode howToGrow = DEFAULT_GROW_MODE) {
         this->binTree = new V[size];
         this->howToGrow = howToGrow;
-        this->currentSize = 0;
+        this->currentSize = binTree != NULL ? size : 0;
+        this->itemsInList = 0;
     }
 
     ~BtreeList() {
@@ -80,6 +81,8 @@ public:
 
         bsize_t insertionPoint = nearestLocation(item.getKey());
         int amtToMove = itemsInList - insertionPoint;
+        serdebugF4("add ", insertionPoint, item.getKey(), amtToMove);
+
         if(amtToMove > 0) {
             memmove(&binTree[insertionPoint + 1], &binTree[insertionPoint], amtToMove * sizeof(V));
         }
@@ -109,37 +112,50 @@ public:
     V* getByKey(K key) {
         if(itemsInList == 0) return NULL;
         bsize_t loc = nearestLocation(key);
+        serdebugF3("getByKey ", loc, key);
         return (binTree[loc].getKey() == key) ? &binTree[loc] : NULL;
     };
 
     bsize_t nearestLocation(K key) {
-        // a few short circuits
+        // a few short circuits, basically handling quickly nothing in list,
+        // one item in the list and an insertion at the end of the list.
         if(itemsInList == 0) return 0; // always first item in this case
-        else if(itemsInList == 1) return (key <= binTree[1].getKey()) ? 0 : 1;
+        else if(itemsInList == 1) return (key <= binTree[0].getKey()) ? 0 : 1;
+        else if(key > binTree[itemsInList - 1].getKey()) return itemsInList;
 
+        // otherwise we search with binary chop
         bsize_t start = 0;
         bsize_t end = itemsInList - 1;
         bsize_t midPoint;
-        bool resolved = false;
-        while(!resolved) {
-            midPoint = (end - start) / 2;
-            resolved = ((end - start) < 2);
+        while((end - start) > 1) {
+            midPoint = start + ((end - start) / 2);
+            serdebugF4("start mid end", start, midPoint, end);
             auto midKey = binTree[midPoint].getKey();
             if(midKey == key) return midPoint;
             else if(midKey > key) end = midPoint;
             else if(midKey < key) start = midPoint;
         }
 
-        serdebugF4("start mid end", start, midPoint, end);
+        // when we get here we've got down to two entries and need to
+        // either return the exact match, or locate the lower of the two
+        // in the case there no exact match.
+
+        // check if start or end contain the key
+        if(binTree[start].getKey() == key) return start;
+        if(binTree[end].getKey() == key) return end;
 
         // in this case we return the first item LOWER than the current one
-        while(midPoint > 0 && binTree[midPoint].getKey() > key) --midPoint;
-        return midPoint;
+        while(end > 0 && binTree[end - 1].getKey() > key) --end;
+        return end;
     }
 
     const V* items() {
         return binTree;
     };
+
+    V* itemAtIndex(int idx) {
+        return (idx < itemsInList)  ? &binTree[idx] : NULL;
+    }
 
     bsize_t count() {
         return itemsInList;

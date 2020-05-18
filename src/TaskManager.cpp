@@ -121,6 +121,7 @@ TaskManager::TaskManager() {
 	interrupted = false;
 	first = NULL;
 	interruptCallback = NULL;
+	tasks = new TimerTask[DEFAULT_TASK_SIZE];
 }
 
 int TaskManager::findFreeTask() {
@@ -129,6 +130,19 @@ int TaskManager::findFreeTask() {
 			return i;
 		}
 	}
+
+	int newSlots = numberOfSlots + DEFAULT_TASK_SIZE;
+	auto newTasks = new TimerTask[newSlots];
+	if(newTasks != NULL) {
+	    int firstNewSlot = numberOfSlots;
+	    memcpy(newTasks, tasks, sizeof(TimerTask) * numberOfSlots);
+	    tasks = newTasks;
+	    numberOfSlots = newSlots;
+        serdebugF3("Successful realloc(slots,ret) ", numberOfSlots, firstNewSlot);
+
+        return firstNewSlot;
+	}
+
     serdebugF("No task slot found");
 	return TASKMGR_INVALIDID;
 }

@@ -23,24 +23,38 @@ KeyboardItem::KeyboardItem() {
 	this->callbackOnRelease = NULL;
 }
 
-void KeyboardItem::initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval, bool keyLogicIsInverted) {
+KeyboardItem::KeyboardItem(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval, bool keyLogicIsInverted) {
+    this->repeatInterval = repeatInterval;
+    this->pin = pin;
 	this->notify.callback = callback;
-	this->pin = pin;
-	this->repeatInterval = repeatInterval;
+	this->counter = 0;
 	previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
+	callbackOnRelease = NULL;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 0);
 	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
 }
 
-void KeyboardItem::initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval, bool keyLogicIsInverted) {
-	this->notify.listener = switchListener;
+KeyboardItem::KeyboardItem(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval, bool keyLogicIsInverted) {
 	this->pin = pin;
 	this->repeatInterval = repeatInterval;
-	previousState = NOT_PRESSED;
+    this->notify.listener = switchListener;
+    this->counter = 0;
+    previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
+	callbackOnRelease = NULL;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 1);
 	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
+}
+
+KeyboardItem::KeyboardItem(const KeyboardItem& other) {
+    this->pin = other.pin;
+    this->repeatInterval = other.repeatInterval;
+    this->counter = other.counter;
+    this->notify.listener = other.notify.listener;
+    this->previousState = other.previousState;
+    this->stateFlags = other.stateFlags;
+    this->callbackOnRelease = other.callbackOnRelease;
 }
 
 void KeyboardItem::onRelease(KeyCallbackFn callbackOnRelease) {
@@ -109,7 +123,6 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 }
 
 SwitchInput::SwitchInput() {
-	this->numberOfKeys = 0;	
 	this->ioDevice = NULL;
 	this->swFlags = 0;
     this->lastSyncStatus = true;
@@ -121,7 +134,6 @@ SwitchInput::SwitchInput() {
 void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
 	this->swFlags = 0;
-	this->numberOfKeys = 0;
 	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 	bitSet(swFlags, SW_FLAG_INTERRUPT_DRIVEN);
 
@@ -131,8 +143,7 @@ void SwitchInput::initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpS
 void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching) {
 	this->ioDevice = ioDevice;
 	this->swFlags = 0;
-	this->numberOfKeys = 0;
-	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
+    	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 
 	taskManager.scheduleFixedRate(20, [] {
 		switches.runLoop();
@@ -142,8 +153,8 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 
 bool SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat, bool invertLogic) {
 	if(internalAddSwitch(pin, invertLogic)) {
-    	keys[numberOfKeys++].initialise(pin, callback, repeat, invertLogic);
-    	return true;
+        KeyboardItem item(pin, callback, repeat, invertLogic);
+        return keys.add(item);
     }
     
     return false;
@@ -151,15 +162,14 @@ bool SwitchInput::addSwitch(uint8_t pin, KeyCallbackFn callback,uint8_t repeat, 
 
 bool SwitchInput::addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat, bool invertLogic) {
 	if(internalAddSwitch(pin, invertLogic)) {
-        keys[numberOfKeys++].initialise(pin, listener, repeat, invertLogic);
-    	return true;
+        KeyboardItem item(pin, listener, repeat, invertLogic);
+        return keys.add(item);
     }
     
     return false;
 }
 
 bool SwitchInput::internalAddSwitch(uint8_t pin, bool invertLogic) {
-	if (numberOfKeys >= MAX_KEYS) return false;
 	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
 
 	ioDevicePinMode(ioDevice, pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
@@ -174,30 +184,16 @@ bool SwitchInput::internalAddSwitch(uint8_t pin, bool invertLogic) {
 void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {
 	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
 
-	for(uint8_t i=0; i<numberOfKeys; ++i) {
-		if(keys[i].getPin() == pin) {
-			keys[i].onRelease(callbackOnRelease);
-			return;
-		}
-	}
+	auto keyItem = keys.getByKey(pin);
+	if(pin) keyItem->onRelease(callbackOnRelease);
 }
 
 bool SwitchInput::isSwitchPressed(uint8_t pin) {
-	for(uint8_t i=0; i<numberOfKeys; ++i) {
-		if(keys[i].getPin() == pin) {
-			return keys[i].isPressed();
-		}
-	}
-	return false;
+    return keys.getByKey(pin)->isPressed();
 }
 
 void SwitchInput::pushSwitch(uint8_t pin, bool held) {
-	for(uint8_t i=0; i<numberOfKeys; ++i) {
-		if(keys[i].getPin() == pin) {
-			keys[i].trigger(held);
-			return;
-		}
-	}
+    keys.getByKey(pin)->trigger(held);
 }
 
 void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue) {
@@ -217,17 +213,18 @@ bool SwitchInput::runLoop() {
 
 	lastSyncStatus = ioDeviceSync(ioDevice);
 
-	for (int i = 0; i < numberOfKeys; ++i) {
+	for (int i = 0; i < keys.count(); ++i) {
 		// get the pins current state
-		uint8_t pinState = ioDeviceDigitalRead(ioDevice, keys[i].getPin());
-		if(isPullupLogic(keys[i].isLogicInverted())) {
+		auto key = keys.itemAtIndex(i);
+		uint8_t pinState = ioDeviceDigitalRead(ioDevice, key->getPin());
+		if(isPullupLogic(key->isLogicInverted())) {
 			pinState = !pinState;
 		}
 		// and pass to the key handler.
-		keys[i].checkAndTrigger(pinState);
+		key->checkAndTrigger(pinState);
 
 		// we need to call into here again if we are debouncing or anything is pressed.
-		needAnotherGo |= (keys[i].isDebouncing() || keys[i].isPressed());
+		needAnotherGo |= (key->isDebouncing() || key->isPressed());
 	}
 
 	return needAnotherGo;

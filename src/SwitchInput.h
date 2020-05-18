@@ -17,6 +17,7 @@
 
 #include <IoAbstraction.h>
 #include <TaskManager.h>
+#include "SimpleCollections.h"
 
 #ifndef HOLD_THRESHOLD
 #define HOLD_THRESHOLD 20
@@ -25,14 +26,6 @@
 // START user adjustable section
 
 /**
- * If you want more (or less) buttons, change this definition below to the appropriate number.
- * Each button adds about 6 bytes of RAM, so on a tiny you could adjust downwards for example.
- */
-#ifndef MAX_KEYS
-#define MAX_KEYS 5
-#endif // MAX_KEYS defined
-
-/** 
  * If you want to adjust the maximum number of rotary encoders from the default of 4 just either
  * change the definition below or set this define during compilation.
  */
@@ -112,10 +105,10 @@ private:
 	} notify;
 	KeyCallbackFn callbackOnRelease;
 public:
-	KeyboardItem();
-
-	void initialise(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
-	void initialise(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
+    KeyboardItem();
+    KeyboardItem(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
+    KeyboardItem(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
+    KeyboardItem(const KeyboardItem& other);
 	void checkAndTrigger(uint8_t pin);
 	void onRelease(KeyCallbackFn callbackOnRelease);
 
@@ -123,6 +116,7 @@ public:
 	bool isPressed() { return getState() == PRESSED || getState() == BUTTON_HELD; }
 	bool isHeld() { return getState() == BUTTON_HELD; }
 	uint8_t getPin() { return pin;  }
+	uint8_t getKey() { return pin; }
 	
 	void trigger(bool held);
 	void triggerRelease(bool held);
@@ -253,8 +247,7 @@ class SwitchInput {
 private:
 	RotaryEncoder* encoder[MAX_ROTARY_ENCODERS];
 	IoAbstractionRef ioDevice;
-	KeyboardItem keys[MAX_KEYS];
-	uint8_t numberOfKeys;
+	BtreeList<pinid_t, KeyboardItem> keys;
 	volatile uint8_t swFlags;
     bool lastSyncStatus;
 public:
@@ -370,7 +363,7 @@ public:
      * @return true if pull up style switching, otherwise false.
 	 */
 	bool isPullupLogic(bool invertedLogic) {
-        bool pullUp bitRead(swFlags, SW_FLAG_PULLUP_LOGIC);
+        bool pullUp = bitRead(swFlags, SW_FLAG_PULLUP_LOGIC);
     	// check if we need to invert the state, basically when the two states don't match.
         return (pullUp && !invertedLogic) || (!pullUp && invertedLogic);
     }
