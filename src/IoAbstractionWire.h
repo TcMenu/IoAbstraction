@@ -12,8 +12,15 @@
 #ifndef _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 #define _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 
-#include "IoAbstraction.h"
+#ifdef __MBED__
+#include <mbed.h>
+#include <i2c_api.h>
+#else
 #include <Wire.h>
+#endif
+
+#include "IoAbstraction.h"
+#include "EepromAbstractionWire.h"
 
 /**
  * An implementation of BasicIoAbstraction that supports the PCF8574 i2c IO chip. Providing all possible capabilities
@@ -23,7 +30,7 @@
  */
 class PCF8574IoAbstraction : public BasicIoAbstraction {
 private:
-	TwoWire* wireImpl;
+	WireType wireImpl;
 	uint8_t address;
 	uint8_t lastRead;
 	uint8_t toWrite;
@@ -37,7 +44,7 @@ public:
 	 * @param interruptPin the pin on the Arduino that the interrupt line is connected to
 	 * @param wireInstance the instance of wire to use for this device, for example &Wire.
 	 */
-	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, TwoWire* wireInstance);
+	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance);
 	virtual ~PCF8574IoAbstraction() { }
 
 	/** Forces the device to start reading back state during syncs even if no pins are configured as read */
@@ -47,39 +54,39 @@ public:
 	 * sets the pin direction on the device, notice that on this device input is achieved by setting the port to high 
 	 * so it is always set as INPUT_PULLUP, even if INPUT is chosen 
 	 */
-	virtual void pinDirection(uint8_t pin, uint8_t mode);
+	void pinDirection(pinid_t pin, uint8_t mode) override;
 
 	/** 
 	 * writes a new value to the device after a sync. 
 	 */
-	virtual void writeValue(uint8_t pin, uint8_t value);
+	void writeValue(pinid_t pin, uint8_t value) override;
 
 	/**
 	 * reads a value from the last cached state  - updated each sync
 	 */
-	virtual uint8_t readValue(uint8_t pin);
+	uint8_t readValue(pinid_t pin) override;
 
 	/**
 	 * Writes a complete 8 bit port value, that is updated to the device each sync
 	 */
-	virtual void writePort(uint8_t pin, uint8_t port);
+	void writePort(pinid_t pin, uint8_t port) override;
 
 	/**
 	 * Reads the complete 8 bit byte from the last cached state, that is updated each sync.
 	 */ 
-	virtual uint8_t readPort(uint8_t pin);
+	uint8_t readPort(pinid_t pin) override;
 
 	/** 
 	 * attaches an interrupt handler for this device. Notice for this device, all pin changes will be notified
 	 * on any pin of the port, it is not configurable at the device level, the type of interrupt will also
 	 * always be CHANGE.
 	 */
-	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode);
+	void attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) override;
 
 	/** 
 	 * updates settings on the board after changes 
 	 */
-	virtual bool runLoop();
+	bool runLoop() override;
 };
 
 //
@@ -127,10 +134,10 @@ enum Mcp23xInterruptMode {
  */
 class MCP23017IoAbstraction : public BasicIoAbstraction {
 private:
-	TwoWire* wireImpl;
+	WireType wireImpl;
 	uint8_t  address;
-	uint8_t  intPinA;
-	uint8_t  intPinB;
+	pinid_t  intPinA;
+	pinid_t  intPinB;
 	uint8_t  intMode;
 	uint8_t  portFlags;
 	bool     needsInit;
@@ -142,7 +149,7 @@ public:
 	 * @see iofrom23017
 	 * @see iofrom23017IntPerPort
 	 */
-	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  uint8_t intPinA, uint8_t intPinB, TwoWire* wireImpl);
+	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  pinid_t intPinA, pinid_t intPinB, WireType wireImpl);
 	virtual ~MCP23017IoAbstraction() {;}
 
 	/**
@@ -150,33 +157,33 @@ public:
 	 * @param pin the pin to set direction for on this device
 	 * @param mode the mode such as INPUT, INPUT_PULLUP, OUTPUT
 	 */
-	virtual void pinDirection(uint8_t pin, uint8_t mode);
+	void pinDirection(pinid_t pin, uint8_t mode) override;
 
-	virtual void writeValue(uint8_t pin, uint8_t value);
-	virtual uint8_t readValue(uint8_t pin);
+	void writeValue(pinid_t pin, uint8_t value) override;
+	uint8_t readValue(pinid_t pin) override;
 
 	/**
 	 * Attaches an interrupt to the device and links it to the arduino pin. On the MCP23017 nearly all interrupt modes
 	 * are supported, including CHANGE, RISING, FALLING and are selective both per port and by pin.
 	 */
-	virtual void attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode);
+	void attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) override;
 	
 	/** 
 	 * updates settings on the board after changes 
 	 */
-	virtual bool runLoop();
+	bool runLoop() override;
 	
 	/**
 	 * Writes a complete 8 bit port value, that is updated to the device each sync
 	 * Any pin between 0-7 refers to portA, otherwise portB.
 	 */
-	virtual void writePort(uint8_t pin, uint8_t port);
+	void writePort(pinid_t pin, uint8_t port) override;
 
 	/**
 	 * Reads the complete 8 bit byte from the last cached state, that is updated each sync.
 	 * Any pin between 0-7 refers to portA, otherwise portB.
 	 */ 
-	virtual uint8_t readPort(uint8_t pin);
+	uint8_t readPort(pinid_t pin) override;
 
     /**
      * This MCP23017 only function inverts the meaning of a given input pin. The pins for this
@@ -188,7 +195,7 @@ public:
      * @param pin the input pin between 0..15
      * @param shouldInvert true to invert the given pin, otherwise false.
      */
-    void setInvertInputPin(uint8_t pin, bool shouldInvert);
+    void setInvertInputPin(pinid_t pin, bool shouldInvert);
 
 private:
 	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
@@ -211,7 +218,7 @@ private:
  * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
  * @return an IoAbstactionRef for the device
  */
-IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff, TwoWire* wireImpl = &Wire);
+IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
@@ -221,7 +228,7 @@ IoAbstractionRef ioFrom8574(uint8_t addr, uint8_t interruptPin = 0xff, TwoWire* 
  * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another TwoWire
  * @return an IoAbstactionRef for the device
  */
-IoAbstractionRef ioFrom23017(uint8_t addr, TwoWire* wireImpl = &Wire);
+IoAbstractionRef ioFrom23017(pinid_t addr, WireType wireImpl);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
@@ -233,7 +240,7 @@ IoAbstractionRef ioFrom23017(uint8_t addr, TwoWire* wireImpl = &Wire);
  * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another TwoWire
  * @return an IoAbstactionRef for the device
  */
-IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin, TwoWire* wireImpl = &Wire);
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest include
@@ -246,6 +253,25 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t 
  * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another TwoWire
  * @return an IoAbstactionRef for the device
  */
-IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPinA, uint8_t interruptPinB, TwoWire* wireImpl = &Wire);
+IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB, WireType wireImpl);
+
+#ifndef __MBED__
+inline IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin = 0xff) {
+    return ioFrom8574(addr, interruptPin, &Wire);
+};
+
+inline IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB) {
+    return ioFrom23017IntPerPort(addr, intMode, interruptPinA, interruptPinB, &Wire);
+}
+
+inline IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin) {
+    return ioFrom23017(addr, intMode, interruptPin, &Wire);
+}
+
+inline IoAbstractionRef ioFrom23017(pinid_t addr) {
+    return ioFrom23017(addr, &Wire);
+}
+
+#endif
 
 #endif /* _IOABSTRACTION_IOABSTRACTIONWIRE_H_ */

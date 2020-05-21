@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include "IoLogging.h"
 
 /**
  * @file SimpleCollections.h memory efficient collections for use on all embedded devices.

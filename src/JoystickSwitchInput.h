@@ -4,6 +4,8 @@
 #include "SwitchInput.h"
 #include "AnalogDeviceAbstraction.h"
 
+#define MAX_JOYSTICK_ACCEL 7.1F
+
 /**
  * @file JoystickSwitchInput.h
  * Provides a rotary encoder emulation based on an analog joystick. Normally used with
@@ -59,24 +61,17 @@ public:
      * Called by taskManager on a frequent basis. Ususally about every 250-500 millis
      */
     void exec() override {
-        // this provides 7 times acceleration at full extent.
-        int shiftAmt = analogDevice->getBitDepth(DIR_IN, analogPin) - 4;
+        float readVal = analogDevice->getCurrentFloat(analogPin) - 0.5F;
 
-        int readVal = analogDevice->getCurrentValue(analogPin) >> shiftAmt;
-        
-        if(readVal == 7 || readVal == 8) {
-            // in the probable centre position - do nothing.
-            taskManager.scheduleOnce(250, this);
-        }
-        else if(readVal > 8) {
+        if(readVal > 0.007) {
             // going up!
-            int val = readVal - 8;
+            int val = abs(readVal * MAX_JOYSTICK_ACCEL);
             increment(-val);
             taskManager.scheduleOnce(nextInterval(val), this);
         }
-        else /* less than 7 */ {
+        else if(readVal < -0.007) {
             // going down less than 7..
-            int val = 7 - readVal;
+            int val = abs(readVal * MAX_JOYSTICK_ACCEL);
             increment(val);
             taskManager.scheduleOnce(nextInterval(val), this);
         }

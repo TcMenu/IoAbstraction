@@ -93,7 +93,7 @@ public:
 /**
  *  Internally used by the keyboard manager to manage the state of keys.
  */
-enum KeyMode: byte {
+enum KeyMode: uint8_t {
     KEYMODE_NOT_PRESSED,
     KEYMODE_DEBOUNCE,
     KEYMODE_PRESSED,

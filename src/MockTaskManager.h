@@ -41,7 +41,6 @@ public:
         yieldTimes[numOfYields++] = micros;
     }
 
-    IdleTask* getRegisteredIdleTask() {return firstIdleTask;}
     int getNumberOfYieldCalls() {return numOfYields;}
     uint16_t getYieldTime(int i) {return yieldTimes[i];}
     TimerTask* getTask(int i) {return &tasks[i];}

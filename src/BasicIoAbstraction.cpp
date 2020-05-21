@@ -7,57 +7,76 @@
 
 #ifdef __MBED__
 #include <mbed.h>
-#include <map>
 
 void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
-    gpio_t* theGpio = this->allocatePinIfNeedBe(pin);
+    GpioWrapper* theGpio = this->allocatePinIfNeedBe(pin);
     if(theGpio != NULL) {
         if(mode == OUTPUT) {
-            gpio_init_out(theGpio, (PinName)pin);
+            gpio_init_out(theGpio->getGpio(), (PinName)pin);
         }
         else {
-            gpio_init_in_ex(theGpio, (PinName) pin, (PinMode)mode);
+            gpio_init_in_ex(theGpio->getGpio(), (PinName) pin, (PinMode)mode);
         }
     }
 }
 
 void BasicIoAbstraction::writeValue(pinid_t pin, uint8_t value) {
-    gpio_t* theGpio = this->allocatePinIfNeedBe(pin);
+    GpioWrapper* theGpio = this->allocatePinIfNeedBe(pin);
     if(theGpio != NULL) {
-        gpio_write(theGpio, value);
+        gpio_write(theGpio->getGpio(), value);
     }
 }
 
 uint8_t BasicIoAbstraction::readValue(pinid_t pin) {
-    gpio_t* theGpio = this->allocatePinIfNeedBe(pin);
+    GpioWrapper* theGpio = this->allocatePinIfNeedBe(pin);
     if(theGpio != NULL) {
-        return gpio_read(theGpio);
+        return gpio_read(theGpio->getGpio());
     }
     return 0;
 }
 
 void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) {
-    InterruptIn()
-    uint8_t intPin = digitalPinToInterrupt(pin);
-    ::attachInterrupt(intPin, interruptHandler, mode);
+    auto gpio = allocatePinIfNeedBe(pin);
+    if(gpio == NULL) return;
+    if(gpio->getInterruptIn() == NULL) {
+        gpio->setInterruptIn(new InterruptIn((PinName)pin));
+    }
+    auto intIn = gpio->getInterruptIn();
+    if(mode == RISING) {
+        intIn->rise(interruptHandler);
+    }
+    else {
+        intIn->fall(interruptHandler);
+    }
+    gpio->setInterruptIn(intIn);
 }
 
-void BasicIoAbstraction::writePort(uint8_t port, uint8_t portVal) {
+void BasicIoAbstraction::writePort(pinid_t port, uint8_t portVal) {
     // unsupported on mbed at the moment
 }
 
-uint8_t BasicIoAbstraction::readPort(uint8_t port) {
+uint8_t BasicIoAbstraction::readPort(pinid_t port) {
     // unsupported on mbed at the moment
     return 0xff;
 }
 
-gpio_t *BasicIoAbstraction::allocatePinIfNeedBe(uint8_t pinToAlloc) {
-    gpio_t* gpio = pinCache[pinToAlloc];
-    if(gpio == NULL) {
-        gpio = new gpio_t;
-        pinCache[pinToAlloc] = gpio;
+GpioWrapper *BasicIoAbstraction::allocatePinIfNeedBe(uint8_t pinToAlloc) {
+    GpioWrapper* gpioWrapper = pinCache.getByKey(pinToAlloc);
+    if(gpioWrapper == NULL) {
+        pinCache.add(GpioWrapper(pinToAlloc));
+        gpioWrapper = pinCache.getByKey(pinToAlloc);
     }
-    return gpio;
+    return gpioWrapper;
+}
+
+IoAbstractionRef mbedAbstraction = NULL;
+IoAbstractionRef internalDigitalIo() {
+    CriticalSectionLock::enable();
+    if (mbedAbstraction == NULL) {
+        mbedAbstraction = new BasicIoAbstraction();
+    }
+    CriticalSectionLock::disable();
+    return mbedAbstraction;
 }
 
 #else // Assuming Arduino
@@ -85,6 +104,16 @@ void BasicIoAbstraction::writePort(uint8_t port, uint8_t portVal) {
 
 uint8_t BasicIoAbstraction::readPort(uint8_t port) {
 	return *portInputRegister(digitalPinToPort(port));
+}
+
+IoAbstractionRef arduinoAbstraction = NULL;
+IoAbstractionRef ioUsingArduino() {
+	noInterrupts();
+	if (arduinoAbstraction == NULL) {
+		arduinoAbstraction = new BasicIoAbstraction();
+	}
+	interrupts();
+	return arduinoAbstraction;
 }
 
 #endif // __MBED__

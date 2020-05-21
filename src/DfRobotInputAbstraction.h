@@ -7,6 +7,7 @@
 #define _DF_ROBOT_INPUT_ABSTRACTION_H
 
 #include "BasicIoAbstraction.h"
+#include "AnalogDeviceAbstraction.h"
 
 /**
  * @file DfRobotInputAbstraction.h
@@ -33,7 +34,11 @@ struct DfRobotAnalogRanges {
 };
 
 #define ALLOWABLE_RANGE 8
+#ifdef __MBED__
+#define pgmAsInt(x) ((int)(*x))
+#else
 #define pgmAsInt(x) ((int)pgm_read_word_near(x))
+#endif
 /**
  * DfRobotInputAbstraction provides the means to use many buttons connected to a single
  * Analog input. It is mainly designed to work with the df robot shield.
@@ -51,27 +56,29 @@ private:
     uint8_t readCache;
     int lastReading;
     const DfRobotAnalogRanges* analogRanges;
+    AnalogDevice* device;
 
 public:
-    DfRobotInputAbstraction(const DfRobotAnalogRanges* ranges, uint8_t pin) {
+    DfRobotInputAbstraction(const DfRobotAnalogRanges* ranges, uint8_t pin, AnalogDevice* device) {
         analogRanges = ranges;
         analogPin = pin;
+        this->device = device;
 
-        pinMode(analogPin, INPUT);
-        lastReading = analogRead(analogPin);
+        device->initPin(analogPin, DIR_IN);
+        lastReading = device->getCurrentValue(analogPin);
         readCache = mapAnalogToPin(lastReading);
     }
 
-    uint8_t readValue(uint8_t pin) override {
+    uint8_t readValue(pinid_t pin) override {
     	return bitRead(readCache, pin);
     }
 
-    uint8_t readPort(uint8_t port) override {
+    uint8_t readPort(pinid_t port) override {
         return readCache;
     }
 
 	bool runLoop() override { 
-        int newReading = analogRead(analogPin);
+        int newReading = device->getCurrentValue(analogPin);
         if(abs(newReading - lastReading) > ALLOWABLE_RANGE) {
             readCache = mapAnalogToPin(newReading);
         }
@@ -94,18 +101,20 @@ public:
 
     // we ignore all non-input methods, as this is input only
 
-    void pinDirection(uint8_t pin, uint8_t mode) override {
+    void pinDirection(pinid_t pin, uint8_t mode) override {
         /** ignored as only input is supported */
     }
 
-   	void writeValue(uint8_t pin, uint8_t value) override {
+   	void writeValue(pinid_t pin, uint8_t value) override {
         /** ignored as only input is supported */        
     }
 
-	void writePort(uint8_t pin, uint8_t portVal) override {
+	void writePort(pinid_t pin, uint8_t portVal) override {
         /** ignored as only input is supported */
     }
 };
+
+#ifndef __MBED__
 
 /**
  * Defines the analog ranges to pass to the DfRobotInputAbstraction - default 
@@ -117,12 +126,17 @@ const PROGMEM DfRobotAnalogRanges dfRobotAvrRanges { 50, 250, 450, 650, 850};
  */
 const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 50, 195, 380, 555, 790};
 
-inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0) {
+
+inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = NULL) {
+    if(device == NULL) device = ArduinoAnalogDevice();
     return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin);
 }
 
-inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0) {
+inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0, AnalogDevice* device = NULL) {
+    if(device == NULL) device = ArduinoAnalogDevice();
     return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin);
 }
+
+#endif
 
 #endif

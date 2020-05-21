@@ -3,8 +3,13 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#include <inttypes.h>
+#ifdef __MBED__
+#include <mbed.h>
+#include "rtos.h"
+#else
 #include <Arduino.h>
+#endif
+
 #include "IoAbstraction.h"
 #include "TaskManager.h"
 
@@ -390,16 +395,17 @@ char* TaskManager::checkAvailableSlots(char* data) {
 }
 
 #ifdef __MBED__
-#include "mbed-hal/us_ticker_api.h"
+
+Timer ioaTimer;
 
 void yield() {
-    Thread.yield();
+    ThisThread::yield();
 }
-unsigned long millis(x) {
-    ms_tick.;
+unsigned long millis() {
+    ioaTimer.read_ms();
 }
-unsigned long micros(x) {
-    return us_ticker_read();
+unsigned long micros() {
+    return (unsigned long) ioaTimer.read_high_resolution_us();
 }
 
 #endif

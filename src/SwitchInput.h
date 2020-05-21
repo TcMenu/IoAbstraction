@@ -39,7 +39,7 @@
 /** For buttons that should not repeat, and instead just indicate they are HELD down */
 #define NO_REPEAT 0xff
 
-enum KeyPressState : byte {
+enum KeyPressState : uint8_t {
 	NOT_PRESSED,
 	DEBOUNCING1,
 	DEBOUNCING2,
@@ -188,7 +188,7 @@ public:
  * This enumeration is used to control how acceleration is handled within a particular instance
  * of a HardwareRotaryEncoder.
  */
-enum HWAccelerationMode : byte {
+enum HWAccelerationMode : uint8_t {
     /** No acceleration, no matter how fast the encoder is turned */
     HWACCEL_NONE,
     /** The default, accelerates based on how fast the encoder is turned */

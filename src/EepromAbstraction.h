@@ -13,7 +13,11 @@
 #ifndef _IOABSTRACTION_EEPROMABSTRACTION_H_
 #define _IOABSTRACTION_EEPROMABSTRACTION_H_
 
+#ifdef __MBED__
+#include <mbed.h>
+#else
 #include <Arduino.h>
+#endif
 
 /**
  * Defines an address or position within the eeprom storage 

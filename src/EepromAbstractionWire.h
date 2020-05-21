@@ -12,10 +12,34 @@
  * Contains the i2c variants of the EepromAbstraction
  */
 
+#ifdef __MBED__
+#include <mbed.h>
+#include <i2c_api.h>
+typedef I2C* WireType;
+
+class I2CLocker {
+private:
+    I2C* i2cPtr;
+public:
+    I2CLocker(I2C* i2c) {
+        i2cPtr = i2c;
+        i2c->lock();
+    }
+
+    ~I2CLocker() {
+        i2cPtr->unlock();
+    }
+};
+
+#else
 #include <Arduino.h>
+#include <Wire.h>
+typedef TwoWire* WireType;
+#endif
+
 #include "EepromAbstraction.h"
 #include <TaskManager.h>
-#include <Wire.h>
+
 
 /** the page size for 32kbit (4KB) roms */
 #define PAGESIZE_AT24C32   32
@@ -48,8 +72,9 @@
 #define WIRE_BUFFER_SIZE 32
 #endif
 
+
 class I2cAt24Eeprom : public EepromAbstraction {
-	TwoWire* wireImpl;
+	WireType wireImpl;
 	uint8_t  eepromAddr;
 	uint8_t  pageSize;
 	bool     errorOccurred;
@@ -58,16 +83,20 @@ public:
 	 * Create an I2C EEPROM object giving it's address and the page size of the device.
 	 * Page sizes are defined in this header file.
 	 */
-	I2cAt24Eeprom(uint8_t address, uint8_t pageSize, TwoWire* wireImpl = &Wire);
+#ifdef __MBED__
+	I2cAt24Eeprom(uint8_t address, uint8_t pageSize, I2C* wireImpl);
+#else
+    I2cAt24Eeprom(uint8_t address, uint8_t pageSize, TwoWire* wireImpl = &Wire);
+#endif
 	virtual ~I2cAt24Eeprom() {}
 
 	/** 
 	 * This indicates if an I2C error has ocrrued at any point since the last call to error.
 	 * Side effect: Every call clears it's state.
 	 */
-	virtual bool hasErrorOccurred();
+	bool hasErrorOccurred() override;
 
-	virtual uint8_t read8(EepromPosition position);
+	uint8_t read8(EepromPosition position) override;
 	virtual void write8(EepromPosition position, uint8_t val);
 
 	virtual uint16_t read16(EepromPosition position);
@@ -80,10 +109,15 @@ public:
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len);
 private:
 	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
+
+#ifndef __MBED__
 	void writeByte(EepromPosition position, uint8_t val);
 	uint8_t readByte(EepromPosition position);
-	void writeAddressWire(uint16_t memAddr);
-	void waitForReady(uint8_t eeprom);
+    void writeAddressWire(uint16_t memAddr);
+    void waitForReady();
+#else
+    void writeAddressWire(uint16_t memAddr, void* data = NULL, int len = 0);
+#endif
 };
 
 #endif /* _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */

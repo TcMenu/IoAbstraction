@@ -4,7 +4,6 @@
  */
 
 #include <inttypes.h>
-#include <Arduino.h>
 #include "SwitchInput.h"
 
 #define ONE_TURN_OF_ENCODER 32
@@ -170,7 +169,7 @@ bool SwitchInput::addSwitchListener(uint8_t pin, SwitchListener* listener, uint8
 }
 
 bool SwitchInput::internalAddSwitch(uint8_t pin, bool invertLogic) {
-	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
+	if (ioDevice == NULL) initialise(internalDigitalIo(), true);
 
 	ioDevicePinMode(ioDevice, pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
 
@@ -182,7 +181,7 @@ bool SwitchInput::internalAddSwitch(uint8_t pin, bool invertLogic) {
 }
 
 void SwitchInput::onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease) {
-	if (ioDevice == NULL) initialise(ioUsingArduino(), true);
+	if (ioDevice == NULL) initialise(internalDigitalIo(), true);
 
 	auto keyItem = keys.getByKey(pin);
 	if(pin) keyItem->onRelease(callbackOnRelease);
@@ -378,7 +377,7 @@ EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, Encod
 /******** ENCODER SETUP METHODS ***********/
 
 void setupUpDownButtonEncoder(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback) {
-	if (switches.getIoAbstraction() == NULL) switches.initialise(ioUsingArduino(), true);
+	if (switches.getIoAbstraction() == NULL) switches.initialise(internalDigitalIo(), true);
 
 	EncoderUpDownButtons* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
 	switches.setEncoder(enc);
@@ -390,7 +389,7 @@ void registerInterrupt(uint8_t pin) {
 }
 
 void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback) {
-	if (switches.getIoAbstraction() == NULL) switches.initialise(ioUsingArduino(), true);
+	if (switches.getIoAbstraction() == NULL) switches.initialise(internalDigitalIo(), true);
 
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
 }

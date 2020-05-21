@@ -3,12 +3,9 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#include <Arduino.h>
 #include <IoAbstractionWire.h>
-#include <Wire.h>
 
-
-PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, TwoWire* wireImplementation) {
+PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireImplementation) {
 	this->wireImpl = wireImplementation;
 	this->address = addr;
 	this->toWrite = 0x00;
@@ -18,7 +15,7 @@ PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, T
 	this->pinsConfiguredRead = false;
 }
 
-void PCF8574IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
+void PCF8574IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
 	if (mode == INPUT || mode == INPUT_PULLUP) {
 		pinsConfiguredRead = true;
 		writeValue(pin, HIGH);
@@ -29,24 +26,39 @@ void PCF8574IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 	needsWrite = true;
 }
 
-void PCF8574IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+void PCF8574IoAbstraction::writeValue(pinid_t pin, uint8_t value) {
 	bitWrite(toWrite, pin, value);
 	needsWrite = true;
 }
 
-uint8_t PCF8574IoAbstraction::readValue(uint8_t pin) {
+uint8_t PCF8574IoAbstraction::readValue(pinid_t pin) {
 	return (lastRead & (1 << pin)) ? HIGH : LOW;
 }
 
-uint8_t PCF8574IoAbstraction::readPort(uint8_t /*pin*/) {
+uint8_t PCF8574IoAbstraction::readPort(pinid_t /*pin*/) {
 	return lastRead;
 }
 
-void PCF8574IoAbstraction::writePort(uint8_t /*pin*/, uint8_t value) {
+void PCF8574IoAbstraction::writePort(pinid_t /*pin*/, uint8_t value) {
 	toWrite = value;
 	needsWrite = true;
 }
 
+#ifdef __MBED__
+bool PCF8574IoAbstraction::runLoop(){
+    I2CLocker locker(wireImpl);
+    bool writeOk = true;
+    if (needsWrite) {
+        needsWrite = false;
+        writeOk = wireImpl->write(address, (char*)&toWrite, 1) == 0;
+    }
+
+    if(pinsConfiguredRead) {
+        writeOk = writeOk || (wireImpl->read(address, (char*)&lastRead, 1) == 0);
+    }
+    return writeOk;
+}
+#else
 bool PCF8574IoAbstraction::runLoop(){
 	bool writeOk = true;
 	if (needsWrite) {
@@ -64,22 +76,21 @@ bool PCF8574IoAbstraction::runLoop(){
 	}
 	return writeOk;
 }
+#endif
 
-void PCF8574IoAbstraction::attachInterrupt(uint8_t /*pin*/, RawIntHandler intHandler, uint8_t /*mode*/) {
+void PCF8574IoAbstraction::attachInterrupt(pinid_t /*pin*/, RawIntHandler intHandler, uint8_t /*mode*/) {
 	// if there's an interrupt pin set
 	if(interruptPin == 0xff) return;
 
-	pinMode(interruptPin, INPUT_PULLUP);
-
-	// the 8574 INT is normally high, we need a FALLING state to know interrupt triggered 
-	::attachInterrupt(digitalPinToInterrupt(interruptPin), intHandler, FALLING);
+	internalDigitalIo()->pinDirection(interruptPin, INPUT_PULLUP);
+	internalDigitalIo()->attachInterrupt(interruptPin, intHandler, FALLING);
 }
 
-BasicIoAbstraction* ioFrom8574(uint8_t addr, uint8_t interruptPin, TwoWire* wireImpl) {
+BasicIoAbstraction* ioFrom8574(uint8_t addr, uint8_t interruptPin, WireType wireImpl) {
 	return new PCF8574IoAbstraction(addr, interruptPin, wireImpl);
 }
 
-MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, uint8_t intPinA, uint8_t intPinB, TwoWire* wireImpl) {
+MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) {
 	this->wireImpl = wireImpl;
 	this->address = address;
 	this->intPinA = intPinA;
@@ -120,7 +131,7 @@ void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit,
 	writeToDevice(regAddr, reg);
 }
 
-void MCP23017IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
+void MCP23017IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
 	if(needsInit) initDevice();
 
 	toggleBitInRegister(IODIR_ADDR, pin, (mode == INPUT || mode == INPUT_PULLUP));
@@ -129,22 +140,22 @@ void MCP23017IoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
 	bitSet(portFlags, (pin < 8) ? READER_PORTA_BIT : READER_PORTB_BIT);
 }
 
-void MCP23017IoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+void MCP23017IoAbstraction::writeValue(pinid_t pin, uint8_t value) {
 	if(needsInit) initDevice();
 
 	bitWrite(toWrite, pin, value);
 	bitSet(portFlags, (pin < 8) ? CHANGE_PORTA_BIT : CHANGE_PORTB_BIT);
 }
 
-uint8_t MCP23017IoAbstraction::readValue(uint8_t pin) {
+uint8_t MCP23017IoAbstraction::readValue(pinid_t pin) {
 	return bitRead(lastRead, pin);
 }
 
-uint8_t MCP23017IoAbstraction::readPort(uint8_t pin) {
+uint8_t MCP23017IoAbstraction::readPort(pinid_t pin) {
 	return (pin < 8) ? (lastRead & 0xff) : (lastRead >> 8);
 }
 
-void MCP23017IoAbstraction::writePort(uint8_t pin, uint8_t value) {
+void MCP23017IoAbstraction::writePort(pinid_t pin, uint8_t value) {
 	if(pin < 8) {
 		toWrite &= 0xff00; 
 		toWrite |= value;
@@ -186,6 +197,44 @@ bool MCP23017IoAbstraction::runLoop() {
 	return writeOk;
 }
 
+#ifdef __MBED__
+bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
+    I2CLocker locker(wireImpl);
+    char data[3];
+    data[0] = reg;
+	data[1] = (char)command;
+	data[2] = (char)(command>>8);
+	return wireImpl->write(address, data, sizeof(data)) == 0;
+}
+
+bool MCP23017IoAbstraction::writeToDevice8(uint8_t reg, uint8_t command) {
+    I2CLocker locker(wireImpl);
+    char data[2];
+    data[0] = reg;
+    data[1] = (char)command;
+    return wireImpl->write(address, data, sizeof(data)) == 0;
+}
+
+uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
+    I2CLocker locker(wireImpl);
+
+    wireImpl->write(address, (char*)&reg, 1);
+	char data[2];
+	wireImpl->read(address, data, sizeof(data));
+	// read will get port A first then port B.
+	return data[0] | (data[1] << 8);
+}
+
+uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
+    I2CLocker locker(wireImpl);
+
+    wireImpl->write(reg);
+
+    char data[1];
+	wireImpl->read(address, data, (uint8_t)1);
+	return data[1];
+}
+#else
 bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
 	wireImpl->beginTransmission(address);
 	wireImpl->write(reg);
@@ -209,7 +258,7 @@ uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
 	wireImpl->beginTransmission(address);
 	wireImpl->write(reg);
 	wireImpl->endTransmission(false);
-	
+
 	wireImpl->requestFrom(address, (uint8_t)2);
 	// read will get port A first then port B.
 	uint8_t portA = wireImpl->read();
@@ -221,45 +270,47 @@ uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
 	wireImpl->beginTransmission(address);
 	wireImpl->write(reg);
 	wireImpl->endTransmission(false);
-	
+
 	wireImpl->requestFrom(address, (uint8_t)1);
 	return wireImpl->read();
 }
+#endif
 
-void MCP23017IoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {
+void MCP23017IoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) {
 	// only if there's an interrupt pin set
 	if(intPinA == 0xff) return;
 
+	auto  inbuiltIo = internalDigitalIo();
 	uint8_t pm = (intMode == ACTIVE_HIGH_OPEN || intMode == ACTIVE_LOW_OPEN) ? INPUT_PULLUP : INPUT;
 	uint8_t im = (intMode == ACTIVE_HIGH || intMode == ACTIVE_HIGH_OPEN) ? RISING : FALLING;
 	if(intPinB == 0xff) {
-		pinMode(intPinA, pm);
-		::attachInterrupt(digitalPinToInterrupt(intPinA), intHandler, im);
+        inbuiltIo->pinDirection(intPinA, pm);
+        inbuiltIo->attachInterrupt(intPinA, intHandler, im);
 	}
 	else {
-		pinMode(intPinA, pm);
-		pinMode(intPinB, pm);
-		::attachInterrupt(digitalPinToInterrupt(intPinA), intHandler, im);
-		::attachInterrupt(digitalPinToInterrupt(intPinB), intHandler, im);
-	}
+        inbuiltIo->pinDirection(intPinA, pm);
+        inbuiltIo->attachInterrupt(intPinA, intHandler, im);
+        inbuiltIo->pinDirection(intPinB, pm);
+        inbuiltIo->attachInterrupt(intPinB, intHandler, im);
+    }
 
 	toggleBitInRegister(GPINTENA_ADDR, pin, true);
 	toggleBitInRegister(INTCON_ADDR, pin, mode != CHANGE);
 	toggleBitInRegister(DEFVAL_ADDR, pin, mode == FALLING);
 }
 
-void MCP23017IoAbstraction::setInvertInputPin(uint8_t pin, bool shouldInvert) {
+void MCP23017IoAbstraction::setInvertInputPin(pinid_t pin, bool shouldInvert) {
     toggleBitInRegister(IPOL_ADDR, pin, shouldInvert);
 }
 
-IoAbstractionRef ioFrom23017(uint8_t addr, TwoWire* wireImpl) {
+IoAbstractionRef ioFrom23017(uint8_t addr, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff, wireImpl);
 }
 
-IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t interruptPin, TwoWire* wireImpl) {
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, intMode, interruptPin, 0xff, wireImpl);
 }
 
-IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, uint8_t intPinA, uint8_t intPinB, TwoWire* wireImpl) {
+IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) {
 	return new MCP23017IoAbstraction(addr, intMode, intPinA, intPinB, wireImpl);
 }

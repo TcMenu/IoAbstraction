@@ -16,7 +16,7 @@
 
 #include <mbed.h>
 #include <stdint.h>
-#include <map>
+#include <SimpleCollections.h>
 
 typedef uint32_t pinid_t;
 
@@ -24,7 +24,44 @@ typedef uint32_t pinid_t;
 
 #define INPUT PullNone
 #define INPUT_PULLUP PullUp
-#define OUTPUT 0x87654321
+#define OUTPUT 0xff
+#define RISING 0x01
+#define FALLING 0x02
+#define CHANGE 0x03
+#define PROGMEM
+#define HIGH 1
+#define LOW 0
+
+#define bitRead(value, bit) ((value & (1 << bit)) != 0)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
+class GpioWrapper {
+private:
+    uint32_t pin;
+    gpio_t gpio;
+    InterruptIn* interruptHandler;
+public:
+    GpioWrapper() {
+        pin = (uint32_t)-1;
+        interruptHandler = NULL;
+    }
+    GpioWrapper(uint32_t pin) {
+        pin = pin;
+        interruptHandler = NULL;
+    }
+    GpioWrapper(const GpioWrapper& other) {
+        this->pin = other.pin;
+        this->interruptHandler = other.interruptHandler;
+        memcpy(&this->gpio, &other.gpio, sizeof(gpio_t));
+    }
+    uint32_t getPin() const { return pin; }
+    uint32_t getKey() const { return pin; }
+    gpio_t* getGpio() { return &gpio; }
+    InterruptIn* getInterruptIn() { return interruptHandler; }
+    void setInterruptIn(InterruptIn* in) { interruptHandler = in; }
+};
 
 #else // NOT MBED
 
@@ -54,7 +91,9 @@ typedef void (*RawIntHandler)(void);
 class BasicIoAbstraction {
 private:
 #ifdef __MBED__
-    std::map<uint32_t, gpio_t*> pinCache;
+    BtreeList<uint32_t, GpioWrapper> pinCache;
+
+    GpioWrapper *allocatePinIfNeedBe(uint8_t pinToAlloc);
 #endif //__MBED__
 public:
 	virtual ~BasicIoAbstraction() { }
@@ -109,10 +148,6 @@ public:
 	 * @return the 8 bit value read from the port.
 	 */
 	virtual uint8_t readPort(pinid_t pin);
-private:
-#ifdef __MBED__
-    gpio_t *allocatePinIfNeedBe(uint8_t pinToAlloc);
-#endif // __MBED__
 };
 
 /** 
@@ -125,8 +160,10 @@ typedef BasicIoAbstraction* IoAbstractionRef;
  * Gives a reference to the Arduino pin implementation of IoAbstraction.
  */
 #ifdef __MBED__
-IoAbstractionRef ioUsingDevicePins();
+IoAbstractionRef internalDigitalIo();
+#define pgm_read_byte_near(x) (*x)
 #else
+#define internalDigitalIo ioUsingArduino
 IoAbstractionRef ioUsingArduino();
 #endif
 

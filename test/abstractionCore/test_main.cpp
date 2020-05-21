@@ -1,7 +1,6 @@
 
 #include <Arduino.h>
 #include <unity.h>
-#include <util/atomic.h>
 #include <MockEepromAbstraction.h>
 #include <EepromAbstractionWire.h>
 #include "IoAbstraction.h"
@@ -64,6 +63,7 @@ void testMockEeprom() {
 }
 
 void setup() {
+    while(!Serial);
     Wire.begin();
     delay(2000);
     UNITY_BEGIN();

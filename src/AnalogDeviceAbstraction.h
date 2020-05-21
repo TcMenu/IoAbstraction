@@ -1,13 +1,19 @@
 #ifndef _ANALOG_DEVICE_ABSTRACTION_H_
 #define _ANALOG_DEVICE_ABSTRACTION_H_
 
+#ifdef __MBED__
+#include <mbed.h>
+#else
 #include <Arduino.h>
+#endif
+
+#include <BasicIoAbstraction.h>
 
 /** 
  * an enumeration that describes direction, eg input or output for the ADC/POT/DAC. For some
  * devices only one mode will make sense.
  */
-enum AnalogDirection { DIR_IN, DIR_OUT };
+enum AnalogDirection { DIR_IN, DIR_OUT, DIR_PWM };
 
 /**
  * Describes an analog device that has commands to both read values from and write values to
@@ -38,14 +44,20 @@ public:
 	 * @param pin the pin to initialise
 	 * @param direction the direction required
 	 */
-	virtual void initPin(uint8_t pin, AnalogDirection direction) = 0;
+	virtual void initPin(pinid_t pin, AnalogDirection direction) = 0;
 
 	/**
 	 * Returns the current value on the ADC for the given pin
 	 * @param pin the pin to read from
 	 * @return the current value on that pin
 	 */
-	virtual unsigned int getCurrentValue(uint8_t pin)=0;
+	virtual unsigned int getCurrentValue(pinid_t pin)=0;
+
+	/*
+	 * Returns the current value on the ADC as a float between
+	 * 0 and 1.
+	 */
+	virtual float getCurrentFloat(pinid_t pin) = 0;
 
 	/**
 	 * Sets the current value on an output capable device to a new value
@@ -53,7 +65,118 @@ public:
 	 * @param newValue the value to be set
 	 */
 	virtual void setCurrentValue(uint8_t pin, unsigned int newValue)=0;
+
+	/**
+	 * sets the current value based on a float from 0 to 1, where 0 is
+	 * minimum and 1 is maximum.
+	 * @param pin the pin for which to set
+	 * @param newValue the new value which should be between 0 and 1.0
+	 */
+    virtual void setCurrentValue(uint8_t pin, float newValue)=0;
+
 };
+
+#ifdef __MBED__
+
+class AnalogPinReference {
+private:
+    pinid_t pin;
+    AnalogDirection direction;
+    union AnalogPinReferences {
+        AnalogIn* input;
+        AnalogOut* out;
+        PwmOut* pwm;
+    } analogRef;
+public:
+    AnalogPinReference() {
+        analogRef.input = NULL;
+        pin = 0;
+        direction = DIR_IN;
+    }
+
+    AnalogPinReference(const AnalogPinReference& other) {
+        this->pin = other.pin;
+        this->direction = other.direction;
+        this->analogRef.input = other.analogRef.input;
+    }
+
+    AnalogPinReference(pinid_t pin, AnalogDirection direction) {
+        this->pin = pin;
+        this->direction = direction;
+        switch(direction) {
+            case DIR_IN:
+                analogRef.input = new AnalogIn((PinName)pin);
+                break;
+            case DIR_OUT:
+                analogRef.out = new AnalogOut((PinName)pin);
+                break;
+            default:
+                analogRef.pwm = new PwmOut((PinName)pin);
+                break;
+        }
+    }
+
+    AnalogPinReferences getReferences() { return analogRef; }
+    AnalogDirection getDirection() { return direction; }
+    pinid_t getKey();
+};
+
+/**
+ * Represents the mbed analog capabilities as an Analog device abstraction, allows
+ * for the same code to be used between Mbed and Arduino. Note that presently the
+ * value for integers is represented between 0..65535 although this may not be
+ * what your hardware supports. It's better to always use the float functions when
+ * you can.
+ */
+class MBedAnalogDevice : public AnalogDevice {
+private:
+    BtreeList<pinid_t, AnalogPinReference> devices;
+public:
+    int getMaximumRange(AnalogDirection direction, uint8_t pin) override {
+        return 0xffff;
+    }
+
+    void initPin(pinid_t pin, AnalogDirection direction) override {
+        if(devices.getByKey(pin) == NULL) devices.add(AnalogPinReference(pin, direction));
+    }
+
+    unsigned int getCurrentValue(pinid_t pin) override {
+        auto dev = devices.getByKey(pin);
+        if(dev == NULL || dev->getDirection() != DIR_IN) return 0;
+        return dev->getReferences().input->read_u16();
+    }
+
+    virtual float getCurrentFloat(pinid_t pin) override {
+        auto dev = devices.getByKey(pin);
+        if(dev == NULL || dev->getDirection() != DIR_IN) return 0;
+        return dev->getReferences().input->read();
+    }
+
+    void setCurrentValue(uint8_t pin, unsigned int newValue) override {
+        auto dev = devices.getByKey(pin);
+        if(dev == NULL || dev->getDirection() == DIR_IN) return;
+        if(dev->getDirection() == DIR_OUT) {
+            return dev->getReferences().out->write_u16(newValue);
+        }
+        else {
+            return dev->getReferences().pwm->write(float(newValue) / 65535.0F);
+        }
+    }
+
+    void setCurrentValue(uint8_t pin, float newValue) override {
+        auto dev = devices.getByKey(pin);
+        if(dev == NULL || dev->getDirection() == DIR_IN) return;
+        if(dev->getDirection() == DIR_OUT) {
+            return dev->getReferences().out->write(newValue);
+        }
+        else {
+            return dev->getReferences().pwm->write(newValue);
+        }
+
+    }
+};
+
+#else
 
 /**
  * Creates an analog device that uses the core Arduino analog capabilities of ADC for reading
@@ -83,25 +206,38 @@ public:
 #endif
 	}
 
-	int getMaximumRange(AnalogDirection dir, uint8_t /*pin*/) override {
+	int getMaximumRange(AnalogDirection dir, pinid_t /*pin*/) override {
 		return (dir == DIR_OUT) ? (1 << writeBitResolution) : (1 << readBitResolution);
 	}
 
-    int getBitDepth(AnalogDirection direction, uint8_t /*pin*/) override {
+    int getBitDepth(AnalogDirection direction, pinid_t /*pin*/) override {
         return (direction == DIR_IN) ? readBitResolution : writeBitResolution;
     }
 
-	void initPin(uint8_t pin, AnalogDirection direction) override {
+	void initPin(pinid_t pin, AnalogDirection direction) override {
 		pinMode(pin, (direction == DIR_IN) ? INPUT : OUTPUT);
 	}
 
-	unsigned int getCurrentValue(uint8_t pin) override {
+	unsigned int getCurrentValue(pinid_t pin) override {
 		return analogRead(pin);
 	}
 
-	void setCurrentValue(uint8_t pin, unsigned int newVal) override {
+	float getCurrentFloat() override {
+	    int maxValue = (1 << writeBitResolution) - 1;
+        return analogRead() / float(maxValue);
+	}
+
+	void setCurrentValue(uint8_t pinid_t, unsigned int newVal) override {
 		analogWrite(pin, newVal);
 	}
+
+	void setCurrentValue(pinid_t pin, float value) override {
+	    if(value < 0.0 || value > 1.0) value = 0;
+	    int maxValue = (1 << writeBitResolution) - 1;
+	    analogWrite(value * float(maxValue));
+	}
 };
+
+#endif // MBED or ARDUINO IMPL
 
 #endif //_ANALOG_DEVICE_ABSTRACTION_H_

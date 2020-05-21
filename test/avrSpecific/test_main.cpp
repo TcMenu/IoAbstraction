@@ -1,6 +1,5 @@
 
 #include <unity.h>
-#include <util/atomic.h>
 #include <EepromAbstraction.h>
 #include "IoAbstraction.h"
 #include "MockIoAbstraction.h"
@@ -12,6 +11,7 @@
 // Keep this test on it's own in this package. It messes around with the millisecond counter.
 
 #ifdef __AVR__
+#include <util/atomic.h>
 
 void setMillis(uint32_t ms)
 {
@@ -126,6 +126,7 @@ void eepromClassWrapperTestCase() {
 }
 
 void setup() {
+    while(!Serial);
     delay(2000);
     UNITY_BEGIN();    // IMPORTANT LINE!
     RUN_TEST(testAvrClockWrappingCase);

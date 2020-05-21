@@ -3,10 +3,12 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#include <Arduino.h>
 #include "IoAbstraction.h"
 
 #define LATCH_TIME 5
+
+#ifndef __MBED__
+#include <Arduino.h>
 
 ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t writeClockPin, uint8_t writeDataPin, 
                                                        uint8_t writeLatchPin, uint8_t noReadDevices, uint8_t noWriteDevices) {
@@ -123,9 +125,33 @@ bool ShiftRegisterIoAbstraction::runLoop() {
 	return true;
 }
 
-MultiIoAbstraction::MultiIoAbstraction(uint8_t arduinoPinsNeeded) {
+// helper functions to create the abstractions.
+
+IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin, uint8_t numOfDevices) {
+    return new ShiftRegisterIoAbstraction(0xff, 0xff, 0xff, writeClkPin, dataPin, latchPin, 1, numOfDevices);
+}
+
+IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t dataPin, uint8_t latchPin, uint8_t numOfDevices) {
+    return new ShiftRegisterIoAbstraction(readClkPin, dataPin, latchPin, 0xff, 0xff, 0xff, numOfDevices, 1);
+}
+
+IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t numOfReadDevices,
+                                              uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin, uint8_t numOfWriteDevices) {
+    return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, numOfReadDevices, numOfWriteDevices);
+}
+
+IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin,
+                                              uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
+    return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, 1, 1);
+}
+
+#else
+#include <mbed.h>
+#endif
+
+MultiIoAbstraction::MultiIoAbstraction(pinid_t arduinoPinsNeeded) {
 	limits[0] = arduinoPinsNeeded;
-	delegates[0] = ioUsingArduino();
+	delegates[0] = internalDigitalIo();
 	numDelegates = 1;
 }
 
@@ -136,14 +162,14 @@ MultiIoAbstraction::~MultiIoAbstraction() {
 	}
 }
 
-void MultiIoAbstraction::addIoExpander(IoAbstractionRef expander, uint8_t numOfPinsNeeded) {
+void MultiIoAbstraction::addIoExpander(IoAbstractionRef expander, pinid_t numOfPinsNeeded) {
 	limits[numDelegates]= limits[numDelegates - 1] + numOfPinsNeeded;
 	delegates[numDelegates] = expander;
 
 	numDelegates++;
 }
 
-uint8_t MultiIoAbstraction::doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn fn) {
+uint8_t MultiIoAbstraction::doExpanderOp(pinid_t pin, uint8_t aVal, ExpanderOpFn fn) {
 	uint8_t ret = -1;
 	for(uint8_t i=0; i<numDelegates; ++i) {
 		// when we are on the first expander, the "previous" last pin is 0.
@@ -161,41 +187,41 @@ uint8_t MultiIoAbstraction::doExpanderOp(uint8_t pin, uint8_t aVal, ExpanderOpFn
 	return ret;
 }
 
-void MultiIoAbstraction::pinDirection(uint8_t pin, uint8_t mode) {
+void MultiIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
 	doExpanderOp(pin, mode, [](IoAbstractionRef a, uint8_t p, uint8_t v) {
 		a->pinDirection(p, v);
 		return (uint8_t)0;
 	});
 }
 
-void MultiIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+void MultiIoAbstraction::writeValue(pinid_t pin, uint8_t value) {
 	doExpanderOp(pin, value, [](IoAbstractionRef a, uint8_t p, uint8_t v) {
 		a->writeValue(p, v);
 		return (uint8_t)0;
 	});
 }
 
-uint8_t MultiIoAbstraction::readValue(uint8_t pin) {
+uint8_t MultiIoAbstraction::readValue(pinid_t pin) {
 	return doExpanderOp(pin, 0, [](IoAbstractionRef a, uint8_t p, uint8_t) {
 		uint8_t retn = a->readValue(p);
 		return retn;
 	});
 }
 
-void MultiIoAbstraction::writePort(uint8_t pin, uint8_t val) {
+void MultiIoAbstraction::writePort(pinid_t pin, uint8_t val) {
 	doExpanderOp(pin, val, [](IoAbstractionRef a, uint8_t p, uint8_t v) {
 		a->writePort(p, v);
 		return (uint8_t)0;
 	});
 }
 
-uint8_t MultiIoAbstraction::readPort(uint8_t pin) {
+uint8_t MultiIoAbstraction::readPort(pinid_t pin) {
 	return doExpanderOp(pin, 0, [](IoAbstractionRef a, uint8_t p, uint8_t) {
 		return a->readPort(p);
 	});
 }
 
-void MultiIoAbstraction::attachInterrupt(uint8_t pin, RawIntHandler intHandler, uint8_t mode) {
+void MultiIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) {
 	for(uint8_t i=0; i<numDelegates; ++i) {
 		// when we are on the first expander, the "previous" last pin is 0.
 		uint8_t last = (i==0) ? 0 : limits[i-1];
@@ -217,34 +243,4 @@ bool MultiIoAbstraction::runLoop() {
 		runStatus = runStatus && delegates[i]->runLoop();
 	}
 	return runStatus;
-}
-
-// helper functions to create the abstractions. 
-
-IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClkPin, uint8_t dataPin, uint8_t latchPin, uint8_t numOfDevices) {
-	return new ShiftRegisterIoAbstraction(0xff, 0xff, 0xff, writeClkPin, dataPin, latchPin, 1, numOfDevices);
-}
-
-IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClkPin, uint8_t dataPin, uint8_t latchPin, uint8_t numOfDevices) {
-	return new ShiftRegisterIoAbstraction(readClkPin, dataPin, latchPin, 0xff, 0xff, 0xff, numOfDevices, 1);
-}
-
-IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t numOfReadDevices,
-									          uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin, uint8_t numOfWriteDevices) {
-	return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, numOfReadDevices, numOfWriteDevices);
-}
-
-IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin,
-									          uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin) {
-	return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, 1, 1);
-}
-
-IoAbstractionRef arduinoAbstraction = NULL;
-IoAbstractionRef ioUsingArduino() { 
-	noInterrupts();
-	if (arduinoAbstraction == NULL) {
-		arduinoAbstraction = new BasicIoAbstraction();
-	}
-	interrupts();
-	return arduinoAbstraction;
 }

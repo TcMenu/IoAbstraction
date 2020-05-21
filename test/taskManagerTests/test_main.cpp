@@ -429,6 +429,7 @@ void testCancellingTasksWithinAnotherTask() {
 }
 
 void setup() {
+    while(!Serial);
     delay(2000);
     UNITY_BEGIN();
 

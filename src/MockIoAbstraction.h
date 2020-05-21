@@ -86,19 +86,19 @@ public:
     }
 
 
-	virtual void pinDirection(uint8_t pin, uint8_t mode) {
+	void pinDirection(pinid_t pin, uint8_t mode) override {
         checkPinInRange(pin);
         pinModes[pin] = mode;
     }
 
-   	virtual void writeValue(uint8_t pin, uint8_t value) {
+   	void writeValue(pinid_t pin, uint8_t value) override {
         checkPinInRange(pin);
 
         if(pinModes[pin] != OUTPUT) error = WRITE_NOT_OUTPUT;
         bitWrite(writeValues[runLoopCalls], pin, value != 0);
     }
 
-   	virtual uint8_t readValue(uint8_t pin) {
+    uint8_t readValue(pinid_t pin) override {
         checkPinInRange(pin);
         if(pinModes[pin] != INPUT && pinModes[pin] != INPUT_PULLUP) error = READ_NOT_INPUT;
         return bitRead(readValues[runLoopCalls], pin);
@@ -107,7 +107,7 @@ public:
     /**
      * Overrides the usual interrupt handler to just record the details of the interrupt requested
      */
-  	void attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode) override {
+  	void attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) override {
         this->intHandler = interruptHandler;
         this->intPin = pin;
         this->intMode = mode;
@@ -124,7 +124,7 @@ public:
         return true;
     }
 
-   	void writePort(uint8_t pin, uint8_t portVal) override {
+   	void writePort(pinid_t pin, uint8_t portVal) override {
 
         checkPinInRange(pin);
 
@@ -138,7 +138,7 @@ public:
         }
     }
 
-	virtual uint8_t readPort(uint8_t pin) {
+	virtual uint8_t readPort(pinid_t pin) {
         checkPinInRange(pin);
 
         if(pin < 8) {
@@ -214,14 +214,17 @@ public:
         writeVals = 0;
     }
 
-    void pinDirection(uint8_t pin, uint8_t mode) override { delegate->pinDirection(pin, mode); }
-    void writeValue(uint8_t pin, uint8_t value) override { 
+    void pinDirection(pinid_t pin, uint8_t mode) override { delegate->pinDirection(pin, mode); }
+
+    void writeValue(pinid_t pin, uint8_t value) override {
         bitWrite(writeVals, pin, value);
         delegate->writeValue(pin, value); 
     }
-    uint8_t readValue(uint8_t pin) override { return delegate->readValue(pin); }
-    void attachInterrupt(uint8_t pin, RawIntHandler interruptHandler, uint8_t mode) override { delegate->attachInterrupt(pin, interruptHandler, mode); }
-    void writePort(uint8_t pin, uint8_t portVal) override { 
+    uint8_t readValue(pinid_t pin) override { return delegate->readValue(pin); }
+
+    void attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) override { delegate->attachInterrupt(pin, interruptHandler, mode); }
+
+    void writePort(pinid_t pin, uint8_t portVal) override {
         if(pin < 8) {
             writeVals &= 0xffffff00L;
             writeVals |= (uint32_t)portVal;
@@ -240,28 +243,26 @@ public:
         }
         delegate->writePort(pin, portVal);
     }
-    uint8_t readPort(uint8_t pin) override { return delegate->readPort(pin);}
+    uint8_t readPort(pinid_t pin) override { return delegate->readPort(pin);}
 
     bool runLoop() override { 
-        Serial.print("Port write ");
+        serdebugF("Port write ");
         uint32_t val = writeVals;
         for(int i=0;i<ports;i++) {
             printHexZeroPad(val);
             val = val >> 8;
         }
         bool ret = delegate->runLoop();
-        Serial.print("read ");
+        serdebugF("read ");
         for(int i=0;i<ports;i++) {
             printHexZeroPad(delegate->readPort(i * 8));
         }
-        Serial.println();
+        serdebugF("EOL");
         return ret;
     }
 
     void printHexZeroPad(uint8_t val) {
-        Serial.write(hexchar(val / 16));
-        Serial.write(hexchar(val % 16));
-        Serial.write(' ');
+        serdebug3(hexchar(val / 16), hexchar(val % 16), ' ');
     }
 
     char hexchar(uint8_t ch) {

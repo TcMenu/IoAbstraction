@@ -27,9 +27,10 @@
 #endif // defined DEFAULT_TASK_SIZE
 
 #ifdef __MBED__
+#include <stdint.h>
 void yield();
-void millis(x);
-void micros(x);
+uint32_t millis();
+uint32_t micros();
 #endif // __MBED__
 
 //
@@ -86,7 +87,7 @@ typedef void (*InterruptFn)(uint8_t pin);
 /**
  * The time units that can be used with the schedule calls.
  */
-enum TimerUnit : byte {
+enum TimerUnit : uint8_t {
 	TIME_MICROS = 0, TIME_SECONDS = 1, TIME_MILLIS=2
 };
 
