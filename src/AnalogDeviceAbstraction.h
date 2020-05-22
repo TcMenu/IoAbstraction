@@ -118,7 +118,7 @@ public:
 
     AnalogPinReferences getReferences() { return analogRef; }
     AnalogDirection getDirection() { return direction; }
-    pinid_t getKey();
+    pinid_t getKey() { return pin; }
 };
 
 /**
@@ -134,6 +134,10 @@ private:
 public:
     int getMaximumRange(AnalogDirection direction, uint8_t pin) override {
         return 0xffff;
+    }
+
+    int getBitDepth(AnalogDirection direction, uint8_t pin) override {
+        return 16;
     }
 
     void initPin(pinid_t pin, AnalogDirection direction) override {

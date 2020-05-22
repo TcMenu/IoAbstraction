@@ -48,7 +48,7 @@ public:
         interruptHandler = NULL;
     }
     GpioWrapper(uint32_t pin) {
-        pin = pin;
+        this->pin = pin;
         interruptHandler = NULL;
     }
     GpioWrapper(const GpioWrapper& other) {

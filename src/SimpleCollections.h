@@ -113,7 +113,7 @@ public:
     V* getByKey(K key) {
         if(itemsInList == 0) return NULL;
         bsize_t loc = nearestLocation(key);
-        serdebugF3("getByKey ", loc, key);
+        //serdebugF3("getByKey ", loc, key);
         return (binTree[loc].getKey() == key) ? &binTree[loc] : NULL;
     };
 
@@ -130,7 +130,7 @@ public:
         bsize_t midPoint;
         while((end - start) > 1) {
             midPoint = start + ((end - start) / 2);
-            serdebugF4("start mid end", start, midPoint, end);
+            //serdebugF4("start mid end", start, midPoint, end);
             auto midKey = binTree[midPoint].getKey();
             if(midKey == key) return midPoint;
             else if(midKey > key) end = midPoint;

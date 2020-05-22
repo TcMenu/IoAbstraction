@@ -212,7 +212,7 @@ bool SwitchInput::runLoop() {
 
 	lastSyncStatus = ioDeviceSync(ioDevice);
 
-	for (int i = 0; i < keys.count(); ++i) {
+	for (bsize_t i = 0; i < keys.count(); ++i) {
 		// get the pins current state
 		auto key = keys.itemAtIndex(i);
 		uint8_t pinState = ioDeviceDigitalRead(ioDevice, key->getPin());
@@ -361,12 +361,12 @@ void HardwareRotaryEncoder::encoderChanged() {
 
 /******** UP DOWN BUTTON ENCODER *******/
 
-void switchEncoderUp(__attribute((unused)) uint8_t key, __attribute((unused)) bool heldDown) {
-	switches.encoder[0]->increment(1);
+void switchEncoderUp(__attribute((unused)) pinid_t key, __attribute((unused)) bool heldDown) {
+	switches.getEncoder()->increment(1);
 }
 
-void switchEncoderDown(__attribute((unused)) uint8_t key, __attribute((unused)) bool heldDown) {
-	switches.encoder[0]->increment(-1);
+void switchEncoderDown(__attribute((unused)) pinid_t key, __attribute((unused)) bool heldDown) {
+	switches.getEncoder()->increment(-1);
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed) : RotaryEncoder(callback) {

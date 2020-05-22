@@ -65,13 +65,13 @@ public:
 	 * @param pin the pin number
 	 * @param held true if held down
 	 */
-	virtual void onPressed(uint8_t pin, bool held) = 0;
+	virtual void onPressed(pinid_t pin, bool held) = 0;
 	/**
 	 * called when a key is released
 	 * @param pin the key number
 	 * @param held true if key was held down
 	 */
-	virtual void onReleased(uint8_t pin, bool held) = 0;
+	virtual void onReleased(pinid_t pin, bool held) = 0;
 };
 
 /** 
@@ -79,7 +79,7 @@ public:
  * @param key the pin associated with the pin
  * @param heldDown if the button has been held down
  */ 
-typedef void(*KeyCallbackFn)(uint8_t key, bool heldDown);
+typedef void(*KeyCallbackFn)(pinid_t key, bool heldDown);
 
 
 /**

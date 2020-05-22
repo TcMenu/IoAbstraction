@@ -4,7 +4,7 @@
 #include "SwitchInput.h"
 #include "AnalogDeviceAbstraction.h"
 
-#define MAX_JOYSTICK_ACCEL 7.1F
+#define MAX_JOYSTICK_ACCEL 10.1F
 
 /**
  * @file JoystickSwitchInput.h
@@ -28,7 +28,6 @@
 class JoystickSwitchInput : public RotaryEncoder, public Executable {
 private:
     uint8_t analogPin;
-    uint8_t counter;
     AnalogDevice* analogDevice;
 public:
     /** 
@@ -63,18 +62,14 @@ public:
     void exec() override {
         float readVal = analogDevice->getCurrentFloat(analogPin) - 0.5F;
 
-        if(readVal > 0.007) {
-            // going up!
-            int val = abs(readVal * MAX_JOYSTICK_ACCEL);
+        int val = abs(readVal * MAX_JOYSTICK_ACCEL);
+        if(readVal > 0.03) {
             increment(-val);
-            taskManager.scheduleOnce(nextInterval(val), this);
         }
-        else if(readVal < -0.007) {
-            // going down less than 7..
-            int val = abs(readVal * MAX_JOYSTICK_ACCEL);
+        else if(readVal < -0.03) {
             increment(val);
-            taskManager.scheduleOnce(nextInterval(val), this);
         }
+        taskManager.scheduleOnce(nextInterval(val), this);
     }
 };
 

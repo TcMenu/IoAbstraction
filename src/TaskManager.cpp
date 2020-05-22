@@ -396,16 +396,24 @@ char* TaskManager::checkAvailableSlots(char* data) {
 
 #ifdef __MBED__
 
+volatile bool timingStarted = false;
 Timer ioaTimer;
 
 void yield() {
     ThisThread::yield();
 }
 unsigned long millis() {
-    ioaTimer.read_ms();
+    if(!timingStarted) {
+        timingStarted = true;
+        ioaTimer.start();
+    }
+    return ioaTimer.read_ms();
 }
 unsigned long micros() {
+    if(!timingStarted) {
+        timingStarted = true;
+        ioaTimer.start();
+    }
     return (unsigned long) ioaTimer.read_high_resolution_us();
 }
-
 #endif

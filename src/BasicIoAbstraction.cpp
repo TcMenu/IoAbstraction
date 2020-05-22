@@ -71,11 +71,9 @@ GpioWrapper *BasicIoAbstraction::allocatePinIfNeedBe(uint8_t pinToAlloc) {
 
 IoAbstractionRef mbedAbstraction = NULL;
 IoAbstractionRef internalDigitalIo() {
-    CriticalSectionLock::enable();
     if (mbedAbstraction == NULL) {
         mbedAbstraction = new BasicIoAbstraction();
     }
-    CriticalSectionLock::disable();
     return mbedAbstraction;
 }
 
