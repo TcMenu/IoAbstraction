@@ -154,7 +154,7 @@ public:
         return binTree;
     };
 
-    V* itemAtIndex(int idx) {
+    V* itemAtIndex(bsize_t idx) {
         return (idx < itemsInList)  ? &binTree[idx] : NULL;
     }
 

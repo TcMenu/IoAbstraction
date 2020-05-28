@@ -178,7 +178,7 @@ uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
 	wireImpl->endTransmission();
 
 	uint8_t ret = 0;
-	wireImpl->requestFrom(eepromAddr, (uint8_t)1, (uint8_t)true);
+	wireImpl->requestFrom(eepromAddr, (uint8_t)1);
 	if(wireImpl->available()) ret = (uint8_t)wireImpl->read();
 	return ret;
 }
@@ -205,7 +205,7 @@ void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, ui
 		writeAddressWire(romSrc + romOffset);
 		wireImpl->endTransmission();
 
-		wireImpl->requestFrom(eepromAddr, (uint8_t)currentGo, (uint8_t)true);
+		wireImpl->requestFrom(eepromAddr, (uint8_t)currentGo);
 		while(len && wireImpl->available()) {
 			memDest[romOffset] = (uint8_t)wireImpl->read();
 			--len;
