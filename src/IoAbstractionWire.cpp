@@ -86,7 +86,7 @@ void PCF8574IoAbstraction::attachInterrupt(pinid_t /*pin*/, RawIntHandler intHan
 	internalDigitalIo()->attachInterrupt(interruptPin, intHandler, FALLING);
 }
 
-BasicIoAbstraction* ioFrom8574(uint8_t addr, uint8_t interruptPin, WireType wireImpl) {
+BasicIoAbstraction* ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl) {
 	return new PCF8574IoAbstraction(addr, interruptPin, wireImpl);
 }
 
@@ -232,7 +232,7 @@ uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
 
     char data[1];
 	wireImpl->read(address, data, (uint8_t)1);
-	return data[1];
+	return data[0];
 }
 #else
 bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {

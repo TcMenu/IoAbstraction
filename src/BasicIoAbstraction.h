@@ -32,7 +32,7 @@ typedef uint32_t pinid_t;
 #define HIGH 1
 #define LOW 0
 
-#define bitRead(value, bit) ((value & (1 << bit)) != 0)
+#define bitRead(value, bit) (((value) & (1 << (bit))) != 0)
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))

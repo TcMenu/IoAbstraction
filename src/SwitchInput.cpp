@@ -255,7 +255,7 @@ void RotaryEncoder::increment(int8_t incVal) {
 
     // otherwise run through all the possibilities
 	if(incVal >= 0) {
-		if(currentReading + incVal <= maximumValue) {
+		if(currentReading != maximumValue) {
 			currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
 			callback(currentReading);
 		}

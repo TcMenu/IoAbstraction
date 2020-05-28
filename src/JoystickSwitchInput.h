@@ -47,11 +47,10 @@ public:
         switch(forceApplied) {
             case 0:
             case 1: return 250;
-            case 2: return 200;
-            case 3: return 150;
-            case 4: return 120;
-            case 5: return 100;
-            case 6: return 75;
+            case 2: return 220;
+            case 3: return 200;
+            case 4: return 150;
+            case 5: return 120;
             default:return 50;
         }
     }
@@ -64,10 +63,10 @@ public:
 
         int val = abs(readVal * MAX_JOYSTICK_ACCEL);
         if(readVal > 0.03) {
-            increment(-val);
+            increment((maximumValue < 32) ? -1 : -val);
         }
         else if(readVal < -0.03) {
-            increment(val);
+            increment((maximumValue < 32) ? 1 : val);
         }
         taskManager.scheduleOnce(nextInterval(val), this);
     }
