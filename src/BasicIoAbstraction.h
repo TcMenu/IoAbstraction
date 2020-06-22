@@ -42,6 +42,7 @@ private:
     uint32_t pin;
     gpio_t gpio;
     InterruptIn* interruptHandler;
+    uint8_t pinMode;
 public:
     GpioWrapper() {
         pin = (uint32_t)-1;
@@ -59,6 +60,8 @@ public:
     uint32_t getPin() const { return pin; }
     uint32_t getKey() const { return pin; }
     gpio_t* getGpio() { return &gpio; }
+    void setPinMode(uint8_t mode) { pinMode = mode; }
+    uint8_t getPinMode() { return pinMode; }
     InterruptIn* getInterruptIn() { return interruptHandler; }
     void setInterruptIn(InterruptIn* in) { interruptHandler = in; }
 };

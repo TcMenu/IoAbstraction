@@ -66,7 +66,7 @@ typedef void (*TimerFn)();
  * The pin that caused the interrupt is passed in the parameter on a best efforts basis.
  * @param pin the pin on which the interrupt occurred (best efforts)
  */ 
-typedef void (*InterruptFn)(uint8_t pin);
+typedef void (*InterruptFn)(pinid_t pin);
 
 #define TASKMGR_INVALIDID 0xff
 
@@ -154,7 +154,7 @@ protected:
 	TimerTask *first;
 	uint8_t numberOfSlots;
 	InterruptFn interruptCallback;
-	volatile uint8_t lastInterruptTrigger;
+	volatile pinid_t lastInterruptTrigger;
 	volatile bool interrupted;
 public:
 	/**
@@ -204,7 +204,7 @@ public:
 	 * @param pin the pin upon which to register (on the IoDevice above)
 	 * @param mode the mode in which to register, eg. CHANGE, RISING, FALLING
 	 */
-	void addInterrupt(IoAbstractionRef ref, uint8_t pin, uint8_t mode);
+	void addInterrupt(IoAbstractionRef ref, pinid_t pin, uint8_t mode);
 	
 	/**
 	 * Sets the interrupt callback to be used when an interrupt is signalled. Note that you will be
@@ -236,7 +236,7 @@ public:
 	/**
 	 * Used internally by the interrupt handlers to tell task manager an interrupt is waiting. Not for external use.
 	 */
-	static void markInterrupted(uint8_t interruptNo);
+	static void markInterrupted(pinid_t interruptNo);
 
 	/**
 	 * Reset the task manager such that all current tasks are cleared, back to power on state.

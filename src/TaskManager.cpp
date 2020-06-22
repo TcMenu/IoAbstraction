@@ -116,7 +116,7 @@ void TimerTask::clear() {
 	next = NULL;
 }
 
-ISR_ATTR void TaskManager::markInterrupted(uint8_t interruptNo) {
+ISR_ATTR void TaskManager::markInterrupted(pinid_t interruptNo) {
 	taskManager.lastInterruptTrigger = interruptNo;
 	taskManager.interrupted = true;
 }
@@ -356,7 +356,7 @@ ISR_ATTR void interruptHandlerOther() {
 	taskManager.markInterrupted(0xff);
 }
 
-void TaskManager::addInterrupt(IoAbstractionRef ioDevice, uint8_t pin, uint8_t mode) {
+void TaskManager::addInterrupt(IoAbstractionRef ioDevice, pinid_t pin, uint8_t mode) {
 	if (interruptCallback == NULL) return;
 
 	switch (pin) {
