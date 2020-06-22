@@ -261,3 +261,6 @@ Note that although the Arduino constructor allows the bit depth to be set, it on
 
 [https://www.thecoderscorner.com/electronics/microcontrollers/switches-inputs/basic-io-abstraction-library-pins-or-8574/]
 
+## Making changes to IoAbstraction
+
+We welcome people rolling up their sleeves and helping out. We use platformIO for development and have a specific project available to help you get started, along with tests that check many elements still work as expected. See [https://github.com/davetcc/tcLibraryDev]
