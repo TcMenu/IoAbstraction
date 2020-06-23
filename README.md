@@ -15,7 +15,7 @@ Along with ths quick start guide and the examples also see:
 
 This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people.
 
-To install this library, simply download a zip (or source as preferred) and install into the `Arduino/libraries` directory, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
+To install this library manually, simply download a zip (or source as preferred) and install into the `Arduino/libraries` directory, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
 
 ## TaskManager - simple, event based programming for Arduino 
 
