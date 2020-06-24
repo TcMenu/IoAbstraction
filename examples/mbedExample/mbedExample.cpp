@@ -1,3 +1,9 @@
+/**
+ * mbedExample.cpp
+ *
+ * Presents an example of how to use the various parts of IoAbstraction with the mbed framework.
+ */
+
 #include "mbed.h"
 #include "rtos.h"
 #include <IoLogging.h>

@@ -117,6 +117,7 @@ void I2cAt24Eeprom::writeAddressWire(EepromPosition memAddr, const char *data, i
     if(data != nullptr) memcpy(ch + 2, data, len);
     while(tries < READY_TRIES_COUNT && wireImpl->write(eepromAddr, (const char*)ch, len + 2, false) !=0) {
         taskManager.yieldForMicros(50);
+        tries++;
     }
     errorOccurred = tries == READY_TRIES_COUNT;
 }
