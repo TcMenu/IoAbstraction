@@ -17,6 +17,7 @@ void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
         else {
             gpio_init_in_ex(theGpio->getGpio(), (PinName) pin, (PinMode)mode);
         }
+        theGpio->setPinMode(mode);
     }
 }
 
@@ -42,13 +43,13 @@ void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHan
         gpio->setInterruptIn(new InterruptIn((PinName)pin));
     }
     auto intIn = gpio->getInterruptIn();
-    if(mode == RISING) {
+    intIn->mode(gpio->getPinMode() == INPUT_PULLUP ? PullUp : PullDown);
+    if((mode & RISING) != 0) {
         intIn->rise(interruptHandler);
     }
-    else {
+    if((mode & FALLING) != 0) {
         intIn->fall(interruptHandler);
     }
-    gpio->setInterruptIn(intIn);
 }
 
 void BasicIoAbstraction::writePort(pinid_t port, uint8_t portVal) {

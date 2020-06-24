@@ -114,7 +114,7 @@ void MCP23017IoAbstraction::initDevice() {
 	bitClear(controlReg, IOCON_BANK_BIT);
 	bitClear(controlReg, IOCON_SEQOP_BIT);
 
-	uint16_t regToWrite = controlReg | (((uint16_t)controlReg) << 8);
+	uint16_t regToWrite = controlReg | (((uint16_t)controlReg) << 8U);
 	writeToDevice(IOCON_ADDR, regToWrite);
 
 	portFlags = 0;
@@ -125,8 +125,8 @@ void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit,
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
 	// for debugging to see the commands being sent, uncomment below
-	//Serial.print("toggle call 0x"); Serial.print(reg, HEX); Serial.print(" pin "); Serial.print(theBit); Serial.print(" toggle "); Serial.print(value);
-	//Serial.print(" reg "); Serial.println(regAddr, HEX);
+	serdebugF4("toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
+	serdebugFHex("Value: ", reg);
 	// end debugging code
 	writeToDevice(regAddr, reg);
 }
@@ -192,7 +192,7 @@ bool MCP23017IoAbstraction::runLoop() {
 	else if(flagA)
 		lastRead = readFromDevice8(GPIO_ADDR);
 	else if(flagB)
-		lastRead = readFromDevice8(GPIO_ADDR + 1) << 8;
+		lastRead = readFromDevice8(GPIO_ADDR + 1) << 8U;
 
 	return writeOk;
 }
@@ -203,7 +203,7 @@ bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
     char data[3];
     data[0] = reg;
 	data[1] = (char)command;
-	data[2] = (char)(command>>8);
+	data[2] = (char)(command>>8U);
 	return wireImpl->write(address, data, sizeof(data)) == 0;
 }
 
@@ -228,7 +228,9 @@ uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
 uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
     I2CLocker locker(wireImpl);
 
-    wireImpl->write(reg);
+    char sz[1];
+    sz[0] = reg;
+    wireImpl->write(address, sz, 1);
 
     char data[1];
 	wireImpl->read(address, data, (uint8_t)1);

@@ -95,7 +95,7 @@ class KeyboardItem {
 private:
 	uint8_t stateFlags;
 	KeyPressState previousState;
-	uint8_t pin;
+	pinid_t pin;
 	uint8_t counter;
 	uint8_t acceleration;
 	uint8_t repeatInterval;
@@ -106,8 +106,8 @@ private:
 	KeyCallbackFn callbackOnRelease;
 public:
     KeyboardItem();
-    KeyboardItem(uint8_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
-    KeyboardItem(uint8_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
+    KeyboardItem(pinid_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
+    KeyboardItem(pinid_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
     KeyboardItem(const KeyboardItem& other);
 	void checkAndTrigger(uint8_t pin);
 	void onRelease(KeyCallbackFn callbackOnRelease);
@@ -115,8 +115,8 @@ public:
 	bool isDebouncing() { return getState() == DEBOUNCING1 || getState() == DEBOUNCING2; }
 	bool isPressed() { return getState() == PRESSED || getState() == BUTTON_HELD; }
 	bool isHeld() { return getState() == BUTTON_HELD; }
-	uint8_t getPin() { return pin;  }
-	uint8_t getKey() { return pin; }
+	pinid_t getPin() { return pin;  }
+	pinid_t getKey() { return pin; }
 	
 	void trigger(bool held);
 	void triggerRelease(bool held);
@@ -205,14 +205,14 @@ enum HWAccelerationMode : uint8_t {
 class HardwareRotaryEncoder : public RotaryEncoder {
 private:
 	unsigned long lastChange;
-	uint8_t pinA;
-	uint8_t pinB;
+	pinid_t pinA;
+    pinid_t pinB;
 	uint8_t aLast;
 	uint8_t cleanFromB;
     HWAccelerationMode accelerationMode;
 	
 public:
-	HardwareRotaryEncoder(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
+	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback);
 	virtual void encoderChanged();
     void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
 private:
@@ -225,7 +225,7 @@ private:
  */
 class EncoderUpDownButtons : public RotaryEncoder {
 public:
-	EncoderUpDownButtons(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback, uint8_t speed = 20);
+	EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed = 20);
 };
 
 #define SW_FLAG_PULLUP_LOGIC 0
@@ -281,7 +281,7 @@ public:
 	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
 	 * @return true if successful, false if the pin could not be registered.
 	 */
-	bool addSwitch(uint8_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT, bool invertLogic = false);
+	bool addSwitch(pinid_t pin, KeyCallbackFn callback, uint8_t repeat = NO_REPEAT, bool invertLogic = false);
 
 	/**
 	 * Add a switch to be managed by switches using an implementation of the
@@ -292,14 +292,14 @@ public:
 	 * @param repeat optional - the frequency in intervals of 1/20th second to repeat.
 	 * @return true if successful, false if the pin could not be registered.
 	 */
-	bool addSwitchListener(uint8_t pin, SwitchListener* listener, uint8_t repeat = NO_REPEAT, bool invertLogic = false);
+	bool addSwitchListener(pinid_t pin, SwitchListener* listener, uint8_t repeat = NO_REPEAT, bool invertLogic = false);
 
 	/**
 	 * Set callback the function to be called back upon key release
 	 * @param pin the pin on which the switch is attached
 	 * @param callbackOnRelease the function to be called back upon key release
 	 */
-	void onRelease(uint8_t pin, KeyCallbackFn callbackOnRelease);
+	void onRelease(pinid_t pin, KeyCallbackFn callbackOnRelease);
 
 	/**
 	 * Sets the rotary encoder to use, unless you have a custom one, prefer to use the setup methods
@@ -347,7 +347,7 @@ public:
 	 * @param pin the pin associated with the switch
 	 * @param held if the held state should be set on the callback
 	 */
-	void pushSwitch(uint8_t pin, bool held);
+	void pushSwitch(pinid_t pin, bool held);
 
 	/**
 	 * This will normally be called by task manager when not interrupt driven.
@@ -382,7 +382,7 @@ public:
 	 * Returns true if the switch at the defined pin is pressed, otherwise false
 	 * @param pin the pin to check if pressed
 	 */
-	bool isSwitchPressed(uint8_t pin);
+	bool isSwitchPressed(pinid_t pin);
 
 	/** 
 	 * Sets the debounce state - only really for internal use.
@@ -397,11 +397,11 @@ public:
     bool didLastSyncSucceed() { return lastSyncStatus; }
 
 private:
-    bool internalAddSwitch(uint8_t pin, bool invertLogic);
+    bool internalAddSwitch(pinid_t pin, bool invertLogic);
     
-	friend void onSwitchesInterrupt(uint8_t);
-	friend void switchEncoderUp(uint8_t, bool);
-	friend void switchEncoderDown(uint8_t, bool);
+	friend void onSwitchesInterrupt(pinid_t);
+	friend void switchEncoderUp(pinid_t, bool);
+	friend void switchEncoderDown(pinid_t, bool);
 };
 
 /**
@@ -418,7 +418,7 @@ extern SwitchInput switches;
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
  */
-void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallbackFn callback);
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback);
 
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
@@ -427,6 +427,6 @@ void setupRotaryEncoderWithInterrupt(uint8_t pinA, uint8_t pinB, EncoderCallback
  * @param pinDown the down button
  * @param callback the function that will receive the new state on change.
  */
-void setupUpDownButtonEncoder(uint8_t pinUp, uint8_t pinDown, EncoderCallbackFn callback);
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback);
 
 #endif

@@ -109,15 +109,16 @@ public:
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len);
 private:
 	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
-
-#ifndef __MBED__
 	void writeByte(EepromPosition position, uint8_t val);
 	uint8_t readByte(EepromPosition position);
-    void writeAddressWire(uint16_t memAddr);
-    void waitForReady();
+
+#ifdef __MBED__
+    void writeAddressWire(uint16_t memAddr, const char* data = nullptr, int len = 0);
 #else
-    void writeAddressWire(uint16_t memAddr, void* data = NULL, int len = 0);
+    void writeAddressWire(uint16_t memAddr);
 #endif
+
+    void waitForReady();
 };
 
 #endif /* _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */

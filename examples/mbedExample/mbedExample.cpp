@@ -1,3 +1,9 @@
+/**
+ * mbedExample.cpp
+ *
+ * Presents an example of how to use the various parts of IoAbstraction with the mbed framework.
+ */
+
 #include "mbed.h"
 #include "rtos.h"
 #include <IoLogging.h>
@@ -5,14 +11,19 @@
 #include <SwitchInput.h>
 #include <JoystickSwitchInput.h>
 #include <AnalogDeviceAbstraction.h>
+#include <EepromAbstractionWire.h>
 
 int myCount = 0;
 
 // to be able to use IoLogging within your application add the following
 Serial console(USBTX, USBRX);
 MBedLogger LoggingPort(console);
+
 IoAbstractionRef ioRef = internalDigitalIo();
 MBedAnalogDevice analogDevice;
+
+I2C i2c(PF_0, PF_1);
+#define START_OFFS 3000
 
 volatile bool exitApp = false;
 
@@ -43,6 +54,9 @@ public:
         serdebugF2("exec() shared state: ", someSharedState);
     }
 };
+
+void checkTheEeprom();
+
 ExecutableTask myTask(100);
 
 void scheduleSomeTasks() {
@@ -66,6 +80,8 @@ int main() {
     ioDevicePinMode(ioRef, LED1, OUTPUT);
     analogDevice.initPin(A0, DIR_IN);
 
+    checkTheEeprom();
+
     doSomeLogging();
 
     scheduleSomeTasks();
@@ -83,4 +99,34 @@ int main() {
     while(!exitApp) {
         taskManager.runLoop();
     }
+}
+
+const char stringSource[] = "This is a really long string that we need to write into the rom and read back";
+void checkTheEeprom() {
+    I2cAt24Eeprom rom(0xA0, PAGESIZE_AT24C128, &i2c);
+
+    for(int i = START_OFFS; i < (START_OFFS + 100); i++) {
+        rom.write8(i, 0);
+        if(rom.read8(i) != 0 || rom.hasErrorOccurred()) {
+            serdebugF2("Rom not cleared at ", i);
+        }
+    }
+
+    rom.write8(START_OFFS + 0, 0x45);
+    serdebugFHex("read8 - 0x45 is ", rom.read8(START_OFFS + 0));
+
+    rom.write16(START_OFFS + 1, 0xa050);
+    serdebugFHex("read16 - 0xa050 is ", rom.read16(START_OFFS + 1));
+    serdebugFHex("read a - 0xa0 is ", rom.read8(START_OFFS + 1));
+    serdebugFHex("read b - 0x50 is ", rom.read8(START_OFFS + 2));
+
+    rom.write32(START_OFFS + 3, 0xd00dface);
+    serdebugFHex("read32 - 0xd00dface is ", rom.read32(START_OFFS + 3));
+
+    rom.writeArrayToRom(START_OFFS + 10, (const uint8_t *)stringSource, sizeof(stringSource));
+    char data[128];
+    rom.readIntoMemArray((uint8_t*)data, START_OFFS + 10, sizeof(stringSource));
+    serdebugF2("read string: ", data);
+
+    serdebugF2("ErrorOccurred: ",rom.hasErrorOccurred());
 }
