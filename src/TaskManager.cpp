@@ -205,10 +205,10 @@ void TaskManager::cancelTask(uint8_t task) {
 
 void TaskManager::yieldForMicros(uint16_t microsToWait) {
 	yield();
-	
+
 	unsigned long microsStart = micros();
 	do {
-		runLoop();
+        runLoop();
 	} while((micros() - microsStart) < microsToWait);
 }
 
@@ -224,6 +224,10 @@ void TaskManager::runLoop() {
 	// these until the first one that isn't ready.
 	TimerTask* tm = first;
 	while(tm != NULL) {
+#ifdef ESP8266
+	    // here we are making extra sure we are good citizens on ESP boards
+	    yield();
+#endif
 		if (tm->isReady()) {
 			removeFromQueue(tm);
 			tm->execute();
