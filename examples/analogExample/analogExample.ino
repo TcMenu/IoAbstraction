@@ -15,7 +15,7 @@
 ArduinoAnalogDevice analog; // by default it assumes 10 bit read, 8 bit write
 
 // We keep a variable that counts the output waveform
-int ledCycleValue = 0;
+float ledCycleValue = 0;
 
 void setup() {
     while(!Serial);
@@ -31,17 +31,20 @@ void setup() {
         Serial.print("The value on A1 is ");
         Serial.print(analog.getCurrentValue(A1));
         Serial.print("/");
-        Serial.println(analog.getMaximumRange(DIR_IN, A1));
+        Serial.print(analog.getMaximumRange(DIR_IN, A1));
+        Serial.print(" - ");
+        Serial.print(analog.getCurrentFloat(A1) * 100.0F);
+        Serial.println('%');
     });
 
     // we also create a sawtooth waveform on one of the outputs. By default we are using the DAC
     // on A0 of most MKR boards. Change to PWM for AVR boards.
     taskManager.scheduleFixedRate(25, [] {
-        ledCycleValue++;
-        if(ledCycleValue >= analog.getMaximumRange(DIR_OUT, PWM_OR_DAC_PIN)) {
-            ledCycleValue = 0;
+        ledCycleValue += 0.001F;
+        if(ledCycleValue >= 1.0) {
+            ledCycleValue = 0.0F;
         }
-        analog.setCurrentValue(PWM_OR_DAC_PIN, ledCycleValue);
+        analog.setCurrentFloat(PWM_OR_DAC_PIN, ledCycleValue);
     }, TIME_MICROS);
 }
 

@@ -35,7 +35,7 @@ public:
      * @param direction the direction in which the depth is queried (DIR_IN, DIR_OUT)
      * @return the number of bits
      */
-    virtual int getBitDepth(AnalogDirection direction, uint8_t pin);
+    virtual int getBitDepth(AnalogDirection direction, uint8_t pin) = 0;
 
 	/**
 	 * initialises a pin as either an input or output of analog signals. No validation to check if
@@ -72,7 +72,7 @@ public:
 	 * @param pin the pin for which to set
 	 * @param newValue the new value which should be between 0 and 1.0
 	 */
-    virtual void setCurrentValue(uint8_t pin, float newValue)=0;
+    virtual void setCurrentFloat(uint8_t pin, float newValue)=0;
 
 };
 
@@ -167,7 +167,7 @@ public:
         }
     }
 
-    void setCurrentValue(uint8_t pin, float newValue) override {
+    void setCurrentFloat(uint8_t pin, float newValue) override {
         auto dev = devices.getByKey(pin);
         if(dev == NULL || dev->getDirection() == DIR_IN) return;
         if(dev->getDirection() == DIR_OUT) {
@@ -226,19 +226,21 @@ public:
 		return analogRead(pin);
 	}
 
-	float getCurrentFloat() override {
-	    int maxValue = (1 << writeBitResolution) - 1;
-        return analogRead() / float(maxValue);
+	float getCurrentFloat(pinid_t pin) override {
+        float maxValue = getMaximumRange(DIR_IN, pin);
+        return analogRead(pin) / maxValue;
 	}
 
-	void setCurrentValue(uint8_t pinid_t, unsigned int newVal) override {
+	void setCurrentValue(pinid_t pin, unsigned int newVal) override {
 		analogWrite(pin, newVal);
 	}
 
-	void setCurrentValue(pinid_t pin, float value) override {
+	void setCurrentFloat(pinid_t pin, float value) override {
 	    if(value < 0.0 || value > 1.0) value = 0;
-	    int maxValue = (1 << writeBitResolution) - 1;
-	    analogWrite(value * float(maxValue));
+	    float maxValue = getMaximumRange(DIR_OUT, pin);
+	    auto compVal = (int)(value * maxValue);
+	    analogWrite(pin, compVal);
+	    //serdebugF4("Flt set ", value, maxValue, compVal);
 	}
 };
 
