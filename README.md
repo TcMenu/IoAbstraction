@@ -1,6 +1,6 @@
 # IoAbstraction for Arduino and mbed summary
 
-This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation.
+This library provides several useful extensions that make programming Arduino / mbed for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation. The API is almost identical between Arduino and mbed making it easier to port between the two. 
 
 ## Full API documentation
 
@@ -55,7 +55,7 @@ Then in the loop method you need to call:
 
 ### Advanced usage of TaskManager
 
-If you want to improve task manager performance in code that frequently calls delayMicroseconds(..), you can enable the flag `_TASKMGR_OVERRIDE_DELAY_` by opening TaskManager.h, it has major limitations and it's better to avoid it's use and change code to use `taskManager.yieldForMicros`.
+ARDUINO ONLY: If you want to improve task manager performance in code that frequently calls delayMicroseconds(..), you can enable the flag `_TASKMGR_OVERRIDE_DELAY_` by opening TaskManager.h, it has major limitations and it's better to avoid it's use and change code to use `taskManager.yieldForMicros`.
 
 ## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
 
