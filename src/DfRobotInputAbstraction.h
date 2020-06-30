@@ -127,14 +127,18 @@ const PROGMEM DfRobotAnalogRanges dfRobotAvrRanges { 50, 250, 450, 650, 850};
 const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 50, 195, 380, 555, 790};
 
 
-inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = NULL) {
-    if(device == NULL) device = ArduinoAnalogDevice();
-    return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin);
+inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = nullptr) {
+#ifndef __MBED__
+    device = new ArduinoAnalogDevice();
+#endif
+    return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin, device);
 }
 
-inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0, AnalogDevice* device = NULL) {
-    if(device == NULL) device = ArduinoAnalogDevice();
-    return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin);
+inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0, AnalogDevice* device = nullptr) {
+#ifndef __MBED__
+    device = new ArduinoAnalogDevice();
+#endif
+    return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin, device);
 }
 
 #endif
