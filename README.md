@@ -1,4 +1,4 @@
-# IoAbstraction Arduino library summary
+# IoAbstraction for Arduino and mbed summary
 
 This library provides several useful extensions that make programming Arduino for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation.
 
@@ -16,6 +16,10 @@ Along with ths quick start guide and the examples also see:
 This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people.
 
 To install this library manually, simply download a zip (or source as preferred) and install into the `Arduino/libraries` directory, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
+
+## Installation for PlatformIO (Arduino or mbed)
+
+Use the platformIO library manager to get the library. It's called 'IoAbstraction'.
 
 ## TaskManager - simple, event based programming for Arduino 
 
