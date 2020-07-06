@@ -1,5 +1,5 @@
 
-#if !defined(_ARDUNIO_EEPROM_ABS_H) && !defined(_NO_EEPROM_CLASS_)
+#if !defined(_ARDUNIO_EEPROM_ABS_H) && !defined(_NO_EEPROM_CLASS_) && !defined(__MBED__)
 #define _ARDUNIO_EEPROM_ABS_H
 
 #include <Arduino.h>
