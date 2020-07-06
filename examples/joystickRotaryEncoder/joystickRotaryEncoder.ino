@@ -5,6 +5,11 @@
  * Shows the value of a rotary encoder over the serial port. Wiring, wire the joystick as per instructions
  * and take note of the analog input pin you've used. 
  */
+
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 #include <IoAbstraction.h>
 #include <JoystickSwitchInput.h>
 

@@ -11,6 +11,10 @@ add.
 Under an apache license
 */
 
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 #include<IoAbstraction.h>
 
 // constant for the pin we will use

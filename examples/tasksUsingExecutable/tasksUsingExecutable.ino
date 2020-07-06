@@ -6,6 +6,10 @@
  * However, it has negligible impact on most 32 boards.
  */
 
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 #include <IoAbstraction.h>
 
 /**

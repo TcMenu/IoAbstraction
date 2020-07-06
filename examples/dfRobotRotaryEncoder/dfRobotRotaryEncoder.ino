@@ -8,6 +8,9 @@
  * Shows the value of a rotary encoder on the display based on the UP and DOWN buttons. Select is also handled.
  */
 
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
 
 // note you can switch this to include <LiquidCrystal.h> instead, just change the construction of lcd too.
 #include <LiquidCrystal.h>

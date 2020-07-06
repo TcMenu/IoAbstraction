@@ -13,6 +13,10 @@
  * It writes a byte, int, double and string to the eeprom and reads them back.
  */
 
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 // you always needs this include.
 #include <EepromAbstraction.h>
 #include <ArduinoEEPROMAbstraction.h>

@@ -9,6 +9,10 @@
 
 */
 
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 #include<IoAbstraction.h>
 
 // The pin onto which we connected the rotary encoders switch

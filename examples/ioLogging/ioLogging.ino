@@ -8,6 +8,11 @@
  * This logging is only complied in when the above define is set, if it is not set then
  * the logging is completely removed.
  */
+
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 #include <IoAbstraction.h>
 
 char sz[] = {"hello world"};

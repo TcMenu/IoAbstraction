@@ -3,6 +3,10 @@
 // switch to the input pin and it will be mirrored to the LED.
 // By default the output uses the inbuilt LED.
 
+// We have a direct dependency on Wire and Arduino ships it as a library for every board
+// therefore to ensure compilation we include it here.
+#include <Wire.h>
+
 #include <IoAbstraction.h>
 
 IoAbstractionRef arduinoPins = ioUsingArduino();
