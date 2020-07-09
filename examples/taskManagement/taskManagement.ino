@@ -13,10 +13,6 @@ will cause an interrupt.
 Written by Dave Cherry of thecoderscorner.com in 2017
 */
 
-// We have a direct dependency on Wire and Arduino ships it as a library for every board
-// therefore to ensure compilation we include it here.
-#include <Wire.h>
-
 #include <IoAbstraction.h>
 
 // We'll register an interrupt on an arduino pin later, so need this reference. 
