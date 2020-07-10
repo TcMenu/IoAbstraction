@@ -182,10 +182,74 @@ public:
 
 #else
 
+#ifdef ESP32
+#include <SimpleCollections.h>
+#include <driver/dac.h>
+#define ANALOG_IN_BITS 12
+#define GPIO_INVALID -1
+
+class EspAnalogOutputMode {
+private:
+    pinid_t pin;
+    uint16_t pwmChannel;
+    uint16_t pwmWidth;
+public:
+    EspAnalogOutputMode() {
+        pin = GPIO_INVALID;
+        pwmChannel = -1;
+        pwmWidth = 5000;
+    }
+    EspAnalogOutputMode(const EspAnalogOutputMode& other) {
+        pin = other.pin;
+        pwmChannel = other.pwmChannel;
+        pwmWidth = other.pwmWidth;
+    }
+
+    bool isDac() const {
+        return pin == DAC1 || pin == DAC2;
+    }
+
+    pinid_t getKey() const {
+        return pin;
+    }
+
+    void pinSetup(int pin_, int pwmChannel_) {
+        this->pin = pin_;
+        this->pwmChannel = pwmChannel_;
+        if(!isDac()) {
+            // for other than the dac ports, we need to set up PWM
+            ledcSetup(pwmChannel, pwmWidth, 8);
+            ledcAttachPin(pin, pwmChannel);
+
+        }
+        else {
+            dac_output_enable(pin == DAC1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2);
+        }
+
+    }
+
+    void write(unsigned int newVal) const {
+        if(isDac()) {
+            dac_output_voltage(pin == DAC1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2, newVal);
+        }
+        else {
+            ledcWrite(pwmChannel, newVal);
+
+        }
+    }
+};
+#else
+#define ANALOG_IN_BITS 10
+#endif
+
 /**
  * Creates an analog device that uses the core Arduino analog capabilities of ADC for reading
- * values and PWM or the inbuilt DAC on SAMD for writing values. It is a nice abstraction as
- * it would later allow to change to an offboard device without changing much code.
+ * values and PWM or the inbuilt DAC if available for writing values. Generally speaking one
+ * starts by initialising a pin as either input or output, then calling the read and write
+ * methods to work with the device.
+ *
+ * If performance is not critical, use the floating point versions of the read and write methods
+ * as these abstract away the absolute ranges, to 0 being GND and 1 being maximum voltage.
  */
 class ArduinoAnalogDevice : public AnalogDevice {
 private:
@@ -194,20 +258,17 @@ private:
 public:
 	/**
 	 * Initialise the Arduino analog device with a given read and write bit resolution, usually
-	 * input is set to 10 bits (1024) and output to 8 bits (255) by default. On SAMD and some
-	 * other board types this can be significantly increased. 
-	 * For example SAMD: 12 bit (4096) input and output.
+	 * input is set to 10 bits (1024) and output to 8 bits (255) by default. However, on ESP32 it
+	 * is 12 bit. Further, on SAMD and some other board types you can configure either 8, 10 or 12 bit.
+	 * For example SAMD: 12 bit (4096) input and output. ESP32 12 bit in, 8 bit output.
 	 */
-	ArduinoAnalogDevice(uint8_t readBitResolution = 10, uint8_t writeBitResolution = 8) {
+	explicit ArduinoAnalogDevice(uint8_t readBitResolution = ANALOG_IN_BITS, uint8_t writeBitResolution = 8) {
 #ifdef ARDUINO_ARCH_SAMD
 		analogReadResolution(readBitResolution);
 		analogWriteResolution(writeBitResolution);
-		this->readBitResolution = readBitResolution;
-		this->writeBitResolution = writeBitResolution;
-#else
-		this->readBitResolution = 10;
-		this->writeBitResolution = 8;
 #endif
+        this->readBitResolution = readBitResolution;
+        this->writeBitResolution = writeBitResolution;
 	}
 
 	int getMaximumRange(AnalogDirection dir, pinid_t /*pin*/) override {
@@ -218,30 +279,53 @@ public:
         return (direction == DIR_IN) ? readBitResolution : writeBitResolution;
     }
 
-	void initPin(pinid_t pin, AnalogDirection direction) override {
-		pinMode(pin, (direction == DIR_IN) ? INPUT : OUTPUT);
-	}
-
 	unsigned int getCurrentValue(pinid_t pin) override {
 		return analogRead(pin);
 	}
 
 	float getCurrentFloat(pinid_t pin) override {
-        float maxValue = getMaximumRange(DIR_IN, pin);
-        return analogRead(pin) / maxValue;
-	}
-
-	void setCurrentValue(pinid_t pin, unsigned int newVal) override {
-		analogWrite(pin, newVal);
+        auto maxValue = (float)getMaximumRange(DIR_IN, pin);
+        return float(analogRead(pin)) / maxValue;
 	}
 
 	void setCurrentFloat(pinid_t pin, float value) override {
 	    if(value < 0.0 || value > 1.0) value = 0;
 	    float maxValue = getMaximumRange(DIR_OUT, pin);
 	    auto compVal = (int)(value * maxValue);
-	    analogWrite(pin, compVal);
+	    setCurrentValue(pin, compVal);
 	    //serdebugF4("Flt set ", value, maxValue, compVal);
 	}
+#ifdef ESP32
+    void initPin(pinid_t pin, AnalogDirection direction) override {
+        if(direction != DIR_IN) {
+            EspAnalogOutputMode outputMode;
+            outputMode.pinSetup(pin, gpioToPwmKey.count());
+            gpioToPwmKey.add(outputMode);
+        }
+        else pinMode(pin, INPUT);
+	}
+
+	void setCurrentValue(pinid_t pin, unsigned int newVal) override {
+	    auto output = gpioToPwmKey.getByKey(pin);
+	    if(output) {
+	        output->write(newVal);
+	    }
+    }
+
+    EspAnalogOutputMode* getEspOutputMode(pinid_t pin) {
+	    return gpioToPwmKey.getByKey(pin);
+	}
+private:
+    BtreeList<pinid_t,EspAnalogOutputMode> gpioToPwmKey;
+#else
+    void initPin(pinid_t pin, AnalogDirection direction) override {
+        pinMode(pin, (direction == DIR_IN) ? INPUT : OUTPUT);
+    }
+
+    void setCurrentValue(pinid_t pin, unsigned int newVal) override {
+        analogWrite(pin, newVal);
+    }
+#endif
 };
 
 #endif // MBED or ARDUINO IMPL
