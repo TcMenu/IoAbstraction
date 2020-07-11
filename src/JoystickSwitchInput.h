@@ -29,6 +29,8 @@ class JoystickSwitchInput : public RotaryEncoder, public Executable {
 private:
     uint8_t analogPin;
     AnalogDevice* analogDevice;
+    float tolerance = 0.03;
+    float midPoint = 0.5;
 public:
     /** 
      * Constructor that initialises the class for use, prefer to use the set up method setupAnalogJoystickEncoder
@@ -41,6 +43,18 @@ public:
         this->analogPin = analogPin;
         this->analogDevice = analogDevice;
         analogDevice->initPin(analogPin, DIR_IN);
+    }
+
+    /**
+     * Use this for situations where the tolerance of the joystick slightly off.
+     * IE the mid point is not exactly half or the tolerance is not sufficiently
+     * large to ignore deviations in the voltage level.
+     * @param midPoint_ the new midpoint to use.
+     * @param tolerance_ the size change to ignore around midpoint.
+     */
+    void setTolerance(float midPoint_, float tolerance_) {
+        tolerance = tolerance_;
+        midPoint = midPoint_;
     }
 
     int nextInterval(int forceApplied) {
@@ -59,13 +73,13 @@ public:
      * Called by taskManager on a frequent basis. Ususally about every 250-500 millis
      */
     void exec() override {
-        float readVal = analogDevice->getCurrentFloat(analogPin) - 0.5F;
+        float readVal = analogDevice->getCurrentFloat(analogPin) - midPoint;
 
         int val = abs(readVal * MAX_JOYSTICK_ACCEL);
-        if(readVal > 0.03) {
+        if(readVal > tolerance) {
             increment((maximumValue < 32) ? -1 : -val);
         }
-        else if(readVal < -0.03) {
+        else if(readVal < (-tolerance)) {
             increment((maximumValue < 32) ? 1 : val);
         }
         taskManager.scheduleOnce(nextInterval(val), this);

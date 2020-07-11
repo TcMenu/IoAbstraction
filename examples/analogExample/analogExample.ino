@@ -13,7 +13,7 @@
 #define PWM_OR_DAC_PIN 13
 
 // This is the input pin where analog input is received.
-#define ANALOG_IN_PIN A1
+#define ANALOG_IN_PIN A0
 
 // here we create the abstraction over the standard arduino analog IO capabilities
 ArduinoAnalogDevice analog; // by default it assumes 10 bit read, 8 bit write
