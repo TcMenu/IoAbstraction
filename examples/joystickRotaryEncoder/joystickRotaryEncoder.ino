@@ -37,6 +37,10 @@ void setup() {
     // now register the joystick
     setupAnalogJoystickEncoder(&analogDevice, ANALOG_INPUT_PIN, onEncoderChange);
 
+    // once you've registed the joystick above with switches, you can then alter the mid point and tolerance if needed
+    // here we set the midpoint to 65% and the tolerance (or point at which we start reading) at +-5%.
+    reinterpret_cast<JoystickSwitchInput*>(switches.getEncoder())->setTolerance(.65F, 0.05F);
+
     // now set the range to 500 and current value to 250
     switches.changeEncoderPrecision(500, 250);
 

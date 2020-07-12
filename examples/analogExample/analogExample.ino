@@ -43,7 +43,7 @@ void setup() {
 
     // we also create a sawtooth waveform on one of the outputs. By default we are using the DAC
     // on A0 of most MKR boards. Change to PWM for AVR boards.
-    taskManager.scheduleFixedRate(1, [] {
+    taskManager.scheduleFixedRate(10, [] {
         ledCycleValue += 0.01F;
         if(ledCycleValue >= 1.0) {
             ledCycleValue = 0.0F;
