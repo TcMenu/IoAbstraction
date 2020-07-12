@@ -9,7 +9,7 @@
 #include <IoAbstraction.h>
 #include <JoystickSwitchInput.h>
 
-#define ANALOG_INPUT_PIN A1
+#define ANALOG_INPUT_PIN A0
 
 // we need to create an analog device that the joystick encoder will use to get readings.
 // In this case on arduino analog pins.
@@ -26,8 +26,11 @@ void onEncoderChange(int newValue) {
 }
 
 void setup() {
-    while(!Serial);
     Serial.begin(115200);
+    
+    // MKR boards require the line below to wait for the serial port, uncomment if needed
+    // However, it doesn't work on some other boards and locks them up.
+    //while(!Serial);
 
     Serial.println("Starting joystick rotary encoder example");
 
