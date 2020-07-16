@@ -4,13 +4,15 @@
 /**
  * @file IoLogging.h
  *
- * Some very basic logging utilities for any IoAbstraction user that log to a chosen serial interface. Turned on  by un-commenting
- * the IO_LOGGING_ON define. Should NOT be used in production.
+ * Some very basic logging utilities for any IoAbstraction user that log to a chosen serial interface. Turned on
+ * by un-commenting the define. Should NOT be used in production.
  */
+
+#include "PlatformDetermination.h"
 
 // START user adjustable section.
 
-// When line below commented out - no logging, when un-commented - logging.
+// When line below commented out - no logging, when un-commented - logging. You can also define this macro in your build system
 //#define IO_LOGGING_DEBUG
 
 // END user adjustable section.
@@ -18,7 +20,7 @@
 #ifdef IO_LOGGING_DEBUG
 
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 #define DEC 1
 #define HEX 2
 
@@ -60,8 +62,9 @@ unsigned long millis(); // from BasicIoAbstraction.cpp to avoid including here.
 
 // Arduino:
 // You can change the logging serial port by defining LoggingPort to your chosen serial port.
+#ifndef LoggingPort
 #define LoggingPort Serial
-
+#endif
 #endif
 
 #define logTime(title) LoggingPort.print(millis());LoggingPort.print(':');LoggingPort.print(title)

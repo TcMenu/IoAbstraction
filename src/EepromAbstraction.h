@@ -13,7 +13,9 @@
 #ifndef _IOABSTRACTION_EEPROMABSTRACTION_H_
 #define _IOABSTRACTION_EEPROMABSTRACTION_H_
 
-#ifdef __MBED__
+#include "PlatformDetermination.h"
+
+#ifdef IOA_USE_MBED
 #include <mbed.h>
 #else
 #include <Arduino.h>

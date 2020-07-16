@@ -34,7 +34,7 @@ struct DfRobotAnalogRanges {
 };
 
 #define ALLOWABLE_RANGE 8
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 #define pgmAsInt(x) ((int)(*x))
 #else
 #define pgmAsInt(x) ((int)pgm_read_word_near(x))
@@ -114,7 +114,7 @@ public:
     }
 };
 
-#ifndef __MBED__
+#ifndef IOA_USE_MBED
 
 /**
  * Defines the analog ranges to pass to the DfRobotInputAbstraction - default 
@@ -128,16 +128,12 @@ const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 50, 195, 380, 555, 790};
 
 
 inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = nullptr) {
-#ifndef __MBED__
     device = new ArduinoAnalogDevice();
-#endif
     return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin, device);
 }
 
 inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0, AnalogDevice* device = nullptr) {
-#ifndef __MBED__
     device = new ArduinoAnalogDevice();
-#endif
     return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin, device);
 }
 

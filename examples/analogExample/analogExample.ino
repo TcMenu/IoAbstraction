@@ -10,7 +10,7 @@
 
 // This is the output pin, where analog output will be sent.
 // on SAMD MKR boards this is the DAC, for Uno, MEGA change to a PWM pin
-#define PWM_OR_DAC_PIN 13
+#define PWM_OR_DAC_PIN 2
 
 // This is the input pin where analog input is received.
 #define ANALOG_IN_PIN A0
@@ -20,6 +20,8 @@ ArduinoAnalogDevice analog; // by default it assumes 10 bit read, 8 bit write
 
 // We keep a variable that counts the output waveform
 float ledCycleValue = 0;
+// the current direction of adjustment
+float ledCycleAdj = 0.01;
 
 void setup() {
     while(!Serial);
@@ -32,10 +34,10 @@ void setup() {
     // we schedule a task to run every 500 millis that reads the value from A1 and prints it output
     // along with the largest possible value
     taskManager.scheduleFixedRate(500, [] {
-        Serial.print("The value on A1 is ");
+        Serial.print("Analog input value is ");
         Serial.print(analog.getCurrentValue(ANALOG_IN_PIN));
         Serial.print("/");
-        Serial.print(analog.getMaximumRange(DIR_IN, A1));
+        Serial.print(analog.getMaximumRange(DIR_IN, ANALOG_IN_PIN));
         Serial.print(" - ");
         Serial.print(analog.getCurrentFloat(ANALOG_IN_PIN) * 100.0F);
         Serial.println('%');
@@ -44,10 +46,10 @@ void setup() {
     // we also create a sawtooth waveform on one of the outputs. By default we are using the DAC
     // on A0 of most MKR boards. Change to PWM for AVR boards.
     taskManager.scheduleFixedRate(10, [] {
-        ledCycleValue += 0.01F;
-        if(ledCycleValue >= 1.0) {
-            ledCycleValue = 0.0F;
-        }
+        ledCycleValue += ledCycleAdj;
+        if(ledCycleValue >= 0.98) ledCycleAdj = -0.01;
+        if(ledCycleValue <= 0.02) ledCycleAdj = 0.01;
+
         analog.setCurrentFloat(PWM_OR_DAC_PIN, ledCycleValue);
     }, TIME_MILLIS);
 }

@@ -5,7 +5,7 @@
 
 #ifndef _TIMER_MANAGER_H_
 #define _TIMER_MANAGER_H_
-
+#include "PlatformDetermination.h"
 #include "BasicIoAbstraction.h"
 
 /** 
@@ -26,12 +26,12 @@
 
 #endif // defined DEFAULT_TASK_SIZE
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 #include <stdint.h>
 void yield();
 uint32_t millis();
 uint32_t micros();
-#endif // __MBED__
+#endif // IOA_USE_MBED
 
 //
 // Only define this if you have libraries you are using that have long delays that you cannot control. Be aware this

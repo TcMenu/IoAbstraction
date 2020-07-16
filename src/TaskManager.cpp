@@ -2,8 +2,9 @@
  * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
+#include "PlatformDetermination.h"
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 #include <mbed.h>
 #include "rtos.h"
 #else
@@ -398,7 +399,7 @@ char* TaskManager::checkAvailableSlots(char* data) {
 	return data;
 }
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 
 volatile bool timingStarted = false;
 Timer ioaTimer;

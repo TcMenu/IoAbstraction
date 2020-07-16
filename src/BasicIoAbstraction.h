@@ -11,14 +11,13 @@
  *
  * Provides the core IoAbstraction interface and Arduino implementation of that interface.
  */
+#include "PlatformDetermination.h"
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 
 #include <mbed.h>
 #include <stdint.h>
 #include <SimpleCollections.h>
-
-typedef uint32_t pinid_t;
 
 // the following defines allow you to pass regular arduino pin modes in mbed
 
@@ -70,9 +69,7 @@ public:
 
 #include <Arduino.h>
 
-typedef uint8_t pinid_t;
-
-#endif //__MBED__
+#endif //IOA_USE_MBED
 
 
 
@@ -93,11 +90,11 @@ typedef void (*RawIntHandler)(void);
  */
 class BasicIoAbstraction {
 private:
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
     BtreeList<uint32_t, GpioWrapper> pinCache;
 
     GpioWrapper *allocatePinIfNeedBe(uint8_t pinToAlloc);
-#endif //__MBED__
+#endif //IOA_USE_MBED
 public:
 	virtual ~BasicIoAbstraction() { }
 
@@ -162,7 +159,7 @@ typedef BasicIoAbstraction* IoAbstractionRef;
 /**
  * Gives a reference to the Arduino pin implementation of IoAbstraction.
  */
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 IoAbstractionRef internalDigitalIo();
 #define pgm_read_byte_near(x) (*x)
 #else
@@ -177,7 +174,7 @@ IoAbstractionRef ioUsingArduino();
  * @param the pin on the device to change mode 
  * @param the mode such as INPUT, OUTPUT, INPUT_PULLUP
  */
-inline void ioDevicePinMode(IoAbstractionRef ioDev, uint8_t pin, uint8_t dir) { ioDev->pinDirection(pin, dir); }
+inline void ioDevicePinMode(IoAbstractionRef ioDev, pinid_t pin, uint8_t dir) { ioDev->pinDirection(pin, dir); }
 
 /**
  * Works in the same way as `digitalRead`, but this works for any `IoAbstractionRef`, on the serial versions, the port is
@@ -186,7 +183,7 @@ inline void ioDevicePinMode(IoAbstractionRef ioDev, uint8_t pin, uint8_t dir) { 
  * @param ioDev the previously created IoAbstraction
  * @param the pin on the device to read 
  */
-inline uint8_t ioDeviceDigitalRead(IoAbstractionRef ioDev, uint8_t pin) { return ioDev->readValue(pin); }
+inline uint8_t ioDeviceDigitalRead(IoAbstractionRef ioDev, pinid_t pin) { return ioDev->readValue(pin); }
 
 /**
  * Works in the same way as digitalWrite, but this works for any `IoAbstractionRef`, on the serial versions, the port is
@@ -196,7 +193,7 @@ inline uint8_t ioDeviceDigitalRead(IoAbstractionRef ioDev, uint8_t pin) { return
  * @param pin the pin to be updated
  * @param val the new value for the pin, HIGH/LOW
  */
-inline void ioDeviceDigitalWrite(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); }
+inline void ioDeviceDigitalWrite(IoAbstractionRef ioDev, pinid_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); }
 
 /**
  * On serial versions of this abstraction, this causes synchronization to both the read and write values, so the chip and this IoAbstraction
@@ -214,7 +211,7 @@ inline bool ioDeviceSync(IoAbstractionRef ioDev) { return ioDev->runLoop(); }
  * @param intHandler a void function with no parameters, used to handle interrupts. THIS IS A RAW INTERRUPT AND NOT MARSHALLED
  * @param mode standard Arduino interrupt modes: CHANGE, RISING, FALLING
  */
-inline void ioDeviceAttachInterrupt(IoAbstractionRef ioDev, uint8_t pin, RawIntHandler intHandler, uint8_t mode) {ioDev->attachInterrupt(pin, intHandler, mode) ;}
+inline void ioDeviceAttachInterrupt(IoAbstractionRef ioDev, pinid_t pin, RawIntHandler intHandler, uint8_t mode) {ioDev->attachInterrupt(pin, intHandler, mode) ;}
 
 /**
  * Works in the same way as `digitalRead`, but this works for any `IoAbstractionRef`, unlike the non 'S' version this automatically
@@ -223,7 +220,7 @@ inline void ioDeviceAttachInterrupt(IoAbstractionRef ioDev, uint8_t pin, RawIntH
  * @param ioDev the previously created IoAbstraction
  * @param the pin on the device to read 
  */
-inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, uint8_t pin) { ioDev->runLoop(); return ioDev->readValue(pin); }
+inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, pinid_t pin) { ioDev->runLoop(); return ioDev->readValue(pin); }
 
 /**
  * Works in the same way as digitalWrite, but this works for any `IoAbstractionRef`, unlike the non 'S' version this automatically
@@ -233,7 +230,7 @@ inline uint8_t ioDeviceDigitalReadS(IoAbstractionRef ioDev, uint8_t pin) { ioDev
  * @param pin the pin to be updated
  * @param val the new value for the pin, HIGH/LOW
  */
-inline bool ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); return ioDev->runLoop(); }
+inline bool ioDeviceDigitalWriteS(IoAbstractionRef ioDev, pinid_t pin, uint8_t val) { ioDev->writeValue(pin, (val)); return ioDev->runLoop(); }
 
 /**
  * Write a whole 8 bit byte onto the port that the pin belongs to. For example if pin 42 where on PORTH then this would write to PORTH.
@@ -245,7 +242,7 @@ inline bool ioDeviceDigitalWriteS(IoAbstractionRef ioDev, uint8_t pin, uint8_t v
  * @param pinOnPort any pin belonging to the port
  * @param val the new value for the port
  */
-inline bool ioDeviceDigitalWritePortS(IoAbstractionRef ioDev, uint8_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); return ioDev->runLoop(); }
+inline bool ioDeviceDigitalWritePortS(IoAbstractionRef ioDev, pinid_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); return ioDev->runLoop(); }
 
 /**
  * Reads a whole 8 bit value back from the port with automatic sync before the operation. Specify the pin on the port that you wish to read.
@@ -258,7 +255,7 @@ inline bool ioDeviceDigitalWritePortS(IoAbstractionRef ioDev, uint8_t pinOnPort,
  * @param pin any pin belonging to the port to be read
  * @return the value of the port.
  */
-inline uint8_t ioDeviceDigitalReadPortS(IoAbstractionRef ioDev, uint8_t pinOnPort) { ioDev->runLoop(); return ioDev->readPort(pinOnPort);  }
+inline uint8_t ioDeviceDigitalReadPortS(IoAbstractionRef ioDev, pinid_t pinOnPort) { ioDev->runLoop(); return ioDev->readPort(pinOnPort);  }
 
 /**
  * Write a whole 8 bit byte onto the port that the pin belongs to. For example if pin 42 where on PORTH then this would write to PORTH.
@@ -270,7 +267,7 @@ inline uint8_t ioDeviceDigitalReadPortS(IoAbstractionRef ioDev, uint8_t pinOnPor
  * @param pinOnPort any pin belonging to the port
  * @param val the new value for the port
  */
-inline void ioDeviceDigitalWritePort(IoAbstractionRef ioDev, uint8_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); }
+inline void ioDeviceDigitalWritePort(IoAbstractionRef ioDev, pinid_t pinOnPort, uint8_t portVal) { ioDev->writePort(pinOnPort, portVal); }
 
 /**
  * Reads a whole 8 bit value back from the port with automatic sync before the operation. Specify the pin on the port that you wish to read.
@@ -283,6 +280,6 @@ inline void ioDeviceDigitalWritePort(IoAbstractionRef ioDev, uint8_t pinOnPort, 
  * @param pin any pin belonging to the port to be read
  * @return the value of the port.
  */
-inline uint8_t ioDeviceDigitalReadPort(IoAbstractionRef ioDev, uint8_t pinOnPort) { return ioDev->readPort(pinOnPort);  }
+inline uint8_t ioDeviceDigitalReadPort(IoAbstractionRef ioDev, pinid_t pinOnPort) { return ioDev->readPort(pinOnPort);  }
 
 #endif

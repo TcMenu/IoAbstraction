@@ -13,15 +13,15 @@
 #include<IoAbstraction.h>
 
 // The pin onto which we connected the rotary encoders switch
-const int spinwheelClickPin = A3;
+const int spinwheelClickPin = 4;
 
 // The pin onto which we connected the repeat button switch
-const int repeatButtonPin = 25;
+const int repeatButtonPin = 3;
 
 // The two pins where we connected the A and B pins of the encoder. I recomend you dont change these
 // as the pin must support interrupts.
-const int encoderAPin = 2;
-const int encoderBPin = 3;
+const int encoderAPin = 6;
+const int encoderBPin = 5;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
@@ -29,7 +29,7 @@ const int maximumEncoderValue = 128;
 //
 // When the spinwheel is clicked, this function will be run as we registered it as a callback
 //
-void onSpinwheelClicked(uint8_t pin, bool heldDown) {
+void onSpinwheelClicked(pinid_t pin, bool heldDown) {
   Serial.print("Button pressed ");
   Serial.println(heldDown ? "Held" : "Pressed");
 }
@@ -37,7 +37,7 @@ void onSpinwheelClicked(uint8_t pin, bool heldDown) {
 //
 // When the repeat button is pressed, this function will be repeatedly called. It's also a callback
 //
-void onRepeatButtonClicked(uint8_t pin, bool heldDown) {
+void onRepeatButtonClicked(pinid_t pin, bool heldDown) {
   Serial.println("Repeat button pressed");
 }
 

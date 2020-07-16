@@ -3,11 +3,12 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include "PlatformDetermination.h"
 #include "IoAbstraction.h"
 
 #define LATCH_TIME 5
 
-#ifndef __MBED__
+#ifndef IOA_USE_MBED
 #include <Arduino.h>
 
 ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t writeClockPin, uint8_t writeDataPin, 
@@ -145,7 +146,7 @@ IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t read
     return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, 1, 1);
 }
 
-#else
+#else // using mbed - IOA_USE_MBED
 #include <mbed.h>
 #endif
 

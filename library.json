@@ -19,7 +19,7 @@
       "frameworks": "arduino"
     }
   ],
-  "version": "1.5.2",
+  "version": "1.5.3",
   "license": "Apache-2.0",
   "frameworks": "arduino, mbed",
   "platforms": "*"

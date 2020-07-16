@@ -14,12 +14,12 @@
  * that the switching from BasicIoFacilities to IoExpanderFacilities allows the same
  * code to use an IoExpander instead of direct pins
  */
-
+#include "PlatformDetermination.h"
 #include "BasicIoAbstraction.h"
 
 #define SHIFT_REGISTER_OUTPUT_CUTOVER 32
 
-#ifndef __MBED__
+#ifndef IOA_USE_MBED
 #include <Arduino.h>
 
 /**
@@ -136,7 +136,7 @@ IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClockPin, uint8_t writ
 #else
 #include <mbed.h>
 
-#endif
+#endif // not IOA_USE_MBED
 
 // this defines the number of IOExpanders can be put into a multi IO expander.
 #ifndef MAX_ALLOWABLE_DELEGATES

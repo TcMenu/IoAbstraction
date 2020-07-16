@@ -11,8 +11,8 @@
 
 #ifndef _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 #define _IOABSTRACTION_IOABSTRACTIONWIRE_H_
-
-#ifdef __MBED__
+#include "PlatformDetermination.h"
+#ifdef IOA_USE_MBED
 #include <mbed.h>
 #include <i2c_api.h>
 #else
@@ -255,7 +255,7 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t 
  */
 IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB, WireType wireImpl);
 
-#ifndef __MBED__
+#ifndef IOA_USE_MBED
 inline IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin = 0xff) {
     return ioFrom8574(addr, interruptPin, &Wire);
 };

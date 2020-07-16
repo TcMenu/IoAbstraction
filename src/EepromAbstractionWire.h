@@ -12,7 +12,9 @@
  * Contains the i2c variants of the EepromAbstraction
  */
 
-#ifdef __MBED__
+#include "PlatformDetermination.h"
+
+#ifdef IOA_USE_MBED
 #include <mbed.h>
 #include <i2c_api.h>
 typedef I2C* WireType;
@@ -31,11 +33,11 @@ public:
     }
 };
 
-#else
+#else // not IOA_USE_MBED
 #include <Arduino.h>
 #include <Wire.h>
 typedef TwoWire* WireType;
-#endif
+#endif // IOA_USE_MBED
 
 #include "EepromAbstraction.h"
 #include <TaskManager.h>
@@ -83,11 +85,11 @@ public:
 	 * Create an I2C EEPROM object giving it's address and the page size of the device.
 	 * Page sizes are defined in this header file.
 	 */
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 	I2cAt24Eeprom(uint8_t address, uint8_t pageSize, I2C* wireImpl);
-#else
+#else // not IOA_USE_MBED
     I2cAt24Eeprom(uint8_t address, uint8_t pageSize, TwoWire* wireImpl = &Wire);
-#endif
+#endif // IOA_USE_MBED
 	virtual ~I2cAt24Eeprom() {}
 
 	/** 
@@ -112,7 +114,7 @@ private:
 	void writeByte(EepromPosition position, uint8_t val);
 	uint8_t readByte(EepromPosition position);
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
     void writeAddressWire(uint16_t memAddr, const char* data = nullptr, int len = 0);
 #else
     void writeAddressWire(uint16_t memAddr);

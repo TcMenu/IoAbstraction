@@ -44,7 +44,7 @@ void PCF8574IoAbstraction::writePort(pinid_t /*pin*/, uint8_t value) {
 	needsWrite = true;
 }
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 bool PCF8574IoAbstraction::runLoop(){
     I2CLocker locker(wireImpl);
     bool writeOk = true;
@@ -197,7 +197,8 @@ bool MCP23017IoAbstraction::runLoop() {
 	return writeOk;
 }
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
+
 bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
     I2CLocker locker(wireImpl);
     char data[3];

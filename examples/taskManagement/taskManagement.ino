@@ -15,9 +15,6 @@ Written by Dave Cherry of thecoderscorner.com in 2017
 
 #include <IoAbstraction.h>
 
-// We'll register an interrupt on an arduino pin later, so need this reference. 
-IoAbstractionRef arduinoIo = ioUsingArduino();
-
 // we use this to provide the debug information that shows the state of each task slot
 char slotString[20] = { 0 };
 
@@ -33,55 +30,6 @@ void log(const char* logLine) {
 	Serial.println(logLine);
 }
 
-void setup() {
-	// start up serial, the second line is for 32 bit boards.
-	Serial.begin(115200);
-	while(!Serial);
-
-	log("Starting task manager");
-
-	// connect a switch to pin 2, so you can raise interrupts.
-	pinMode(2, INPUT);
-
-	//
-	// Now we register some taks, note that on AVR by default there are 6 slots, all others have 10 slots.
-	// this can be changed in TaskManager.h to your preferred setting.
-	//
-
-	// We schedule the function tenSecondsUp() to be called in 10,000 milliseconds.
-	taskManager.scheduleOnce(10000, tenSecondsUp);
-	
-	// Now we schedule oneSecondPulse() to be called every second. 
-	// keep hold of the ID as we will later cancel it from running.
-	taskId = taskManager.scheduleFixedRate(1, oneSecondPulse, TIME_SECONDS);
-
-	//
-	// now we do a yield operation, which is similar to delayMicroseconds but allows other
-	// tasks to be run during that time.
-	//
-	log("Waiting 32 milli second with yield in setup");
-	taskManager.yieldForMicros(32000);
-	log("Waited 32 milli second with yield in setup");
-
-	// now schedule a task to run once in 30 seconds
-	taskManager.scheduleOnce(30000, [] {
-		log("30 seconds up, stopping 1 second job");
-
-		// now cancel the one second job we scheduled earlier
-		taskManager.cancelTask(taskId); 
-	});
-
-	// and another to run repeatedly at 5 second intervals, shows the task slot status
-	taskManager.scheduleFixedRate(5, [] { log(taskManager.checkAvailableSlots(slotString)); }, TIME_SECONDS);
-
-	// and now schedule onMicrosJob() to be called every 100 micros
-	taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
-
-	// register a port 2 interrupt.
-	taskManager.setInterruptCallback (onInterrupt);
-	taskManager.addInterrupt(arduinoIo, 2, CHANGE);
-}
-
 /**
  * This is called by taskManager when the interrupt is raised. TaskManager marshalls the
  * interrupt into a task, so it is safe to call Serial etc here. Be aware that interrupts
@@ -91,10 +39,10 @@ void setup() {
  * - Safe usage: change in rotary encoder, button pressed.
  * - Unsafe usage: over temprature shutdown, safety circuit.
  */
-void onInterrupt(uint8_t bits) {	
+void onInterrupt(pinid_t pin) {
 	log("Interrupt triggered");
 	Serial.print("  Interrupt was ");
-	Serial.println(bits);
+	Serial.println(pin);
 }
 
 // count up the number of times the micros job has been called.
@@ -119,22 +67,70 @@ void oneSecondPulse() {
 }
 
 /**
- * Called by taskManager when ten seconds is up, the job is registered in setup.
- * It starts another job in 10 seconds time, the 20 second job.
- */
-void tenSecondsUp() {
-	log("Ten seconds up");
-	log(taskManager.checkAvailableSlots(slotString));
-	if(taskManager.scheduleOnce(10000, twentySecondsUp) == 0xff) {
-		log("Failed to register twenty second task");
-	}
-}
-
-/**
  * This is the job that was started in the tenSecondsUp above.
  */
 void twentySecondsUp() {
 	log("Twenty seconds up");
+}
+
+/**
+ * Called by taskManager when ten seconds is up, the job is registered in setup.
+ * It starts another job in 10 seconds time, the 20 second job.
+ */
+void tenSecondsUp() {
+    log("Ten seconds up");
+    log(taskManager.checkAvailableSlots(slotString));
+    if(taskManager.scheduleOnce(10000, twentySecondsUp) == 0xff) {
+        log("Failed to register twenty second task");
+    }
+}
+
+void setup() {
+    // start up serial, the first line is for 32 bit boards and may require commenting out on some devices.
+    Serial.begin(9600);
+
+    Serial.println("Task manager example is starting");
+
+    // connect a switch to pin 2, so you can raise interrupts.
+    pinMode(2, INPUT);
+
+    //
+    // Now we register some taks, note that on AVR by default there are 6 slots, all others have 10 slots.
+    // this can be changed in TaskManager.h to your preferred setting.
+    //
+
+    // We schedule the function tenSecondsUp() to be called in 10,000 milliseconds.
+    taskManager.scheduleOnce(10000, tenSecondsUp);
+
+    // Now we schedule oneSecondPulse() to be called every second.
+    // keep hold of the ID as we will later cancel it from running.
+    taskId = taskManager.scheduleFixedRate(1, oneSecondPulse, TIME_SECONDS);
+
+    //
+    // now we do a yield operation, which is similar to delayMicroseconds but allows other
+    // tasks to be run during that time.
+    //
+    log("Waiting 32 milli second with yield in setup");
+    taskManager.yieldForMicros(32000);
+    log("Waited 32 milli second with yield in setup");
+
+    // now schedule a task to run once in 30 seconds
+    taskManager.scheduleOnce(30000, [] {
+        log("30 seconds up, stopping 1 second job");
+
+        // now cancel the one second job we scheduled earlier
+        taskManager.cancelTask(taskId);
+    });
+
+    // and another to run repeatedly at 5 second intervals, shows the task slot status
+    taskManager.scheduleFixedRate(5, [] { log(taskManager.checkAvailableSlots(slotString)); }, TIME_SECONDS);
+
+    // and now schedule onMicrosJob() to be called every 100 micros
+    taskManager.scheduleFixedRate(100, onMicrosJob, TIME_MICROS);
+
+    // register a port 2 interrupt.
+    taskManager.setInterruptCallback (onInterrupt);
+    taskManager.addInterrupt(ioUsingArduino(), 6, CHANGE);
 }
 
 /**

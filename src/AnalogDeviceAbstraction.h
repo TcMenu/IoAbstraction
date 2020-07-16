@@ -1,7 +1,9 @@
 #ifndef _ANALOG_DEVICE_ABSTRACTION_H_
 #define _ANALOG_DEVICE_ABSTRACTION_H_
 
-#ifdef __MBED__
+#include "PlatformDetermination.h"
+
+#ifdef IOA_USE_MBED
 #include <mbed.h>
 #else
 #include <Arduino.h>
@@ -28,14 +30,14 @@ public:
 	 * @param pin the pin for which the range is desired
 	 * @return the maximum range of the analog input or output on this device for the given pin 
 	 */
-	virtual int getMaximumRange(AnalogDirection direction, uint8_t pin)=0;
+	virtual int getMaximumRange(AnalogDirection direction, pinid_t pin)=0;
 
     /**
      * @param pin the pin for which the bit depth is required.
      * @param direction the direction in which the depth is queried (DIR_IN, DIR_OUT)
      * @return the number of bits
      */
-    virtual int getBitDepth(AnalogDirection direction, uint8_t pin) = 0;
+    virtual int getBitDepth(AnalogDirection direction, pinid_t pin) = 0;
 
 	/**
 	 * initialises a pin as either an input or output of analog signals. No validation to check if
@@ -64,7 +66,7 @@ public:
 	 * @param pin the pin to read from
 	 * @param newValue the value to be set
 	 */
-	virtual void setCurrentValue(uint8_t pin, unsigned int newValue)=0;
+	virtual void setCurrentValue(pinid_t pin, unsigned int newValue)=0;
 
 	/**
 	 * sets the current value based on a float from 0 to 1, where 0 is
@@ -72,11 +74,11 @@ public:
 	 * @param pin the pin for which to set
 	 * @param newValue the new value which should be between 0 and 1.0
 	 */
-    virtual void setCurrentFloat(uint8_t pin, float newValue)=0;
+    virtual void setCurrentFloat(pinid_t pin, float newValue)=0;
 
 };
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 
 class AnalogPinReference {
 private:
@@ -132,11 +134,11 @@ class MBedAnalogDevice : public AnalogDevice {
 private:
     BtreeList<pinid_t, AnalogPinReference> devices;
 public:
-    int getMaximumRange(AnalogDirection direction, uint8_t pin) override {
+    int getMaximumRange(AnalogDirection direction, pinid_t pin) override {
         return 0xffff;
     }
 
-    int getBitDepth(AnalogDirection direction, uint8_t pin) override {
+    int getBitDepth(AnalogDirection direction, pinid_t pin) override {
         return 16;
     }
 
@@ -156,7 +158,7 @@ public:
         return dev->getReferences().input->read();
     }
 
-    void setCurrentValue(uint8_t pin, unsigned int newValue) override {
+    void setCurrentValue(pinid_t pin, unsigned int newValue) override {
         auto dev = devices.getByKey(pin);
         if(dev == NULL || dev->getDirection() == DIR_IN) return;
         if(dev->getDirection() == DIR_OUT) {
@@ -167,7 +169,7 @@ public:
         }
     }
 
-    void setCurrentFloat(uint8_t pin, float newValue) override {
+    void setCurrentFloat(pinid_t pin, float newValue) override {
         auto dev = devices.getByKey(pin);
         if(dev == NULL || dev->getDirection() == DIR_IN) return;
         if(dev->getDirection() == DIR_OUT) {
@@ -185,7 +187,6 @@ public:
 #ifdef ESP32
 #include <SimpleCollections.h>
 #include <driver/dac.h>
-#define ANALOG_IN_BITS 12
 #define GPIO_INVALID -1
 
 class EspAnalogOutputMode {
@@ -238,8 +239,6 @@ public:
         }
     }
 };
-#else
-#define ANALOG_IN_BITS 10
 #endif
 
 /**
@@ -257,14 +256,18 @@ private:
 	uint8_t writeBitResolution;
 public:
 	/**
-	 * Initialise the Arduino analog device with a given read and write bit resolution, usually
-	 * input is set to 10 bits (1024) and output to 8 bits (255) by default. However, on ESP32 it
-	 * is 12 bit. Further, on SAMD and some other board types you can configure either 8, 10 or 12 bit.
-	 * For example SAMD: 12 bit (4096) input and output. ESP32 12 bit in, 8 bit output.
+	 * Initialise the Arduino analog device with a given read and write bit resolution, on AVR and
+	 * ESP8266 input is set to 10 bits (1024) and output to 8 bits (255). However, on ESP32 it
+	 * is 12 bit input, 8 output. On SAMD and some other board types you can configure either 8, 10 or 12 bit.
+	 * On SAMD by default 12 bit (4096) input 10 bit output.
 	 */
-	explicit ArduinoAnalogDevice(uint8_t readBitResolution = ANALOG_IN_BITS, uint8_t writeBitResolution = 8) {
-#ifdef ARDUINO_ARCH_SAMD
+	explicit ArduinoAnalogDevice(uint8_t readBitResolution = IOA_ANALOGIN_RES, uint8_t writeBitResolution = IOA_ANALOGOUT_RES) {
+#if IOA_ANALOGIN_RES > 10
+	    // some boards have the option for greater analog resolution on input. It needs to be configured
 		analogReadResolution(readBitResolution);
+#endif
+#if IOA_ANALOGOUT_RES > 8
+		// some boards have the option for greater analog output resolution, but then it needs configuring.
 		analogWriteResolution(writeBitResolution);
 #endif
         this->readBitResolution = readBitResolution;

@@ -3,6 +3,7 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include "PlatformDetermination.h"
 #include <EepromAbstractionWire.h>
 #include <IoLogging.h>
 #include <TaskManager.h>
@@ -78,7 +79,7 @@ void I2cAt24Eeprom::write32(EepromPosition position, uint32_t val) {
     writeByte(position,   (uint8_t)val);
 }
 
-#ifdef __MBED__
+#ifdef IOA_USE_MBED
 
 #define checkForError(flag, ret) (flag = (flag || ((ret) !=0)))
 
@@ -146,7 +147,7 @@ void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSr
     }
 }
 
-#else
+#else // not IOA_USE_MBED
 
 
 uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
@@ -233,4 +234,4 @@ void I2cAt24Eeprom::waitForReady() {
     }
 }
 
-#endif
+#endif // IOA_USE_MBED
