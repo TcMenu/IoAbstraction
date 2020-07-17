@@ -15,6 +15,11 @@ Written by Dave Cherry of thecoderscorner.com in 2017
 
 #include <IoAbstraction.h>
 
+// here we define an interrupt capable pin that will be varied in value during execution causing the
+// task manager interrupt handler to be executed. Task manager will marshal the interrupt back into 
+// a task, so it's safe to call anything you wish during it's execution.
+const int interruptPin = 2;
+
 // we use this to provide the debug information that shows the state of each task slot
 char slotString[20] = { 0 };
 
@@ -91,8 +96,8 @@ void setup() {
 
     Serial.println("Task manager example is starting");
 
-    // connect a switch to pin 2, so you can raise interrupts.
-    pinMode(2, INPUT);
+    // connect a switch to interruptPin, so you can raise interrupts.
+    pinMode(interruptPin, INPUT);
 
     //
     // Now we register some taks, note that on AVR by default there are 6 slots, all others have 10 slots.
@@ -130,7 +135,7 @@ void setup() {
 
     // register a port 2 interrupt.
     taskManager.setInterruptCallback (onInterrupt);
-    taskManager.addInterrupt(ioUsingArduino(), 6, CHANGE);
+    taskManager.addInterrupt(ioUsingArduino(), interruptPin, CHANGE);
 }
 
 /**

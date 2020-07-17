@@ -26,18 +26,18 @@
 #define DF_KEY_SELECT 4
 
 struct DfRobotAnalogRanges {
-    uint16_t right;
-    uint16_t up;
-    uint16_t down;
-    uint16_t left;
-    uint16_t select;
+    float right;
+    float up;
+    float down;
+    float left;
+    float select;
 };
 
-#define ALLOWABLE_RANGE 8
+#define ALLOWABLE_RANGE 0.01F
 #ifdef IOA_USE_MBED
-#define pgmAsInt(x) ((int)(*x))
+#define pgmAsFloat(x) ((float)(*x))
 #else
-#define pgmAsInt(x) ((int)pgm_read_word_near(x))
+#define pgmAsFloat(x) ((float)pgm_read_float_near(x))
 #endif
 /**
  * DfRobotInputAbstraction provides the means to use many buttons connected to a single
@@ -52,14 +52,14 @@ struct DfRobotAnalogRanges {
  */
 class DfRobotInputAbstraction : public BasicIoAbstraction {
 private:
-    uint8_t analogPin;
+    pinid_t analogPin;
     uint8_t readCache;
-    int lastReading;
+    float lastReading;
     const DfRobotAnalogRanges* analogRanges;
     AnalogDevice* device;
 
 public:
-    DfRobotInputAbstraction(const DfRobotAnalogRanges* ranges, uint8_t pin, AnalogDevice* device) {
+    DfRobotInputAbstraction(const DfRobotAnalogRanges* ranges, pinid_t pin, AnalogDevice* device) {
         analogRanges = ranges;
         analogPin = pin;
         this->device = device;
@@ -78,20 +78,20 @@ public:
     }
 
 	bool runLoop() override { 
-        int newReading = device->getCurrentValue(analogPin);
+        auto newReading = device->getCurrentFloat(analogPin);
         if(abs(newReading - lastReading) > ALLOWABLE_RANGE) {
             readCache = mapAnalogToPin(newReading);
         }
         lastReading = newReading;
     }
 
-    uint8_t mapAnalogToPin(int reading) {
+    uint8_t mapAnalogToPin(float reading) {
         uint8_t ret = 0xff;
-        if(reading < pgmAsInt(&analogRanges->right)) ret =  DF_KEY_RIGHT;
-        else if(reading < pgmAsInt(&analogRanges->up)) ret =  DF_KEY_UP;
-        else if(reading < pgmAsInt(&analogRanges->down)) ret = DF_KEY_DOWN;
-        else if(reading < pgmAsInt(&analogRanges->left)) ret = DF_KEY_LEFT;
-        else if(reading < pgmAsInt(&analogRanges->select)) ret = DF_KEY_SELECT;
+        if(reading < pgmAsFloat(&analogRanges->right)) ret =  DF_KEY_RIGHT;
+        else if(reading < pgmAsFloat(&analogRanges->up)) ret =  DF_KEY_UP;
+        else if(reading < pgmAsFloat(&analogRanges->down)) ret = DF_KEY_DOWN;
+        else if(reading < pgmAsFloat(&analogRanges->left)) ret = DF_KEY_LEFT;
+        else if(reading < pgmAsFloat(&analogRanges->select)) ret = DF_KEY_SELECT;
 
         if(ret == 0xff) 
             return 0;
@@ -119,12 +119,12 @@ public:
 /**
  * Defines the analog ranges to pass to the DfRobotInputAbstraction - default 
  */
-const PROGMEM DfRobotAnalogRanges dfRobotAvrRanges { 50, 250, 450, 650, 850};
+const PROGMEM DfRobotAnalogRanges dfRobotAvrRanges { 0.0488F, 0.2441F, 0.4394F, 0.6347F, 0.8300F};
 
 /**
  * Defines the analog ranges to pass to the DfRobotInputAbstraction - for V1.0 of the board 
  */
-const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 50, 195, 380, 555, 790};
+const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 0.0488F, 0.1904F, 0.3710F, 0.5419F, 0.7714F};
 
 
 inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = nullptr) {
