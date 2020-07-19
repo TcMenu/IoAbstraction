@@ -11,6 +11,9 @@
 // As more Arduino mbed devices become available, I imagine this list will grow, and we may revisit if
 // it's better to work out how to include the mbed namespace and use our mbed layer instead.
 
+// If you have a board that's not properly mapped, please raise an issue and we'll see if it's possible to add it.
+// This file is shared across IoTaskManager and IoAbstraction
+
 #if defined(ARDUINO_ARDUINO_NANO33BLE)
 // here we're in a hybrid of mbed and Arduino basically. We treat all abstractions as Arduino though.
 #include <Arduino.h>
@@ -37,6 +40,9 @@ typedef uint8_t pinid_t;
 #elif defined(ESP32)
 # define IOA_ANALOGIN_RES 12
 # define IOA_ANALOGOUT_RES 8
+#elif defined(ESP8266)
+# define IOA_ANALOGIN_RES 10
+# define IOA_ANALOGOUT_RES 10
 #else
 # define IOA_ANALOGIN_RES 10
 # define IOA_ANALOGOUT_RES 8

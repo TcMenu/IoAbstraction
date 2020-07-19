@@ -3,12 +3,6 @@
 
 #include "PlatformDetermination.h"
 
-#ifdef IOA_USE_MBED
-#include <mbed.h>
-#else
-#include <Arduino.h>
-#endif
-
 #include <BasicIoAbstraction.h>
 
 /** 
@@ -178,7 +172,10 @@ public:
         else {
             return dev->getReferences().pwm->write(newValue);
         }
+    }
 
+    AnalogPinReference* getAnalogGPIO(pin) {
+        return devices.getByKey(pin);
     }
 };
 
@@ -212,6 +209,10 @@ public:
 
     pinid_t getKey() const {
         return pin;
+    }
+
+    uint16_t getPwmChannel() const {
+        return pwmChannel;
     }
 
     void pinSetup(int pin_, int pwmChannel_) {
@@ -266,8 +267,9 @@ public:
 	    // some boards have the option for greater analog resolution on input. It needs to be configured
 		analogReadResolution(readBitResolution);
 #endif
-#if IOA_ANALOGOUT_RES > 8
+#if (IOA_ANALOGOUT_RES > 8) && !defined(ESP8266)
 		// some boards have the option for greater analog output resolution, but then it needs configuring.
+		// except on esp8266 where 1024 pwm resolution is standard
 		analogWriteResolution(writeBitResolution);
 #endif
         this->readBitResolution = readBitResolution;

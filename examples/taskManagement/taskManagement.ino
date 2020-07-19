@@ -92,7 +92,7 @@ void tenSecondsUp() {
 
 void setup() {
     // start up serial, the first line is for 32 bit boards and may require commenting out on some devices.
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     Serial.println("Task manager example is starting");
 

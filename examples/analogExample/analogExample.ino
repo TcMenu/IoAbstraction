@@ -24,7 +24,6 @@ float ledCycleValue = 0;
 float ledCycleAdj = 0.01;
 
 void setup() {
-    while(!Serial);
     Serial.begin(115200);
 
     // set up the device pin directions upfront.
@@ -41,6 +40,18 @@ void setup() {
         Serial.print(" - ");
         Serial.print(analog.getCurrentFloat(ANALOG_IN_PIN) * 100.0F);
         Serial.println('%');
+
+#ifdef ESP32
+        // On ESP32 boards, where the analogWrite function doesn't exist we use the underlying functions
+        // to access either the DAC or LEDC subsystem, if you want to get hold of the ledc channel you can.
+        EspAnalogOutputMode* outputMode = analog.getEspOutputMode(PWM_OR_DAC_PIN);
+        if(outputMode != nullptr) {
+            Serial.print("ESP32 Output type: ");
+            Serial.print(outputMode->isDac());
+            Serial.print(", ledc (pwm channel): ");
+            Serial.println(outputMode->getPwmChannel());
+        }
+#endif
     });
 
     // we also create a sawtooth waveform on one of the outputs. By default we are using the DAC
