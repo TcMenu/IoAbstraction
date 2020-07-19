@@ -174,7 +174,7 @@ public:
         }
     }
 
-    AnalogPinReference* getAnalogGPIO(pin) {
+    AnalogPinReference* getAnalogGPIO(pinid_t pin) {
         return devices.getByKey(pin);
     }
 };

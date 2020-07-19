@@ -13,15 +13,15 @@
 #include<IoAbstraction.h>
 
 // The pin onto which we connected the rotary encoders switch
-const int spinwheelClickPin = 4;
+const int spinwheelClickPin = 18;
 
 // The pin onto which we connected the repeat button switch
 const int repeatButtonPin = 3;
 
 // The two pins where we connected the A and B pins of the encoder. I recomend you dont change these
 // as the pin must support interrupts.
-const int encoderAPin = 6;
-const int encoderBPin = 5;
+const int encoderAPin = 14;
+const int encoderBPin = 17;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
