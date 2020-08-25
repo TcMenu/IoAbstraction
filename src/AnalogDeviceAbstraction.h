@@ -5,6 +5,12 @@
 
 #include <BasicIoAbstraction.h>
 
+/**
+ * @file AnalogDeviceAbstraction.h
+ * Contains a series of helper classes for dealing with analog devices, these are compatible across a wide range of
+ * devices.
+ */
+
 /** 
  * an enumeration that describes direction, eg input or output for the ADC/POT/DAC. For some
  * devices only one mode will make sense.

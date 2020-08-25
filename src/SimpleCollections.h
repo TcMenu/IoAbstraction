@@ -92,6 +92,11 @@ public:
         return true;
     }
 
+    /**
+     * Check the capacity of the list, increasing the size if needed. This is normally called before an add operation
+     * to ensure there will be space to add another item.
+     * @return
+     */
     bool checkCapacity() {
         // a couple of short circuits first
         if(itemsInList < currentSize) return true;
@@ -110,6 +115,11 @@ public:
         return true;
     }
 
+    /**
+     * Get a value by it's key using a binary search algorithm.
+     * @param key the key to be looked up
+     * @return the value at that key position or null.
+     */
     V* getByKey(K key) {
         if(itemsInList == 0) return NULL;
         bsize_t loc = nearestLocation(key);
@@ -117,6 +127,12 @@ public:
         return (binTree[loc].getKey() == key) ? &binTree[loc] : NULL;
     };
 
+    /**
+     * gets the nearest location to the key, this is an in-exact method in that it gives the exact match if available
+     * or otherwise the nearest one that is lower.
+     * @param key the key to lookup
+     * @return the position in the list
+     */
     bsize_t nearestLocation(K key) {
         // a few short circuits, basically handling quickly nothing in list,
         // one item in the list and an insertion at the end of the list.
@@ -150,18 +166,32 @@ public:
         return end;
     }
 
+    /**
+     * @return a list of all items
+     */
     const V* items() {
         return binTree;
     };
 
+    /**
+     * gets an item by it's index
+     * @param idx the index to find
+     * @return the item at the index or null.
+     */
     V* itemAtIndex(bsize_t idx) {
         return (idx < itemsInList)  ? &binTree[idx] : NULL;
     }
 
+    /**
+     * @return number of items in the list
+     */
     bsize_t count() {
         return itemsInList;
     }
 
+    /**
+     * @return current capacity of the list
+     */
     bsize_t capacity() {
         return currentSize;
     }

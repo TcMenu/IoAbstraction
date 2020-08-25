@@ -7,6 +7,11 @@
 #include "EepromAbstraction.h"
 
 /**
+ * @file ArduinoEEPROMAbstraction.h
+ * A wrapper around the Arduino EEPROM support.
+ */
+
+/**
  * Provides a wrapper around the EEPROM class available on some Arduino boards. For AVR 8bit boards
  * such as Uno and Mega, there are no notes, it neatly wraps the class.
  * 

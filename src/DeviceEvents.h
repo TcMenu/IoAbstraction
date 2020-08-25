@@ -5,15 +5,26 @@
 #ifndef IOABSTRACTION_DEVICEEVENTS_H
 #define IOABSTRACTION_DEVICEEVENTS_H
 
+/**
+ * @file DeviceEvents.h
+ * This file contains events that are associated with the device, such as the Analog Device.
+ */
+
 #include "TaskManagerIO.h"
 #include "PlatformDetermination.h"
 #include "AnalogDeviceAbstraction.h"
 
-
-
 /**
- * Here we create our event class, all events must extend from BaseEvent, and that class provides much of the boiler
- * plate needed for event handling. Here we implement a very simple latching analog level threshold event.
+ * An event that triggers when a certain analog condition is reached, based on a made and a threshold. It can either
+ * poll the analog in pin by setting the poll interval to a small value, or can be interrupt driven by calling the
+ * `readingAvailable` method from the ISR, you can even use a combination of the two. The `exec` method must be
+ * implemented by the implementor.
+ *
+ * There are three possible combinations:
+ *
+ * * ANALOGIN_EXCEEDS - the event is triggered when analog in exceeds threshold.
+ * * ANALOGIN_BELOW - the event is triggered when analog in is below threshold.
+ * * ANALOGIN_CHANGE - the event is triggered when analog in changes by more than threshold.
  */
 class AnalogInEvent : public BaseEvent {
 public:
@@ -39,11 +50,13 @@ protected:
     float lastReading;
 public:
 
-
     /**
-     * Constructs the event class providing the analog pin to read from and the threshold for triggering.
+     * Constructs the abstract analog event class. Providing the analog pin to read from and the mode for triggering.
+     * @param device the analog device
      * @param inputPin the pin to read from
      * @param threshold the value at which to trigger the event.
+     * @param mode_ one of the values in enum AnalogEventMode
+     * @param pollInterval_ the interval on which taskManager should check if the event needs to trigger
      */
     AnalogInEvent(AnalogDevice *device, pinid_t inputPin, float threshold, AnalogEventMode mode_,
                   uint32_t pollInterval_) : BaseEvent() {
