@@ -16,6 +16,7 @@
 
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
+#include <TaskManagerIO.h>
 
 // we are going to use a MultiIoAbstraction to let us have both arduino pins and an MCP23017 i2c
 // in one abstraction. Arduino pins will go to 99, expander from 100..109.

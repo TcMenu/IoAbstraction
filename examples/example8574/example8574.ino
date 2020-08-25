@@ -1,6 +1,7 @@
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
 #include <Wire.h>
+#include <TaskManagerIO.h>
 
 //
 // This simple demo shows the use of the IO abstraction library to use a 8574 i2c IO chip.

@@ -21,6 +21,7 @@
 
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
+#include<TaskManagerIO.h>
 #include <Wire.h>
 
 // to make life easier, probably define each expander

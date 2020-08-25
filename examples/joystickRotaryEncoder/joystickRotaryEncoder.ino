@@ -6,6 +6,7 @@
  * and take note of the analog input pin you've used. 
  */
 
+#include<TaskManagerIO.h>
 #include <IoAbstraction.h>
 #include <JoystickSwitchInput.h>
 

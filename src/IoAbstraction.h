@@ -240,7 +240,7 @@ inline MultiIoAbstractionRef multiIoExpander(pinid_t arduinoPinRange) { return n
  */
 inline void multiIoAddExpander(MultiIoAbstractionRef multiIo, IoAbstractionRef expander, pinid_t pinRange) { multiIo->addIoExpander(expander, pinRange); }
 
-#include "TaskManager.h"
+#include "TaskManagerIO.h"
 #include "SwitchInput.h"
 #include "IoLogging.h"
 

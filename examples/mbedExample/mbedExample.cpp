@@ -7,7 +7,7 @@
 #include "mbed.h"
 #include "rtos.h"
 #include <IoLogging.h>
-#include <TaskManager.h>
+#include <TaskManagerIO.h>
 #include <SwitchInput.h>
 #include <JoystickSwitchInput.h>
 #include <AnalogDeviceAbstraction.h>
