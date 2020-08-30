@@ -4,6 +4,7 @@
 // By default the output uses the inbuilt LED.
 
 #include <IoAbstraction.h>
+#include <TaskManagerIO.h>
 
 IoAbstractionRef arduinoPins = ioUsingArduino();
 

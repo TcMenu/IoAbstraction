@@ -17,6 +17,7 @@
 
 #include<IoAbstraction.h>
 #include<IoAbstractionWire.h>
+#include <TaskManagerIO.h>
 
 // The pin onto which we connected the rotary encoders switch
 const int spinwheelClickPin = 5;

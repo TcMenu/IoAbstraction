@@ -7,12 +7,11 @@ Because this example uses IoAbstraction, the LED could be on the end of an i2c e
 on a shift register. Further, if you then needed a second timed action, it would be trivial to
 add.
 
-(C) By Dave Cherry of thecoderscorner.com 2017
-Under an apache license
 */
 
 #include <Wire.h>
 #include<IoAbstraction.h>
+#include<TaskManagerIO.h>
 
 // constant for the pin we will use
 const int ledPin = LED_BUILTIN;
@@ -21,7 +20,7 @@ const int ledPin = LED_BUILTIN;
 int ledOn = LOW;
 
 // create an IO abstraction, so later we could put the led on a shift register or i2c.
-IoAbstractionRef ioDevice = ioUsingArduino(); 
+IoAbstractionRef ioDevice = ioUsingArduino();
 
 void setup() {
 	// set the pin we are to use as output using the io abstraction

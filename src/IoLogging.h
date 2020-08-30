@@ -21,42 +21,32 @@
 
 
 #ifdef IOA_USE_MBED
-#define DEC 1
-#define HEX 2
+
+#include "PrintCompat.h"
 
 //
 // On mbed you create an instance of this class called LoggingPort in your main class.
 // see the mbed example.
 //
-class MBedLogger {
+class MBedLogger : public Print {
 private:
     Stream& serial;
 public:
     MBedLogger(Stream& serialName) : serial(serialName) {}
-    void print(const char* sz) { serial.puts(sz);}
-    void print(char ch) { serial.putc(ch); }
-    void print(bool b) { serial.puts(b ? "true" : "false"); }
-    void print(int val, int mode = DEC) { char sz[20]; itoa(val, sz, mode == DEC ? 10 : 16); serial.puts(sz);}
-    void print(unsigned int val, int mode = DEC) { char sz[20]; itoa(val, sz, mode == DEC ? 10 : 16); serial.puts(sz);}
-    void print(unsigned long val, int mode = DEC) { char sz[20]; itoa(val, sz, mode == DEC ? 10 : 16); serial.puts(sz);}
-    void print(long val, int mode = DEC) { char sz[20]; itoa(val, sz, mode == DEC ? 10 : 16); serial.puts(sz);}
-    void print(double dbl) {
-        char sz[20];
-        int whole = int(dbl);
-        int fract = int((dbl - double(whole)) * 1000.0);
-        itoa((int)abs(dbl), sz, 10);
-        serial.puts(sz);
-        serial.putc('.');
-        itoa((int)abs(fract), sz, 10);
-        if(dbl < 0) serial.putc('-');
-        serial.puts(sz);
+
+    size_t write(uint8_t ch) override {
+        serial.putc(ch);
+        return 1;
     }
-    void println() {
-        serial.putc('\r'); serial.putc('\n');
+
+    size_t write(const char* sz) override {
+        serial.puts(sz);
+        return strlen(sz);
     }
 };
 extern MBedLogger LoggingPort;
-unsigned long millis(); // from BasicIoAbstraction.cpp to avoid including here.
+// a couple of definitions here to avoid including headers, F() macro not needed on mbed
+unsigned long millis();
 #define F(x) x
 #else
 

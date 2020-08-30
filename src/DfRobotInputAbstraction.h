@@ -83,6 +83,7 @@ public:
             readCache = mapAnalogToPin(newReading);
         }
         lastReading = newReading;
+        return true;
     }
 
     uint8_t mapAnalogToPin(float reading) {

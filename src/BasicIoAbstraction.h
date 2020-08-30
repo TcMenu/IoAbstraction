@@ -12,6 +12,7 @@
  * Provides the core IoAbstraction interface and Arduino implementation of that interface.
  */
 #include "PlatformDetermination.h"
+#include <TaskManagerIO.h>
 
 #ifdef IOA_USE_MBED
 
@@ -71,13 +72,6 @@ public:
 
 #endif //IOA_USE_MBED
 
-
-
-/** 
- * the definition of an interrupt handler function, to be called back when an interrupt occurs.
- */
-typedef void (*RawIntHandler)(void);
-
 /**
  * This class provides the interface by which all `IoAbstractionRef` types work. It makes it possible to
  * treat many types of IO in the same way, by providing a standard way of dealing with Arduino pins, 
@@ -88,7 +82,7 @@ typedef void (*RawIntHandler)(void);
  * Normally, to use an IoAbstraction one would use the helper functions available, for this IoAbstraction
  * the helper function is `ioUsingArduino`
  */
-class BasicIoAbstraction {
+class BasicIoAbstraction : public InterruptAbstraction {
 private:
 #ifdef IOA_USE_MBED
     BtreeList<uint32_t, GpioWrapper> pinCache;
@@ -161,7 +155,7 @@ typedef BasicIoAbstraction* IoAbstractionRef;
  */
 #ifdef IOA_USE_MBED
 IoAbstractionRef internalDigitalIo();
-#define pgm_read_byte_near(x) (*x)
+#define pgm_read_byte_near(x) (*(x))
 #else
 #define internalDigitalIo ioUsingArduino
 IoAbstractionRef ioUsingArduino();
@@ -282,4 +276,4 @@ inline void ioDeviceDigitalWritePort(IoAbstractionRef ioDev, pinid_t pinOnPort, 
  */
 inline uint8_t ioDeviceDigitalReadPort(IoAbstractionRef ioDev, pinid_t pinOnPort) { return ioDev->readPort(pinOnPort);  }
 
-#endif
+#endif // _IO_ABSTRACTION_CORE_TYPES

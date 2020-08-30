@@ -7,6 +7,8 @@
 
 #include <IoAbstraction.h>
 #include <AnalogDeviceAbstraction.h>
+#include <TaskManagerIO.h>
+#include <DeviceEvents.h>
 
 // This is the output pin, where analog output will be sent.
 // on SAMD MKR boards this is the DAC, for Uno, MEGA change to a PWM pin
@@ -17,6 +19,22 @@
 
 // here we create the abstraction over the standard arduino analog IO capabilities
 ArduinoAnalogDevice analog; // by default it assumes 10 bit read, 8 bit write
+
+// Here we create an analog event that will be triggered when the the analog level exceeds 75%. it is triggered every
+// 100 milliseconds and whwn triggered runs the code in the exec() method.
+class MyAnalogExceedsEvent : public AnalogInEvent {
+public:
+    MyAnalogExceedsEvent(AnalogDevice* device, pinid_t pin) :
+            AnalogInEvent(device, pin, 0.75, AnalogInEvent::ANALOGIN_EXCEEDS, 100000UL) {
+    }
+
+    void exec() override {
+        Serial.print("Trigger AnalogInEvent Threshold ");
+        Serial.print(analogThreshold);
+        Serial.print(", value ");
+        Serial.println(lastReading);
+    }
+};
 
 // We keep a variable that counts the output waveform
 float ledCycleValue = 0;
@@ -29,6 +47,9 @@ void setup() {
     // set up the device pin directions upfront.
     analog.initPin(ANALOG_IN_PIN, DIR_IN);
     analog.initPin(PWM_OR_DAC_PIN, DIR_OUT);
+
+    // this is how to register an event with task manager
+    taskManager.registerEvent(new MyAnalogExceedsEvent(&analog, ANALOG_IN_PIN), true);
 
     // we schedule a task to run every 500 millis that reads the value from A1 and prints it output
     // along with the largest possible value

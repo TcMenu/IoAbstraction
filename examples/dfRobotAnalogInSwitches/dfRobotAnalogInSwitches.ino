@@ -1,5 +1,5 @@
 /**
- * This example shows how to use the switches library with a DfRobot shield. These sheilds
+ * This example shows how to use the switches library with a DfRobot shield. These shields
  * usually contain an LCD display combined with some buttons that are all connected onto a
  * single analog input. This abstraction turns the analog input back into a normalised
  * digital form that can be used with switches library. 
@@ -13,6 +13,7 @@
 
 #include <IoAbstraction.h>
 #include <DfRobotInputAbstraction.h>
+#include <TaskManagerIO.h>
 
 // As per the above wiki this uses the default settings for analog ranges.
 IoAbstractionRef dfRobotKeys = inputFromDfRobotShield();

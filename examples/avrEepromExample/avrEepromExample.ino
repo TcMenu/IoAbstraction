@@ -16,6 +16,7 @@
 // you always needs this include.
 #include <EepromAbstraction.h>
 #include <ArduinoEEPROMAbstraction.h>
+#include <TaskManagerIO.h>
 
 const unsigned int romStart = 800;
 

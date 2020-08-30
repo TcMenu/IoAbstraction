@@ -18,6 +18,7 @@
 
 // you always needs this include.
 #include <EepromAbstractionWire.h>
+#include <TaskManagerIO.h>
 
 const unsigned int romStart = 800;
 
