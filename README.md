@@ -13,7 +13,7 @@ Along with ths quick start guide and the examples also see:
 
 ## Installation for Arduino IDE
 
-This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependency, [TaskManagerIO](https://github.com/davetcc/TaskManagerIO), if for some reason it does not, please also install task manager manually. It is highly recommended that you install the libraries using your library manager.
+This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependency, [TaskManagerIO](https://github.com/davetcc/TaskManagerIO). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
 
 ## Installation for PlatformIO (Arduino or mbed)
 
