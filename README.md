@@ -1,6 +1,6 @@
 # IoAbstraction for Arduino and mbed summary
 
-This library provides several useful extensions that make programming Arduino / mbed for non-trivial tasks simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation. The API is almost identical between Arduino and mbed making it easier to port between the two. 
+This library provides several useful extensions that make programming Arduino / mbed for non-trivial apps simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation. The API is almost identical between Arduino and mbed making it easier to port between the two. 
 
 ## Full API documentation
 
@@ -13,49 +13,15 @@ Along with ths quick start guide and the examples also see:
 
 ## Installation for Arduino IDE
 
-This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people.
-
-To install this library manually, simply download a zip (or source as preferred) and install into the `Arduino/libraries` directory, rename the library from IoAbstraction-master to IoAbstraction. Arduino sketches and libraries are normally stored under the Documents folder on most operating systems.
+This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependency, [TaskManagerIO](https://github.com/davetcc/TaskManagerIO), if for some reason it does not, please also install task manager manually. It is highly recommended that you install the libraries using your library manager.
 
 ## Installation for PlatformIO (Arduino or mbed)
 
-Use the platformIO library manager to get the library. It's called 'IoAbstraction'.
+Use the platformIO library manager to get the library. It's called 'IoAbstraction'. It should automatically include "TaskManagerIO" as it's a dependency.
 
-## TaskManager - simple, event based programming for Arduino 
+## This library is based on TaskManagerIO
 
-Is a very simple scheduler that can be used to schedule things to happen either once or repeatedly in the future. Very similar to using setTimeout in Javascript or co-routine frameworks in other languages. It also simplifies interrupt handling such that you are not in an ISR when called back, meaning you can do everything exactly as normal. The only real restriction with this library is not to call delay() or do any operations that block for more than a few microseconds. 
-
-A simple example:
-
-In the setup method, add an event that gets fired once in the future:
-
-```
-	taskManager.scheduleOnce(100, [] {
-		// some work to be done.
-	});
-```
-
-You can also create a class that extends from `Executable` and schedule that instead. For example:
-
-```
-    class MyClassToSchedule : public Executable {
-        //... your other stuff
-
-        void exec() override {
-            // your code to be executed upon schedule.
-        }
-    };
-    MyClassToSchedule myClass;
-    taskManager.scheduleFixedRate(1, &myClass, TIME_SECONDS);
-```
-
-Then in the loop method you need to call: 
-
-  	taskManager.runLoop();
-
-### Advanced usage of TaskManager
-
-ARDUINO ONLY: If you want to improve task manager performance in code that frequently calls delayMicroseconds(..), you can enable the flag `_TASKMGR_OVERRIDE_DELAY_` by opening TaskManager.h, it has major limitations and it's better to avoid it's use and change code to use `taskManager.yieldForMicros`.
+Take a look at the [TaskManagerIO repo](https://github.com/davetcc/TaskManagerIO) for more information about how task manager works, this library relies heavily on task manager.
 
 ## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
 
