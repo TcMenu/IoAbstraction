@@ -73,7 +73,6 @@ void ShiftRegisterIoAbstraction::writePort(uint8_t pin, uint8_t portV) {
 		toWrite &= 0x00ffffff;
 		toWrite |= (portVal << 24);
 	}
-	toWrite = portVal;
 	needsWrite = true;
 }
 
