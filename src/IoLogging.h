@@ -23,25 +23,26 @@
 #ifdef IOA_USE_MBED
 
 #include "PrintCompat.h"
-
+#include <FileHandle.h>
 //
 // On mbed you create an instance of this class called LoggingPort in your main class.
 // see the mbed example.
 //
 class MBedLogger : public Print {
 private:
-    Stream& serial;
+    FileHandle& serial;
 public:
-    MBedLogger(Stream& serialName) : serial(serialName) {}
+    MBedLogger(FileHandle& serialName) : serial(serialName) {}
 
     size_t write(uint8_t ch) override {
-        serial.putc(ch);
+        serial.write(&ch, 1);
         return 1;
     }
 
     size_t write(const char* sz) override {
-        serial.puts(sz);
-        return strlen(sz);
+        auto len = strlen(sz);
+        serial.write(sz, len);
+        return len;
     }
 };
 extern MBedLogger LoggingPort;
