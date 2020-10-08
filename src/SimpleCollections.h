@@ -195,6 +195,10 @@ public:
     bsize_t capacity() {
         return currentSize;
     }
+
+    void clear() {
+        itemsInList = 0;
+    }
 };
 
 #endif // _SIMPLE_COLLECTIONS_H
