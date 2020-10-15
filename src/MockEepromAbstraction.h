@@ -24,13 +24,15 @@ private:
 	uint8_t *data;
     unsigned int memSize;
 public:
-    MockEepromAbstraction(unsigned int size = 128) {
+    explicit MockEepromAbstraction(unsigned int size = 128) {
         data = new uint8_t[size];
         errorFlag = false;
         memSize = size;
         memset(data, 0, memSize);
     }
-	virtual ~MockEepromAbstraction() {}
+	~MockEepromAbstraction() override {
+        delete[] data;
+    }
 
 	bool hasErrorOccurred() override { return errorFlag;}
 	void clearError() {errorFlag = false;}
@@ -87,6 +89,24 @@ public:
 		checkBounds(romDest, len);
 		memcpy(&data[romDest], memSrc, len);
 	}
+
+	void serDebugContents(int start, int len) {
+        if(len >= 63) {
+            serdebugF("Mock rom debug - len too big");
+            return;
+        }
+        char str[64];
+        str[0] = 0;
+        int i;
+        for(i=0; i<len; i++) {
+            if(data[i + start] >= 30)
+                str[i] = data[i + start];
+            else
+                str[i] = '?';
+        }
+        str[i] = 0;
+        serdebugF4("MockRom contents start, len, data: ", start, len, str);
+    }
 };
 
 #endif
