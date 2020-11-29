@@ -97,12 +97,12 @@ private:
 	KeyPressState previousState;
 	pinid_t pin;
 	uint8_t counter;
-	uint8_t acceleration{};
+	uint8_t acceleration;
 	uint8_t repeatInterval;
 	union {
 		KeyCallbackFn callback;
 		SwitchListener* listener;
-	} notify{};
+	} notify;
 	KeyCallbackFn callbackOnRelease;
 public:
     KeyboardItem();
@@ -212,8 +212,8 @@ private:
     HWAccelerationMode accelerationMode;
 	
 public:
-	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback);
-	virtual void encoderChanged();
+	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR);
+	void encoderChanged() override;
     void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
 private:
 	int amountFromChange(unsigned long change);
@@ -418,7 +418,7 @@ extern SwitchInput switches;
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
  */
-void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback);
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR);
 
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.

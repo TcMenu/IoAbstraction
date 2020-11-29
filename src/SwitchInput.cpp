@@ -20,6 +20,7 @@ KeyboardItem::KeyboardItem() {
 	this->stateFlags = NOT_PRESSED;
 	this->previousState = NOT_PRESSED;
 	this->callbackOnRelease = NULL;
+	this->acceleration = 0;
 }
 
 KeyboardItem::KeyboardItem(pinid_t pin, KeyCallbackFn callback, uint8_t repeatInterval, bool keyLogicIsInverted) {
@@ -30,6 +31,7 @@ KeyboardItem::KeyboardItem(pinid_t pin, KeyCallbackFn callback, uint8_t repeatIn
 	previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
 	callbackOnRelease = NULL;
+	acceleration = 0;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 0);
 	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
 }
@@ -42,6 +44,7 @@ KeyboardItem::KeyboardItem(pinid_t pin, SwitchListener* switchListener, uint8_t 
     previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
 	callbackOnRelease = NULL;
+	acceleration = 0;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 1);
 	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
 }
@@ -280,12 +283,11 @@ void RotaryEncoder::increment(int8_t incVal) {
 	}	
 }
 
-HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback) : RotaryEncoder(callback) {
+HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode) : RotaryEncoder(callback) {
 	this->pinA = pinA;
 	this->pinB = pinB;
 	this->lastChange = micros();
-
-    accelerationMode = HWACCEL_REGULAR;
+    this->accelerationMode = accelerationMode;
 
 	// set the pin directions to input with pull ups enabled
 	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
@@ -387,7 +389,7 @@ EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, Encod
 /******** ENCODER SETUP METHODS ***********/
 
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback) {
-	if (switches.getIoAbstraction() == NULL) switches.initialise(internalDigitalIo(), true);
+	if (switches.getIoAbstraction() == nullptr) switches.initialise(internalDigitalIo(), true);
 
 	EncoderUpDownButtons* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
 	switches.setEncoder(enc);
@@ -398,8 +400,8 @@ void registerInterrupt(pinid_t pin) {
 	taskManager.addInterrupt(switches.getIoAbstraction(), pin, CHANGE);
 }
 
-void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback) {
-	if (switches.getIoAbstraction() == NULL) switches.initialise(internalDigitalIo(), true);
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode) {
+	if (switches.getIoAbstraction() == nullptr) switches.initialise(internalDigitalIo(), true);
 
-	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback));
+	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode));
 }
