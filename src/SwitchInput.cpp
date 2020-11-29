@@ -54,6 +54,7 @@ KeyboardItem::KeyboardItem(const KeyboardItem& other) {
     this->previousState = other.previousState;
     this->stateFlags = other.stateFlags;
     this->callbackOnRelease = other.callbackOnRelease;
+    this->acceleration = other.acceleration;
 }
 
 void KeyboardItem::onRelease(KeyCallbackFn callbackOnRelease) {
@@ -169,7 +170,7 @@ bool SwitchInput::addSwitchListener(pinid_t pin, SwitchListener* listener, uint8
 }
 
 bool SwitchInput::internalAddSwitch(pinid_t pin, bool invertLogic) {
-	if (ioDevice == NULL) initialise(internalDigitalIo(), true);
+	if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
 
 	ioDevicePinMode(ioDevice, pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
 
@@ -184,7 +185,16 @@ void SwitchInput::onRelease(pinid_t pin, KeyCallbackFn callbackOnRelease) {
 	if (ioDevice == NULL) initialise(internalDigitalIo(), true);
 
 	auto keyItem = keys.getByKey(pin);
-	if(pin) keyItem->onRelease(callbackOnRelease);
+	if(pin) {
+	    // already initialised, just add the release callback
+	    keyItem->onRelease(callbackOnRelease);
+	}
+	else if(internalAddSwitch(pin, false)) {
+	    // not yet added, we will do a best efforts standard initialisation.
+        KeyboardItem newItem(pin, (KeyCallbackFn) nullptr, NO_REPEAT, false);
+        newItem.onRelease(callbackOnRelease);
+        keys.add(newItem);
+    }
 }
 
 bool SwitchInput::isSwitchPressed(pinid_t pin) {

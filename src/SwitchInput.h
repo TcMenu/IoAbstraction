@@ -97,12 +97,12 @@ private:
 	KeyPressState previousState;
 	pinid_t pin;
 	uint8_t counter;
-	uint8_t acceleration;
+	uint8_t acceleration{};
 	uint8_t repeatInterval;
 	union {
 		KeyCallbackFn callback;
 		SwitchListener* listener;
-	} notify;
+	} notify{};
 	KeyCallbackFn callbackOnRelease;
 public:
     KeyboardItem();
