@@ -131,6 +131,20 @@ public:
 };
 
 /**
+ * When working with rotary encoders there's three possible ways that the user will interact, and it is this
+ * intent that we need to capture, they are either using it for direction only, to scroll through items,
+ * or to change a value.
+ */
+enum EncoderUserIntention {
+    /** User wishes to change or set a value */
+    CHANGE_VALUE = 0,
+    /** User wishes to scroll through a list of items */
+    SCROLL_THROUGH_ITEMS,
+    /** User is just using the encoder for direction only */
+    DIRECTION_ONLY
+};
+
+/**
  * Rotary encoder is the base class of both the hardware rotary encoder and the up / down button version. 
  * It handles storing the current value, setting and managing the range of allowed values and calling
  * back when the encoder changes.
@@ -141,6 +155,7 @@ protected:
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
     bool lastSyncStatus;
+    EncoderUserIntention intent;
 public:
 	RotaryEncoder(EncoderCallbackFn callback);
 	virtual ~RotaryEncoder() {;}
@@ -182,6 +197,16 @@ public:
      * @return true if the sync was successful, otherwise.
      */
     bool didLastSyncSucceed() { return lastSyncStatus; }
+
+    /**
+     * For joystick and up/down button encoders there is a difference between scroll using
+     * the encoder, and presenting the menu using the encoder, unlike rotary encoders where
+     * both modes feel natural the same way, there is a need to invert scrolling on button
+     * and joysticks.
+     */
+    void setUserIntention(EncoderUserIntention intention);
+
+    EncoderUserIntention getUserIntention() { return intent; }
 };
 
 /**

@@ -251,12 +251,22 @@ RotaryEncoder::RotaryEncoder(EncoderCallbackFn callback) {
 	this->currentReading = 0;
 	this->maximumValue = 0;
     this->lastSyncStatus = true;
+    this->intent = CHANGE_VALUE;
 }
 
 void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 	this->maximumValue = maxValue;
 	this->currentReading = currentValue;
+	if(maxValue == currentValue == 0) intent = DIRECTION_ONLY;
 	callback(currentReading);
+}
+
+void RotaryEncoder::setUserIntention(EncoderUserIntention intention) {
+    intent = intention;
+    if(intention == DIRECTION_ONLY) {
+        maximumValue = 0;
+        currentReading = 0;
+    }
 }
 
 void RotaryEncoder::increment(int8_t incVal) {
@@ -374,11 +384,13 @@ void HardwareRotaryEncoder::encoderChanged() {
 /******** UP DOWN BUTTON ENCODER *******/
 
 void switchEncoderUp(__attribute((unused)) pinid_t key, __attribute((unused)) bool heldDown) {
-	switches.getEncoder()->increment(1);
+    int dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -1 : 1;
+	switches.getEncoder()->increment(dir);
 }
 
 void switchEncoderDown(__attribute((unused)) pinid_t key, __attribute((unused)) bool heldDown) {
-	switches.getEncoder()->increment(-1);
+    int dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? 1 : -1;
+	switches.getEncoder()->increment(dir);
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed) : RotaryEncoder(callback) {
