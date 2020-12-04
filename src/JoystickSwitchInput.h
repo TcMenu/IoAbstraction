@@ -29,8 +29,9 @@ class JoystickSwitchInput : public RotaryEncoder, public Executable {
 private:
     uint8_t analogPin;
     AnalogDevice* analogDevice;
-    float tolerance = 0.03;
-    float midPoint = 0.5;
+    float tolerance = 0.03F;
+    float midPoint = 0.5F;
+    float accelerationFactor = 1000.0F;
 public:
     /** 
      * Constructor that initialises the class for use, prefer to use the set up method setupAnalogJoystickEncoder
@@ -61,11 +62,10 @@ public:
         switch(forceApplied) {
             case 0:
             case 1: return 250;
-            case 2: return 220;
-            case 3: return 200;
-            case 4: return 150;
-            case 5: return 120;
-            default:return 50;
+            case 2: return 200;
+            case 3: return 150;
+            case 4: return 100;
+            default: return 50;
         }
     }
 
@@ -75,14 +75,23 @@ public:
     void exec() override {
         float readVal = analogDevice->getCurrentFloat(analogPin) - midPoint;
 
-        int val = abs(readVal * MAX_JOYSTICK_ACCEL);
         if(readVal > tolerance) {
-            increment((maximumValue < 32) ? -1 : -val);
+            int dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -1 : 1;
+            increment(dir);
         }
         else if(readVal < (-tolerance)) {
-            increment((maximumValue < 32) ? 1 : val);
+            int dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? 1 : -1;
+            increment(dir);
         }
-        taskManager.scheduleOnce(nextInterval(val), this);
+        else {
+            accelerationFactor = 750.0F;
+            taskManager.scheduleOnce(250, this);
+            return;
+        }
+
+        auto delay = nextInterval(abs(readVal * MAX_JOYSTICK_ACCEL)) + accelerationFactor;
+        taskManager.scheduleOnce(delay, this);
+        accelerationFactor /= 3.0;
     }
 };
 

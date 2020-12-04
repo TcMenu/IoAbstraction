@@ -10,7 +10,7 @@
 #include <IoAbstraction.h>
 #include <JoystickSwitchInput.h>
 
-#define ANALOG_INPUT_PIN A0
+#define ANALOG_INPUT_PIN A1
 
 // we need to create an analog device that the joystick encoder will use to get readings.
 // In this case on arduino analog pins.
@@ -43,7 +43,7 @@ void setup() {
 
     // once you've registed the joystick above with switches, you can then alter the mid point and tolerance if needed
     // here we set the midpoint to 65% and the tolerance (or point at which we start reading) at +-5%.
-    reinterpret_cast<JoystickSwitchInput*>(switches.getEncoder())->setTolerance(.65F, 0.05F);
+    reinterpret_cast<JoystickSwitchInput*>(switches.getEncoder())->setTolerance(.5F, 0.05F);
 
     // now set the range to 500 and current value to 250
     switches.changeEncoderPrecision(500, 250);
