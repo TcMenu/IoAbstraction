@@ -3,6 +3,7 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include <BasicInterruptAbstraction.h>
 #include "PlatformDetermination.h"
 #include "IoAbstraction.h"
 
@@ -94,12 +95,8 @@ uint8_t BasicIoAbstraction::readValue(pinid_t pin) {
 }
 
 void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) {
-	uint8_t intPin = digitalPinToInterrupt(pin);
-#ifdef IOA_ARDUINO_MBED
-	::attachInterrupt(intPin, interruptHandler, (PinStatus)mode);
-#else
-    ::attachInterrupt(intPin, interruptHandler, mode);
-#endif
+	pintype_t intPin = digitalPinToInterrupt(pin);
+    internalHandleInterrupt(intPin, interruptHandler, mode);
 }
 
 #ifdef IOA_DEVICE_HAS_PORTS
