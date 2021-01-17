@@ -98,12 +98,12 @@ public:
             debounce = true;
         }
         float x = ((firstSample + secondSample) / 2.0F);
+        if(needsCorrection) x = (x - minValX) * (1 / (maxValX - minValX));
         if(rotation == LANDSCAPE_INVERTED || rotation == PORTRAIT) {
             x = 1.0F - x;
         }
-        if(needsCorrection) x = (x - minValX) * (1 / (maxValX - minValX));
 
-            // now we calculate everything in the Y dimension.
+        // now we calculate everything in the Y dimension.
         analogDevice->initPin(xnPinAdc, DIR_IN);
         ioDevicePinMode(device, xpPin, INPUT);
         ioDevicePinMode(device, ypPinAdc, OUTPUT);
@@ -119,10 +119,10 @@ public:
             debounce = true;
         }
         float y = ((firstSample + secondSample) / 2.0F);
+        if(needsCorrection) y = (y - minValY) * (1 / (maxValY - minValY));
         if(rotation == LANDSCAPE || rotation == PORTRAIT) {
             y = 1.0F - y;
         }
-        if(needsCorrection) y = (y - minValY) * (1 / (maxValY - minValY));
 
         // and finally the Z dimension
         ioDevicePinMode(device, xpPin, OUTPUT);
