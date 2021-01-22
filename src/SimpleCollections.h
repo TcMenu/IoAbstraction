@@ -124,7 +124,7 @@ public:
         if(itemsInList == 0) return NULL;
         bsize_t loc = nearestLocation(key);
         //serdebugF3("getByKey ", loc, key);
-        return (binTree[loc].getKey() == key) ? &binTree[loc] : NULL;
+        return (binTree[loc].getKey() == key && loc < itemsInList) ? &binTree[loc] : NULL;
     };
 
     /**

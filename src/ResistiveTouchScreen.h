@@ -32,8 +32,7 @@ public:
     enum TouchState: byte {
         NOT_TOUCHED,
         TOUCHED,
-        HELD,
-        DEBOUNCE
+        HELD
     };
     enum TouchRotation: byte {
         PORTRAIT,
@@ -139,7 +138,6 @@ public:
         float touch = 1.0F - (secondSample - firstSample);
 
         if(debounce) {
-            touchMode = DEBOUNCE;
             taskManager.scheduleOnce(100, this, TIME_MILLIS);
             return;
         }
