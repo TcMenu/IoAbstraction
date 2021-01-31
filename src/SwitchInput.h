@@ -33,6 +33,9 @@
 #define MAX_ROTARY_ENCODERS 4
 #endif // MAX_ROTARY_ENCODERS
 
+#ifndef SWITCH_POLL_INTERVAL
+#define SWITCH_POLL_INTERVAL 20
+#endif // SWITCH_POLL_INTERVAL
 
 // END user adjustable section
 

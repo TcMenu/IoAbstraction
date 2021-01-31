@@ -148,7 +148,7 @@ void SwitchInput::initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching)
 	this->swFlags = 0;
     	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
 
-	taskManager.scheduleFixedRate(20, [] {
+	taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL, [] {
 		switches.runLoop();
 	});
 
