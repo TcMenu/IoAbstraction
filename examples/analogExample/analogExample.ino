@@ -17,9 +17,6 @@
 // This is the input pin where analog input is received.
 #define ANALOG_IN_PIN A0
 
-// here we create the abstraction over the standard arduino analog IO capabilities
-ArduinoAnalogDevice analog; // by default it assumes 10 bit read, 8 bit write
-
 // Here we create an analog event that will be triggered when the the analog level exceeds 75%. it is triggered every
 // 100 milliseconds and whwn triggered runs the code in the exec() method.
 class MyAnalogExceedsEvent : public AnalogInEvent {
@@ -49,7 +46,7 @@ void setup() {
     analog.initPin(PWM_OR_DAC_PIN, DIR_OUT);
 
     // this is how to register an event with task manager
-    taskManager.registerEvent(new MyAnalogExceedsEvent(&analog, ANALOG_IN_PIN), true);
+    taskManager.registerEvent(new MyAnalogExceedsEvent(internalAnalogIo(), ANALOG_IN_PIN), true);
 
     // we schedule a task to run every 500 millis that reads the value from A1 and prints it output
     // along with the largest possible value
