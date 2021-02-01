@@ -1,6 +1,7 @@
-//
-// Created by David Cherry on 22/08/2020.
-//
+/*
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
+ */
 
 #ifndef IOABSTRACTION_DEVICEEVENTS_H
 #define IOABSTRACTION_DEVICEEVENTS_H

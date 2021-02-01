@@ -85,8 +85,6 @@ namespace iotouch {
             RAW
         };
     private:
-        AnalogDevice *analogDevice;
-        IoAbstractionRef device;
         AccelerationHandler accelerationHandler;
         pinid_t xpPin, xnPinAdc, ypPinAdc, ynPin;
         float minValX = 0.0, maxValX = 1.0, minValY = 0.0, maxValY = 1.0;
@@ -96,9 +94,8 @@ namespace iotouch {
         bool usedForScrolling = false;
     public:
 
-        BaseResistiveTouchScreen(AnalogDevice *device, IoAbstractionRef pins, pinid_t xpPin, pinid_t xnPin,
-                                 pinid_t ypPin, pinid_t ynPin, TouchRotation rotation)
-                : analogDevice(device), device(pins), accelerationHandler(10, true), xpPin(xpPin), xnPinAdc(xnPin),
+        BaseResistiveTouchScreen(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin, TouchRotation rotation)
+                : accelerationHandler(10, true), xpPin(xpPin), xnPinAdc(xnPin),
                   ypPinAdc(ypPin), ynPin(ynPin), touchMode(NOT_TOUCHED), rotation(rotation) {}
 
         /**
@@ -136,6 +133,8 @@ namespace iotouch {
         }
 
         void exec() override {
+            auto* analogDevice = internalAnalogIo();
+            auto* device = internalDigitalIo();
             // first we calculate everything in the X dimension.
             analogDevice->initPin(ypPinAdc, DIR_IN);
             ioDevicePinMode(device, xnPinAdc, OUTPUT);
@@ -241,9 +240,8 @@ namespace iotouch {
         float lastX, lastY, touchPressure;
         TouchState touchState;
     public:
-        ValueStoringResistiveTouchScreen(AnalogDevice *device, IoAbstractionRef pins, pinid_t xpPin, pinid_t xnPin,
-                                         pinid_t ypPin, pinid_t ynPin, TouchRotation rotation) :
-                BaseResistiveTouchScreen(device, pins, xpPin, xnPin, ypPin, ynPin, rotation) {}
+        ValueStoringResistiveTouchScreen(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin, TouchRotation rotation) :
+                BaseResistiveTouchScreen(xpPin, xnPin, ypPin, ynPin, rotation) {}
 
         void sendEvent(float locationX, float locationY, float pressure, TouchState touched) override {
             lastX = locationX;

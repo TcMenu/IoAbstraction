@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
+ */
+
 #ifndef _ANALOG_DEVICE_ABSTRACTION_H_
 #define _ANALOG_DEVICE_ABSTRACTION_H_
 
@@ -21,7 +26,8 @@ enum AnalogDirection { DIR_IN, DIR_OUT, DIR_PWM };
  * Describes an analog device that has commands to both read values from and write values to
  * a device. Not all devices will support both input and output. When such a case occurs the
  * getMaximumRange would return -1 for that direction. This abstraction can support ADC, PWM
- * DAC and Potentiometer devices.
+ * DAC and Potentiometer devices. On every device we support, calling internalAnalogIO gives
+ * the instance for the internal analog pins.
  */
 class AnalogDevice {
 public:
@@ -129,11 +135,15 @@ public:
  * value for integers is represented between 0..65535 although this may not be
  * what your hardware supports. It's better to always use the float functions when
  * you can.
+ *
+ * Get an instance by calling internalAnalogIO() rather than creating one.
  */
 class MBedAnalogDevice : public AnalogDevice {
 private:
     BtreeList<pinid_t, AnalogPinReference> devices;
 public:
+    static MbedAnalogDevice* theInstance;
+
     int getMaximumRange(AnalogDirection direction, pinid_t pin) override {
         return 0xffff;
     }
@@ -256,13 +266,17 @@ public:
  *
  * If performance is not critical, use the floating point versions of the read and write methods
  * as these abstract away the absolute ranges, to 0 being GND and 1 being maximum voltage.
+ *
+ * Get an instance by calling internalAnalogIO() rather than creating one
  */
 class ArduinoAnalogDevice : public AnalogDevice {
 private:
 	uint8_t readBitResolution;
 	uint8_t writeBitResolution;
 public:
-	/**
+    static ArduinoAnalogDevice* theInstance;
+
+    /**
 	 * Initialise the Arduino analog device with a given read and write bit resolution, on AVR and
 	 * ESP8266 input is set to 10 bits (1024) and output to 8 bits (255). However, on ESP32 it
 	 * is 12 bit input, 8 output. On SAMD and some other board types you can configure either 8, 10 or 12 bit.
@@ -280,6 +294,7 @@ public:
 #endif
         this->readBitResolution = readBitResolution;
         this->writeBitResolution = writeBitResolution;
+        theInstance = this;
 	}
 
 	int getMaximumRange(AnalogDirection dir, pinid_t /*pin*/) override {
@@ -338,6 +353,13 @@ private:
     }
 #endif
 };
+
+/**
+ * Create an instance of the analog IO abstraction for the current hardware and cache it
+ * so further calls return the same one, use this instead of creating one.
+ * @return the analog device as a pointer.
+ */
+AnalogDevice* internalAnalogIo();
 
 #endif // MBED or ARDUINO IMPL
 
