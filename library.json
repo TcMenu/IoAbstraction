@@ -22,7 +22,7 @@
       "name": "TaskManagerIO"
     }
   ],
-  "version": "1.7.0",
+  "version": "1.7.1",
   "license": "Apache-2.0",
   "frameworks": "arduino, mbed",
   "platforms": "*"
