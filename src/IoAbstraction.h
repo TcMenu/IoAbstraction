@@ -172,9 +172,9 @@ IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClockPin, uint8_t writ
  * Performs input only functions using a 74x165 plugin, the input pins start at 0 up to a maximum of 31, each device
  * adds another 8 pins.
  * @param readClkPin the clock pin of the shift register, used as OUTPUT
- * @param dataPin the data pin of the shift register, used as OUTPUT
+ * @param dataPin the data pin of the shift register, used as INPUT
  * @param latchPin the latch pin of the shift register, used as OUTPUT
- * @param numOfDevices the number of devices that are chained together in the usual fashion
+ * @param numOfDevices the number of devices that are chained together in the usual fashion, range is 1..4
  * @return a shift register abstraction as an IoAbstraction ref.
  */
 IoAbstractionRef inputFrom74HC165ShiftRegister(pinid_t readClkPin, pinid_t dataPin, pinid_t latchPin, pinid_t numOfDevices = 1);
