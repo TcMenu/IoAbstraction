@@ -37,14 +37,14 @@ private:
 	bool needsWrite;
 
 	uint8_t numOfDevicesRead;
-	uint8_t readDataPin;
-	uint8_t readLatchPin;
-	uint8_t readClockPin;
+	pinid_t readDataPin;
+	pinid_t readLatchPin;
+	pinid_t readClockPin;
 
 	uint8_t numOfDevicesWrite;
-	uint8_t writeDataPin;
-	uint8_t writeLatchPin;
-	uint8_t writeClockPin;
+	pinid_t writeDataPin;
+	pinid_t writeLatchPin;
+	pinid_t writeClockPin;
 public:
 	/** 
 	 * Normally use the shift register helper functions to create an instance.
@@ -52,36 +52,36 @@ public:
 	 * @see inputOnlyFromShiftRegister
 	 * @see outputOnlyFromShiftRegister
 	 */
-	ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, 
-	                           uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin, uint8_t numRead, uint8_t numWrite);
+	ShiftRegisterIoAbstraction(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin,
+	                           pinid_t writeClockPin, pinid_t writeDataPin, pinid_t writeLatchPin, uint8_t numRead, uint8_t numWrite);
 	virtual ~ShiftRegisterIoAbstraction() { }
-	virtual void pinDirection(uint8_t pin, uint8_t mode);
-	virtual void writeValue(uint8_t pin, uint8_t value);
+	virtual void pinDirection(pinid_t pin, uint8_t mode);
+	virtual void writeValue(pinid_t pin, uint8_t value);
 	virtual uint8_t readValue(uint8_t pin);
 	/**
 	 * Interrupts are not supported on shift registers
 	 */
-	virtual void attachInterrupt(uint8_t, RawIntHandler, uint8_t) {;}
+	virtual void attachInterrupt(pinid_t, RawIntHandler, uint8_t) {;}
 	virtual bool runLoop();
 	
 	/**
 	 * writes to the output shift register - currently always port 0
 	 */
-	virtual void writePort(uint8_t port, uint8_t portVal);
+	virtual void writePort(pinid_t port, uint8_t portVal);
 
 	/**
 	 * reads from the input shift register - currently always port 3
 	 */
-	virtual uint8_t readPort(uint8_t port);
+	virtual uint8_t readPort(pinid_t port);
 };
 
 class ShiftRegisterIoAbstraction165In : public BasicIoAbstraction {
 private:
     uint32_t lastRead;
     uint8_t numOfDevicesRead;
-    uint8_t readDataPin;
-    uint8_t readLatchPin;
-    uint8_t readClockPin;
+    pinid_t readDataPin;
+    pinid_t readLatchPin;
+    pinid_t readClockPin;
 
 public:
     /**

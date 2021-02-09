@@ -11,8 +11,8 @@
 #ifndef IOA_USE_MBED
 #include <Arduino.h>
 
-ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uint8_t readDataPin, uint8_t readLatchPin, uint8_t writeClockPin, uint8_t writeDataPin, 
-                                                       uint8_t writeLatchPin, uint8_t noReadDevices, uint8_t noWriteDevices) {
+ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin, pinid_t writeClockPin, pinid_t writeDataPin,
+                                                       pinid_t writeLatchPin, uint8_t noReadDevices, uint8_t noWriteDevices) {
 	needsWrite = true;
 	toWrite = 0;
 
@@ -41,11 +41,11 @@ ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(uint8_t readClockPin, uin
 	}
 }
 
-void ShiftRegisterIoAbstraction::pinDirection(__attribute((unused)) uint8_t pin, __attribute((unused)) uint8_t mode) {
+void ShiftRegisterIoAbstraction::pinDirection(__attribute((unused)) pinid_t pin, __attribute((unused)) uint8_t mode) {
 	// ignored, this implementation has hardwired inputs and outputs - inputs are 0-31, outputs are 32 onwards
 }
 
-void ShiftRegisterIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
+void ShiftRegisterIoAbstraction::writeValue(pinid_t pin, uint8_t value) {
 	if (pin < SHIFT_REGISTER_OUTPUT_CUTOVER) return;
 	pin = pin - SHIFT_REGISTER_OUTPUT_CUTOVER;
 
@@ -53,7 +53,7 @@ void ShiftRegisterIoAbstraction::writeValue(uint8_t pin, uint8_t value) {
 	needsWrite = true;
 }
 
-void ShiftRegisterIoAbstraction::writePort(uint8_t pin, uint8_t portV) {
+void ShiftRegisterIoAbstraction::writePort(pinid_t pin, uint8_t portV) {
 	uint32_t portVal = portV;
 	if(pin < SHIFT_REGISTER_OUTPUT_CUTOVER) return;
 	pin = pin - SHIFT_REGISTER_OUTPUT_CUTOVER;
@@ -76,7 +76,7 @@ void ShiftRegisterIoAbstraction::writePort(uint8_t pin, uint8_t portV) {
 	needsWrite = true;
 }
 
-uint8_t ShiftRegisterIoAbstraction::readPort(uint8_t pin) {
+uint8_t ShiftRegisterIoAbstraction::readPort(pinid_t pin) {
 	if(pin < 8) {
 		return lastRead & 0xff;
 	}
@@ -161,7 +161,7 @@ ShiftRegisterIoAbstraction165In::ShiftRegisterIoAbstraction165In(pinid_t readClo
 }
 
 
-uint8_t ShiftRegisterIoAbstraction165In::readPort(uint8_t pin) {
+uint8_t ShiftRegisterIoAbstraction165In::readPort(pinid_t pin) {
     if(pin < 8) {
         return lastRead & 0xff;
     }
@@ -176,7 +176,7 @@ uint8_t ShiftRegisterIoAbstraction165In::readPort(uint8_t pin) {
     }
 }
 
-uint8_t ShiftRegisterIoAbstraction165In::readValue(uint8_t pin) {
+uint8_t ShiftRegisterIoAbstraction165In::readValue(pinid_t pin) {
     return ((lastRead & (1 << pin)) != 0) ? HIGH : LOW;
 }
 
