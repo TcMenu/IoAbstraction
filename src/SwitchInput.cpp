@@ -257,7 +257,7 @@ RotaryEncoder::RotaryEncoder(EncoderCallbackFn callback) {
 void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
 	this->maximumValue = maxValue;
 	this->currentReading = currentValue;
-	if(maxValue == currentValue == 0) intent = DIRECTION_ONLY;
+	if(maxValue == 0 && currentValue == 0U) intent = DIRECTION_ONLY;
 	callback(currentReading);
 }
 

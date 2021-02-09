@@ -145,6 +145,71 @@ IoAbstractionRef inputOutputFromShiftRegister(uint8_t readClockPin, uint8_t read
     return new ShiftRegisterIoAbstraction(readClockPin, readDataPin, readLatchPin, writeClockPin, writeDataPin, writeLatchPin, 1, 1);
 }
 
+
+ShiftRegisterIoAbstraction165In::ShiftRegisterIoAbstraction165In(pinid_t readClockPin, pinid_t readDataPin,
+                                                                 pinid_t readLatchPin, pinid_t numRead) {
+    this->readClockPin = readClockPin;
+    this->readDataPin = readDataPin;
+    this->readLatchPin = readLatchPin;
+    this->lastRead = 0;
+    this->numOfDevicesRead = numRead;
+
+    pinMode(readLatchPin, OUTPUT);
+    pinMode(readDataPin, INPUT);
+    pinMode(readClockPin, OUTPUT);
+    digitalWrite(readLatchPin, HIGH);
+}
+
+
+uint8_t ShiftRegisterIoAbstraction165In::readPort(uint8_t pin) {
+    if(pin < 8) {
+        return lastRead & 0xff;
+    }
+    else if(pin < 16) {
+        return (lastRead >> 8) & 0xff;
+    }
+    else if(pin < 24) {
+        return (lastRead >> 16) & 0xff;
+    }
+    else {
+        return (lastRead >> 24) & 0xff;
+    }
+}
+
+uint8_t ShiftRegisterIoAbstraction165In::readValue(uint8_t pin) {
+    return ((lastRead & (1 << pin)) != 0) ? HIGH : LOW;
+}
+
+bool ShiftRegisterIoAbstraction165In::runLoop() {
+    uint8_t i;
+    digitalWrite(readLatchPin, LOW);
+    delayMicroseconds(LATCH_TIME);
+    digitalWrite(readLatchPin, HIGH);
+
+    lastRead = 0;
+    for(i = 0; i < numOfDevicesRead; ++i) {
+        lastRead = lastRead << 8;
+        lastRead |= (shiftInFor165() & 0xff);
+    }
+
+    return true;
+}
+
+uint8_t ShiftRegisterIoAbstraction165In::shiftInFor165() const {
+    uint8_t value = 0;
+
+    for (int8_t i = 7; i >= 0; --i) {
+        digitalWrite(readClockPin, LOW);
+        value |= (digitalRead(readDataPin) << i);
+        digitalWrite(readClockPin, HIGH);
+    }
+    return value;
+}
+
+IoAbstractionRef inputFrom74HC165ShiftRegister(pinid_t readClkPin, pinid_t dataPin, pinid_t latchPin, pinid_t numOfDevices) {
+    return new ShiftRegisterIoAbstraction165In(readClkPin, dataPin, latchPin, numOfDevices);
+}
+
 #else // using mbed - IOA_USE_MBED
 #include <mbed.h>
 #endif

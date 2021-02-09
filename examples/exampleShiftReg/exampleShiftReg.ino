@@ -12,6 +12,10 @@
 // here we create a shift register abstraction that has 1 input and 1 output shift register.
 IoAbstractionRef shiftRegister = inputOutputFromShiftRegister(READ_CLOCK_PIN, READ_DATA_PIN, READ_LATCH_PIN, 1, WRITE_CLOCK_PIN, WRITE_DATA_PIN, WRITE_LATCH_PIN, 1);
 
+// If you are using a 74HC165 for input, you can also use the following instead:
+//IoAbstractionRef inputFrom74HC165ShiftRegister(pinid_t readClkPin, pinid_t dataPin, pinid_t latchPin, pinid_t numOfDevices);
+
+
 void setup() {
 	// although not technically needed for the shift register we should always call pinDirection
 	// as it makes it possible to switch in future to either arduino direct or IO expander.

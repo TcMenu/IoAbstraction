@@ -75,6 +75,41 @@ public:
 	virtual uint8_t readPort(uint8_t port);
 };
 
+class ShiftRegisterIoAbstraction165In : public BasicIoAbstraction {
+private:
+    uint32_t lastRead;
+    uint8_t numOfDevicesRead;
+    uint8_t readDataPin;
+    uint8_t readLatchPin;
+    uint8_t readClockPin;
+
+public:
+    /**
+     * Normally use the shift register helper functions to create an instance.
+     * @see inputOutputFromShiftRegister
+     * @see inputOnlyFromShiftRegister
+     * @see outputOnlyFromShiftRegister
+     */
+    ShiftRegisterIoAbstraction165In(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin, pinid_t numRead);
+    ~ShiftRegisterIoAbstraction165In() override { }
+
+    /** Input only abstraction, does nothing because only input is supported */
+    virtual void pinDirection(pinid_t pin, uint8_t mode) { }
+
+    virtual uint8_t readValue(pinid_t pin);
+    virtual bool runLoop();
+    virtual uint8_t readPort(pinid_t port);
+
+    //
+    // Features not implemented on this abstaction
+    //
+    virtual void writePort(pinid_t port, uint8_t portVal) { }
+    virtual void writeValue(pinid_t pin, uint8_t value) { }
+    virtual void attachInterrupt(pinid_t, RawIntHandler, uint8_t) { }
+
+    uint8_t shiftInFor165() const;
+};
+
 /**
  * performs both input and output functions using two or more shift registers, for both reading and writing.  As shift registers have a fixed direction
  * input and output are handled by different devices, and therefore fixed at the time of building the circuit. This function supports chaining of
@@ -132,6 +167,17 @@ IoAbstractionRef inputOnlyFromShiftRegister(uint8_t readClockPin, uint8_t dataPi
  * @param writeLatchPin the latch pin on the OUTPUT shift register
  */
 IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClockPin, uint8_t writeDataPin, uint8_t writeLatchPin, uint8_t numOfDevicesWrite = 1);
+
+/**
+ * Performs input only functions using a 74x165 plugin, the input pins start at 0 up to a maximum of 31, each device
+ * adds another 8 pins.
+ * @param readClkPin the clock pin of the shift register, used as OUTPUT
+ * @param dataPin the data pin of the shift register, used as OUTPUT
+ * @param latchPin the latch pin of the shift register, used as OUTPUT
+ * @param numOfDevices the number of devices that are chained together in the usual fashion
+ * @return a shift register abstraction as an IoAbstraction ref.
+ */
+IoAbstractionRef inputFrom74HC165ShiftRegister(pinid_t readClkPin, pinid_t dataPin, pinid_t latchPin, pinid_t numOfDevices = 1);
 
 #else
 #include <mbed.h>
