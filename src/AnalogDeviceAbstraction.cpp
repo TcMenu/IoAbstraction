@@ -8,7 +8,7 @@
 #ifdef IOA_USE_MBED
 MBedAnalogDevice* MBedAnalogDevice::theInstance;
 AnalogDevice* internalAnalogIo() {
-    if(MBedAnalogDevice::theInstance == nullptr) MBedAnalogDevice::theInstance = new ArduinoAnalogDevice();
+    if(MBedAnalogDevice::theInstance == nullptr) MBedAnalogDevice::theInstance = new MBedAnalogDevice();
     return MBedAnalogDevice::theInstance;
 }
 #else

@@ -92,7 +92,9 @@ private:
     AnalogDirection direction;
     union AnalogPinReferences {
         AnalogIn* input;
+#ifdef DEVICE_ANALOGOUT
         AnalogOut* out;
+#endif
         PwmOut* pwm;
     } analogRef;
 public:
@@ -115,9 +117,11 @@ public:
             case DIR_IN:
                 analogRef.input = new AnalogIn((PinName)pin);
                 break;
+#ifdef DEVICE_ANALOGOUT
             case DIR_OUT:
                 analogRef.out = new AnalogOut((PinName)pin);
                 break;
+#endif
             default:
                 analogRef.pwm = new PwmOut((PinName)pin);
                 break;
@@ -142,7 +146,7 @@ class MBedAnalogDevice : public AnalogDevice {
 private:
     BtreeList<pinid_t, AnalogPinReference> devices;
 public:
-    static MbedAnalogDevice* theInstance;
+    static MBedAnalogDevice* theInstance;
 
     int getMaximumRange(AnalogDirection direction, pinid_t pin) override {
         return 0xffff;
@@ -171,23 +175,23 @@ public:
     void setCurrentValue(pinid_t pin, unsigned int newValue) override {
         auto dev = devices.getByKey(pin);
         if(dev == NULL || dev->getDirection() == DIR_IN) return;
+#ifdef DEVICE_ANALOGOUT
         if(dev->getDirection() == DIR_OUT) {
             return dev->getReferences().out->write_u16(newValue);
         }
-        else {
-            return dev->getReferences().pwm->write(float(newValue) / 65535.0F);
-        }
+#endif
+        return dev->getReferences().pwm->write(float(newValue) / 65535.0F);
     }
 
     void setCurrentFloat(pinid_t pin, float newValue) override {
         auto dev = devices.getByKey(pin);
         if(dev == NULL || dev->getDirection() == DIR_IN) return;
+#ifdef DEVICE_ANALOGOUT
         if(dev->getDirection() == DIR_OUT) {
             return dev->getReferences().out->write(newValue);
         }
-        else {
-            return dev->getReferences().pwm->write(newValue);
-        }
+#endif
+        return dev->getReferences().pwm->write(newValue);
     }
 
     AnalogPinReference* getAnalogGPIO(pinid_t pin) {

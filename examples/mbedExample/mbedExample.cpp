@@ -16,14 +16,17 @@
 int myCount = 0;
 
 // to be able to use IoLogging within your application add the following
-Serial console(USBTX, USBRX);
-MBedLogger LoggingPort(console);
+BufferedSerial serPort(USBTX, USBRX);
+MBedLogger LoggingPort(serPort);
 
 IoAbstractionRef ioRef = internalDigitalIo();
 MBedAnalogDevice analogDevice;
 
 I2C i2c(PF_0, PF_1);
 #define START_OFFS 3000
+
+// if you want to run the eeprom tests, uncomment below
+//#define HAS_EEPROM_ATTACHED
 
 volatile bool exitApp = false;
 
@@ -75,12 +78,14 @@ void scheduleSomeTasks() {
 }
 
 int main() {
-    console.baud(115200);
+    serPort.set_baud(115200);
 
     ioDevicePinMode(ioRef, LED1, OUTPUT);
     analogDevice.initPin(A0, DIR_IN);
 
+#ifdef HAS_EEPROM_ATTACHED
     checkTheEeprom();
+#endif
 
     doSomeLogging();
 
