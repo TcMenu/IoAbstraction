@@ -112,19 +112,20 @@ public:
     KeyboardItem(pinid_t pin, KeyCallbackFn callback, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
     KeyboardItem(pinid_t pin, SwitchListener* switchListener, uint8_t repeatInterval = NO_REPEAT, bool keyLogicIsInverted = false);
     KeyboardItem(const KeyboardItem& other);
+    KeyboardItem& operator=(const KeyboardItem& other);
 	void checkAndTrigger(uint8_t pin);
 	void onRelease(KeyCallbackFn callbackOnRelease);
 
-	bool isDebouncing() { return getState() == DEBOUNCING1 || getState() == DEBOUNCING2; }
-	bool isPressed() { return getState() == PRESSED || getState() == BUTTON_HELD; }
-	bool isHeld() { return getState() == BUTTON_HELD; }
-	pinid_t getPin() { return pin;  }
-	pinid_t getKey() { return pin; }
+	bool isDebouncing() const { return getState() == DEBOUNCING1 || getState() == DEBOUNCING2; }
+	bool isPressed() const { return getState() == PRESSED || getState() == BUTTON_HELD; }
+	bool isHeld() const { return getState() == BUTTON_HELD; }
+	pinid_t getPin() const { return pin;  }
+	pinid_t getKey() const { return pin; }
 	
 	void trigger(bool held);
 	void triggerRelease(bool held);
 
-	KeyPressState getState() { return (KeyPressState)(stateFlags & KEY_PRESS_STATE_MASK); }
+	KeyPressState getState() const { return (KeyPressState)(stateFlags & KEY_PRESS_STATE_MASK); }
 	void setState(KeyPressState state) { 
 		stateFlags &= ~KEY_PRESS_STATE_MASK; 
 		stateFlags |= (state & KEY_PRESS_STATE_MASK);

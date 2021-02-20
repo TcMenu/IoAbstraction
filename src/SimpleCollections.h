@@ -76,17 +76,25 @@ public:
      * @param item the item to add
      * @return true if added, otherwise false
      */
-    bool add(V item) {
-        // after check capacity returns true, we always have space
+    bool add(const V& item) {
+        // check capacity returns true, we always have space
         if(!checkCapacity()) return false;
 
+        // find the insertion point.
         bsize_t insertionPoint = nearestLocation(item.getKey());
-        int amtToMove = itemsInList - insertionPoint;
+
+        // given the insert position, work out the number of items to move
+        int amtToMove = (itemsInList - insertionPoint);
         serdebugF4("add ", insertionPoint, item.getKey(), amtToMove);
 
+        // move the instances in reverse order using their assignment operator.
         if(amtToMove > 0) {
-            memmove(&binTree[insertionPoint + 1], &binTree[insertionPoint], amtToMove * sizeof(V));
+            for (bsize_t i = insertionPoint + amtToMove; i > insertionPoint; --i) {
+                binTree[i] = binTree[i - 1];
+            }
         }
+
+        // and finally, insert the new item
         binTree[insertionPoint] = item;
         itemsInList++;
         return true;
@@ -108,7 +116,9 @@ public:
         if(replacement == NULL) return false;
 
         // now copy over and replace the current tree.
-        memcpy(replacement, binTree, sizeof(V) * itemsInList);
+        for(bsize_t i=0; i<itemsInList; ++i) {
+            replacement[i] = binTree[i];
+        }
         delete[] binTree;
         binTree = replacement;
         currentSize = newSize;
@@ -133,7 +143,7 @@ public:
      * @param key the key to lookup
      * @return the position in the list
      */
-    bsize_t nearestLocation(K key) {
+    bsize_t nearestLocation(const K& key) {
         // a few short circuits, basically handling quickly nothing in list,
         // one item in the list and an insertion at the end of the list.
         if(itemsInList == 0) return 0; // always first item in this case

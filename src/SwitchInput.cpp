@@ -15,11 +15,11 @@ void registerInterrupt(pinid_t pin);
 KeyboardItem::KeyboardItem() {
 	this->repeatInterval = NO_REPEAT;
 	this->pin = -1;
-	this->notify.callback = NULL;
+	this->notify.callback = nullptr;
 	this->counter = 0;
 	this->stateFlags = NOT_PRESSED;
 	this->previousState = NOT_PRESSED;
-	this->callbackOnRelease = NULL;
+	this->callbackOnRelease = nullptr;
 	this->acceleration = 0;
 }
 
@@ -30,7 +30,7 @@ KeyboardItem::KeyboardItem(pinid_t pin, KeyCallbackFn callback, uint8_t repeatIn
 	this->counter = 0;
 	previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
-	callbackOnRelease = NULL;
+	callbackOnRelease = nullptr;
 	acceleration = 0;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 0);
 	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
@@ -43,7 +43,7 @@ KeyboardItem::KeyboardItem(pinid_t pin, SwitchListener* switchListener, uint8_t 
     this->counter = 0;
     previousState = NOT_PRESSED;
 	stateFlags = NOT_PRESSED;
-	callbackOnRelease = NULL;
+	callbackOnRelease = nullptr;
 	acceleration = 0;
 	bitWrite(stateFlags, KEY_LISTENER_MODE_BIT, 1);
 	bitWrite(stateFlags, KEY_LOGIC_IS_INVERTED, keyLogicIsInverted);
@@ -58,6 +58,19 @@ KeyboardItem::KeyboardItem(const KeyboardItem& other) {
     this->stateFlags = other.stateFlags;
     this->callbackOnRelease = other.callbackOnRelease;
     this->acceleration = other.acceleration;
+}
+
+KeyboardItem& KeyboardItem::operator=(const KeyboardItem& other) {
+    if(this == &other) return *this;
+    this->pin = other.pin;
+    this->repeatInterval = other.repeatInterval;
+    this->counter = other.counter;
+    this->notify.listener = other.notify.listener;
+    this->previousState = other.previousState;
+    this->stateFlags = other.stateFlags;
+    this->callbackOnRelease = other.callbackOnRelease;
+    this->acceleration = other.acceleration;
+    return *this;
 }
 
 void KeyboardItem::onRelease(KeyCallbackFn callbackOnRelease) {
@@ -77,7 +90,7 @@ void KeyboardItem::triggerRelease(bool held) {
 }
 
 void KeyboardItem::checkAndTrigger(uint8_t buttonState){
-	if (notify.callback == NULL && callbackOnRelease == NULL) return; 
+	if (notify.callback == nullptr && callbackOnRelease == nullptr) return;
 
 	if (buttonState == HIGH) {
 		if (getState() == NOT_PRESSED) {
@@ -126,11 +139,11 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 }
 
 SwitchInput::SwitchInput() {
-	this->ioDevice = NULL;
+	this->ioDevice = nullptr;
 	this->swFlags = 0;
     this->lastSyncStatus = true;
 	for (int i = 0; i < MAX_ROTARY_ENCODERS; ++i) {
-		encoder[i] = NULL;
+		encoder[i] = nullptr;
 	}
 }
 
@@ -185,7 +198,7 @@ bool SwitchInput::internalAddSwitch(pinid_t pin, bool invertLogic) {
 }
 
 void SwitchInput::onRelease(pinid_t pin, KeyCallbackFn callbackOnRelease) {
-	if (ioDevice == NULL) initialise(internalDigitalIo(), true);
+	if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
 
 	auto keyItem = keys.getByKey(pin);
 	if(pin) {
@@ -209,7 +222,7 @@ void SwitchInput::pushSwitch(pinid_t pin, bool held) {
 }
 
 void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue) {
-	if (slot < MAX_ROTARY_ENCODERS && encoder[slot] != NULL) {
+	if (slot < MAX_ROTARY_ENCODERS && encoder[slot] != nullptr) {
 		encoder[slot]->changePrecision(precision, currentValue);
 	}
 }

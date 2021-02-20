@@ -55,7 +55,16 @@ public:
     GpioWrapper(const GpioWrapper& other) {
         this->pin = other.pin;
         this->interruptHandler = other.interruptHandler;
+        this->pinMode = other.pinMode;
         memcpy(&this->gpio, &other.gpio, sizeof(gpio_t));
+    }
+    GpioWrapper& operator=(const GpioWrapper& other) {
+        if(this == &other) return *this;
+        this->pin = other.pin;
+        this->pinMode = other.pinMode;
+        this->interruptHandler = other.interruptHandler;
+        memcpy(&this->gpio, &other.gpio, sizeof(gpio_t));
+        return *this;
     }
     uint32_t getPin() const { return pin; }
     uint32_t getKey() const { return pin; }

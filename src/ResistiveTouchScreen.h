@@ -16,7 +16,7 @@
 #endif
 
 namespace iotouch {
-    enum AccelerationMode: byte {
+    enum AccelerationMode: uint8_t {
         WAITING,
         ACCELERATING,
         NEVER_ACCELERATES
@@ -52,7 +52,7 @@ namespace iotouch {
         }
     };
 
-    enum TouchState : byte {
+    enum TouchState : uint8_t {
         /** no touch has been detected */
         NOT_TOUCHED,
         /** the display has been touched */
@@ -77,7 +77,7 @@ namespace iotouch {
      */
     class BaseResistiveTouchScreen : public Executable {
     public:
-        enum TouchRotation : byte {
+        enum TouchRotation : uint8_t {
             PORTRAIT,
             PORTRAIT_INVERTED,
             LANDSCAPE,

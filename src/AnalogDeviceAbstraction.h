@@ -110,6 +110,14 @@ public:
         this->analogRef.input = other.analogRef.input;
     }
 
+    AnalogPinReference& operator=(const AnalogPinReference& other) {
+        if(this == &other) return *this;
+        this->pin = other.pin;
+        this->direction = other.direction;
+        this->analogRef.input = other.analogRef.input;
+        return *this;
+    }
+
     AnalogPinReference(pinid_t pin, AnalogDirection direction) {
         this->pin = pin;
         this->direction = direction;
@@ -130,7 +138,7 @@ public:
 
     AnalogPinReferences getReferences() { return analogRef; }
     AnalogDirection getDirection() { return direction; }
-    pinid_t getKey() { return pin; }
+    pinid_t getKey() const { return pin; }
 };
 
 /**
@@ -358,6 +366,8 @@ private:
 #endif
 };
 
+#endif // MBED or ARDUINO IMPL
+
 /**
  * Create an instance of the analog IO abstraction for the current hardware and cache it
  * so further calls return the same one, use this instead of creating one.
@@ -365,6 +375,5 @@ private:
  */
 AnalogDevice* internalAnalogIo();
 
-#endif // MBED or ARDUINO IMPL
 
 #endif //_ANALOG_DEVICE_ABSTRACTION_H_
