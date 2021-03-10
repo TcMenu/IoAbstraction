@@ -52,16 +52,151 @@ namespace iotouch {
         }
     };
 
+    class CalibrationHandler {
+    private:
+        float minX, maxX;
+        float minY, maxY;
+        bool calibrationOn;
+
+    public:
+        CalibrationHandler() = default;
+
+        void setCalibrationValues(float mnX, float mxX, float mnY, float mxY) {
+            minX = mnX;
+            minY = mnY;
+            maxX = mxX;
+            maxY = mxY;
+            calibrationOn = true;
+        }
+
+        void enableCalibration(bool state) {
+            calibrationOn = state;
+        }
+
+        float calibrateX(float rawValue, bool isInverted) const  {
+            auto x = (calibrationOn) ? ((rawValue - minX) * (1.0F / (maxX - minX))) : rawValue;
+            return isInverted ? 1.0F - x : x;
+        }
+
+        float calibrateY(float rawValue, bool isInverted) const {
+            auto y = (calibrationOn) ? ((rawValue - minY) * (1.0F / (maxY - minY))) : rawValue;
+            return isInverted ? 1.0F - y : y;
+        }
+    };
+
     enum TouchState : uint8_t {
         /** no touch has been detected */
         NOT_TOUCHED,
         /** the display has been touched */
         TOUCHED,
         /** the touch is being dragged or held */
-        HELD
+        HELD,
+        /** a debounce is needed */
+        TOUCH_DEBOUNCE
     };
 
 #define portableFloatAbs(x) ((x)<0.0F?-(x):(x))
+
+    class TouchInterrogator {
+    public:
+        enum TouchRotation : uint8_t {
+            PORTRAIT,
+            PORTRAIT_INVERTED,
+            LANDSCAPE,
+            LANDSCAPE_INVERTED,
+            RAW
+        };
+
+        virtual TouchState internalProcessTouch(float* ptrX, float* ptrY, TouchRotation rotation, const CalibrationHandler& calib)=0;
+    };
+
+    class TouchInterrogator;
+
+    class TouchScreenManager : public Executable {
+    public:
+    private:
+        AccelerationHandler accelerationHandler;
+        CalibrationHandler calibrator;
+        TouchInterrogator* touchInterrogator;
+        TouchState touchMode;
+        bool usedForScrolling = false;
+        TouchInterrogator::TouchRotation rotation;
+    public:
+        explicit TouchScreenManager(TouchInterrogator* interrogator, TouchInterrogator::TouchRotation rot) :
+                accelerationHandler(10, true), calibrator(),
+                touchInterrogator(interrogator), touchMode(NOT_TOUCHED), rotation(rot) {}
+
+        void start() {
+            touchMode = NOT_TOUCHED;
+            taskManager.execute(this);
+        }
+
+        void setUsedForScrolling(bool scrolling) {
+            usedForScrolling = scrolling;
+        }
+
+        void calibrateMinMaxValues(float xmin, float xmax, float ymin, float ymax) {
+            calibrator.setCalibrationValues(xmin, xmax, ymin, ymax);
+        }
+
+        void enableCalibration(bool ena) {
+            calibrator.enableCalibration(ena);
+        }
+
+        void exec() override {
+            float x;
+            float y;
+            auto touch = touchInterrogator->internalProcessTouch(&x, &y, rotation, calibrator);
+            // now determine what state we are in, touched, not touched or held.
+            auto oldTouchMode = touchMode;
+            switch(touch) {
+                case NOT_TOUCHED:
+                    touchMode = NOT_TOUCHED;
+                    break;
+                case TOUCHED:
+                case HELD:
+                    touchMode = (oldTouchMode == TOUCHED || oldTouchMode == HELD) ? HELD : TOUCHED;
+                    break;
+                case TOUCH_DEBOUNCE:
+                    taskManager.scheduleOnce(5, this, TIME_MILLIS);
+                    return;
+            }
+
+            // we are in a repeated not touch situation, we can slow down the polling slightly now. No update needed
+            // even at 1/10th of a second, we'll still wake up pretty quick when they select something.
+            if (oldTouchMode == NOT_TOUCHED && touchMode == NOT_TOUCHED) {
+                taskManager.scheduleOnce(100, this, TIME_MILLIS);
+                accelerationHandler.reset();
+                return;
+            }
+
+            // only the held state state is subject to acceleration control
+            if(touchMode != HELD || usedForScrolling || accelerationHandler.tick()) {
+                if (rotation == TouchInterrogator::LANDSCAPE || rotation == TouchInterrogator::LANDSCAPE_INVERTED) {
+                    sendEvent(y, x, touch, touchMode);
+                } else {
+                    sendEvent(x, y, touch, touchMode);
+                }
+            }
+            taskManager.scheduleOnce(20, this, TIME_MILLIS);
+        }
+
+        TouchInterrogator::TouchRotation changeRotation(TouchInterrogator::TouchRotation newRotation) {
+            auto oldRotation = rotation;
+            rotation = newRotation;
+            return oldRotation;
+        }
+
+        /**
+         * You must create a subclass extends from this and takes the three values converting into an
+         * event for processing.
+         *
+         * @param locationX the location between 0 and 1 in the X domain
+         * @param locationY the location between 0 and 1 in the Y domain
+         * @param touched if the panel is current touched
+         */
+        virtual void sendEvent(float locationX, float locationY, float touchPressure, TouchState touched) = 0;
+    };
 
     /**
      * This class handles the basics of a touch screen interface, capturing the values and converting them into a usable
@@ -75,64 +210,15 @@ namespace iotouch {
      * * Y+ and X- must be connected to ADC (analog input capable) pins.
      * * it uses taskManager and takes readings at the millisecond interval provided.
      */
-    class BaseResistiveTouchScreen : public Executable {
-    public:
-        enum TouchRotation : uint8_t {
-            PORTRAIT,
-            PORTRAIT_INVERTED,
-            LANDSCAPE,
-            LANDSCAPE_INVERTED,
-            RAW
-        };
+    class ResistiveTouchInterrogator : public TouchInterrogator {
     private:
-        AccelerationHandler accelerationHandler;
         pinid_t xpPin, xnPinAdc, ypPinAdc, ynPin;
-        float minValX = 0.0, maxValX = 1.0, minValY = 0.0, maxValY = 1.0;
-        enum TouchState touchMode;
-        enum TouchRotation rotation;
-        bool needsCorrection = false;
-        bool usedForScrolling = false;
     public:
 
-        BaseResistiveTouchScreen(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin, TouchRotation rotation)
-                : accelerationHandler(10, true), xpPin(xpPin), xnPinAdc(xnPin),
-                  ypPinAdc(ypPin), ynPin(ynPin), touchMode(NOT_TOUCHED), rotation(rotation) {}
+        ResistiveTouchInterrogator(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin)
+                : xpPin(xpPin), xnPinAdc(xnPin), ypPinAdc(ypPin), ynPin(ynPin) {}
 
-        /**
-         * Calibrate the actual minimum and maximum values that the touch screen returns. Use the test sketch that
-         * writes the touch screen values to the serial port, and also draws on the screen. Get the minimum and
-         * maximum values X and Y and then pass them to here. Important note, these are BEFORE rotation.
-         *
-         * @param xmin the minimum possible value in the X domain
-         * @param xmax the maximum possible value in the X domain
-         * @param ymin the minimum possible value in the Y domain
-         * @param ymax the maximum possible value in the Y domain
-         */
-        void calibrateMinMaxValues(float xmin, float xmax, float ymin, float ymax) {
-            needsCorrection = true;
-            minValX = xmin;
-            maxValX = xmax;
-            minValY = ymin;
-            maxValY = ymax;
-        }
-
-        TouchRotation changeRotation(TouchRotation newRotation, bool enableCorrection) {
-            needsCorrection = enableCorrection;
-            auto oldRotation = rotation;
-            rotation = newRotation;
-            return oldRotation;
-        }
-
-        void start() {
-            touchMode = NOT_TOUCHED;
-            taskManager.execute(this);
-        }
-
-        void setUsedForScrolling(bool scrolling) {
-            usedForScrolling = scrolling;
-        }
-
-        void exec() override {
+        TouchState internalProcessTouch(float* ptrX, float* ptrY, TouchRotation rotation, const CalibrationHandler& calibrator) override {
             auto* analogDevice = internalAnalogIo();
             auto* device = internalDigitalIo();
             // first we calculate everything in the X dimension.
@@ -148,14 +234,9 @@ namespace iotouch {
             float secondSample = analogDevice->getCurrentFloat(ypPinAdc);
 
             if (portableFloatAbs(firstSample - secondSample) > 0.007) {
-                taskManager.scheduleOnce(5, this, TIME_MILLIS);
-                return;
+                return TOUCH_DEBOUNCE;
             }
-            float x = ((firstSample + secondSample) / 2.0F);
-            if (needsCorrection) x = (x - minValX) * (1.0F / (maxValX - minValX));
-            if (rotation == LANDSCAPE_INVERTED || rotation == PORTRAIT) {
-                x = 1.0F - x;
-            }
+            float x = calibrator.calibrateX((firstSample + secondSample) / 2.0F, (rotation == LANDSCAPE_INVERTED || rotation == PORTRAIT));
 
             // now we calculate everything in the Y dimension.
             analogDevice->initPin(xnPinAdc, DIR_IN);
@@ -170,14 +251,9 @@ namespace iotouch {
             secondSample = analogDevice->getCurrentFloat(xnPinAdc);
 
             if (portableFloatAbs(firstSample - secondSample) > 0.007) {
-                taskManager.scheduleOnce(5, this, TIME_MILLIS);
-                return;
+                return TOUCH_DEBOUNCE;
             }
-            float y = ((firstSample + secondSample) / 2.0F);
-            if (needsCorrection) y = (y - minValY) * (1.0F / (maxValY - minValY));
-            if (rotation == LANDSCAPE || rotation == PORTRAIT) {
-                y = 1.0F - y;
-            }
+            float y = calibrator.calibrateY((firstSample + secondSample) / 2.0F, (rotation == LANDSCAPE || rotation == PORTRAIT));
 
             // and finally the Z dimension
             ioDevicePinMode(device, xpPin, OUTPUT);
@@ -192,56 +268,26 @@ namespace iotouch {
 
             //float touch = ((z2 / z1) * -1.0) * x * resistanceX;
             float touch = 1.0F - (secondSample - firstSample);
-
-            // now determine what state we are in, touched, not touched or held.
-            auto oldTouchMode = touchMode;
-            if (touch > TOUCH_THRESHOLD) {
-                touchMode = (oldTouchMode == TOUCHED || oldTouchMode == HELD) ? HELD : TOUCHED;
-            } else {
-                touchMode = NOT_TOUCHED;
-            }
-
-            // we are in a repeated not touch situation, we can slow down the polling slightly now. No update needed
-            // even at 1/10th of a second, we'll still wake up pretty quick when they select something.
-            if (oldTouchMode == NOT_TOUCHED && touchMode == NOT_TOUCHED) {
-                taskManager.scheduleOnce(100, this, TIME_MILLIS);
-                accelerationHandler.reset();
-                return;
-            }
-
-            // only the held state state is subject to acceleration control
-            if(touchMode != HELD || usedForScrolling || accelerationHandler.tick()) {
-                if (rotation == LANDSCAPE || rotation == LANDSCAPE_INVERTED) {
-                    sendEvent(y, x, touch, touchMode);
-                } else {
-                    sendEvent(x, y, touch, touchMode);
-                }
-            }
-            taskManager.scheduleOnce(20, this, TIME_MILLIS);
+            *ptrX = x;
+            *ptrY = y;
+            return (touch > TOUCH_THRESHOLD) ? TOUCHED : NOT_TOUCHED;
         }
 
-        /**
-         * You must create a subclass extends from this and takes the three values converting into an
-         * event for processing.
-         *
-         * @param locationX the location between 0 and 1 in the X domain
-         * @param locationY the location between 0 and 1 in the Y domain
-         * @param touched if the panel is current touched
-         */
-        virtual void sendEvent(float locationX, float locationY, float touchPressure, TouchState touched) = 0;
     };
 
     /**
      * Handles the touch screen interface by storing the latest values for later use. This allows for simple uses of
      * touch screen without creating a sub class, by just getting the latest values as needed.
      */
-    class ValueStoringResistiveTouchScreen : public BaseResistiveTouchScreen {
+    class ValueStoringResistiveTouchScreen : public TouchScreenManager {
     private:
         float lastX, lastY, touchPressure;
         TouchState touchState;
+        ResistiveTouchInterrogator resistiveInterrogator;
     public:
-        ValueStoringResistiveTouchScreen(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin, TouchRotation rotation) :
-                BaseResistiveTouchScreen(xpPin, xnPin, ypPin, ynPin, rotation) {}
+        ValueStoringResistiveTouchScreen(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin, ResistiveTouchInterrogator::TouchRotation rotation) :
+                TouchScreenManager(&resistiveInterrogator, rotation),
+                resistiveInterrogator(xpPin, xnPin, ypPin, ynPin){}
 
         void sendEvent(float locationX, float locationY, float pressure, TouchState touched) override {
             lastX = locationX;
