@@ -12,7 +12,7 @@
 
 // This is the output pin, where analog output will be sent.
 // on SAMD MKR boards this is the DAC, for Uno, MEGA change to a PWM pin
-#define PWM_OR_DAC_PIN 2
+#define PWM_OR_DAC_PIN 10
 
 // This is the input pin where analog input is received.
 #define ANALOG_IN_PIN A0
@@ -38,12 +38,15 @@ float ledCycleValue = 0;
 // the current direction of adjustment
 float ledCycleAdj = 0.01;
 
+AnalogDevice* analog = internalAnalogIo();
+
 void setup() {
     Serial.begin(115200);
 
+
     // set up the device pin directions upfront.
-    analog.initPin(ANALOG_IN_PIN, DIR_IN);
-    analog.initPin(PWM_OR_DAC_PIN, DIR_OUT);
+    analog->initPin(ANALOG_IN_PIN, DIR_IN);
+    analog->initPin(PWM_OR_DAC_PIN, DIR_OUT);
 
     // this is how to register an event with task manager
     taskManager.registerEvent(new MyAnalogExceedsEvent(internalAnalogIo(), ANALOG_IN_PIN), true);
@@ -52,11 +55,11 @@ void setup() {
     // along with the largest possible value
     taskManager.scheduleFixedRate(500, [] {
         Serial.print("Analog input value is ");
-        Serial.print(analog.getCurrentValue(ANALOG_IN_PIN));
+        Serial.print(analog->getCurrentValue(ANALOG_IN_PIN));
         Serial.print("/");
-        Serial.print(analog.getMaximumRange(DIR_IN, ANALOG_IN_PIN));
+        Serial.print(analog->getMaximumRange(DIR_IN, ANALOG_IN_PIN));
         Serial.print(" - ");
-        Serial.print(analog.getCurrentFloat(ANALOG_IN_PIN) * 100.0F);
+        Serial.print(analog->getCurrentFloat(ANALOG_IN_PIN) * 100.0F);
         Serial.println('%');
 
 #ifdef ESP32
@@ -79,7 +82,7 @@ void setup() {
         if(ledCycleValue >= 0.98) ledCycleAdj = -0.01;
         if(ledCycleValue <= 0.02) ledCycleAdj = 0.01;
 
-        analog.setCurrentFloat(PWM_OR_DAC_PIN, ledCycleValue);
+        analog->setCurrentFloat(PWM_OR_DAC_PIN, ledCycleValue);
     }, TIME_MILLIS);
 }
 

@@ -52,7 +52,7 @@ public:
 
     // you must implement a method that returns the key field with this name, it must return the same type as the
     // key you specify for the list, (IE template parameter 1).
-    int getKey() {
+    int getKey() const {
         return key;
     }
 

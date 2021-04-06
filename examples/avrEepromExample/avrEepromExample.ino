@@ -18,11 +18,10 @@
 #include <ArduinoEEPROMAbstraction.h>
 #include <TaskManagerIO.h>
 
-const unsigned int romStart = 800;
+const unsigned int romStart = 400;
 
-// When you want to use the AVR built in EEPROM support (only available on AVR)
-// comment / uncomment to select
 AvrEeprom anEeprom;
+ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
 
 const char strData[15] = { "Hello Eeprom"};
 
@@ -44,13 +43,12 @@ void setup() {
 
     // here I show another way to wrap the EEPROM class into an IO abstraction, prefer local instantiation, it's small.
 
-    ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
     eepromWrapper.write8(romStart + 30, 99);
     eepromWrapper.write16(romStart + 31, 0xf00d);
     eepromWrapper.write32(romStart + 33, 0xfade0ff);
     eepromWrapper.writeArrayToRom(romStart + 37, (const unsigned char*)strData, sizeof strData);
     //and if your device needs a commit operation, do it here. For example:
-    //EEPROM.commit(); 
+    //EEPROM.commit();
 
 	Serial.println("All values written out");
 }
@@ -80,7 +78,6 @@ void loop() {
     //
 
     Serial.println("Now reading back using ArduinoEEPROMAbstraction");
-    ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
 
 	Serial.print("Reading back byte: ");
 	Serial.println(eepromWrapper.read8(romStart + 30));
