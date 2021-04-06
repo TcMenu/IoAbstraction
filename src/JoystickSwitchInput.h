@@ -27,7 +27,7 @@
  */
 class JoystickSwitchInput : public RotaryEncoder, public Executable {
 private:
-    uint8_t analogPin;
+    pinid_t analogPin;
     AnalogDevice* analogDevice;
     float tolerance = 0.03F;
     float midPoint = 0.5F;
@@ -40,7 +40,7 @@ public:
      * @param analogPin the pin on which the joystick analog pin is connected to
      * @param callback the callback to provide updates to when the value changes.
      */
-    JoystickSwitchInput(AnalogDevice *analogDevice, uint8_t analogPin, EncoderCallbackFn callback) : RotaryEncoder(callback) {
+    JoystickSwitchInput(AnalogDevice *analogDevice, pinid_t analogPin, EncoderCallbackFn callback) : RotaryEncoder(callback) {
         this->analogPin = analogPin;
         this->analogDevice = analogDevice;
         analogDevice->initPin(analogPin, DIR_IN);
@@ -95,6 +95,80 @@ public:
     }
 };
 
+#define ANALOG_JOYSTICK_LOWER_PIN 0
+#define ANALOG_JOYSTICK_HIGHER_PIN 1
+
+class AnalogJoystickToButtons : public BasicIoAbstraction {
+private:
+    enum CurrentJoystickDirection : byte { LEFT = 0x01, RIGHT = 0x02, NONE = 0x00 };
+    AnalogDevice* analogDevice;
+    pinid_t joystickPin;
+    CurrentJoystickDirection currentDir = NONE;
+    bool errorOccurred = false;
+    bool inverted = false;
+    float centrePoint;
+public:
+    AnalogJoystickToButtons(AnalogDevice* device, pinid_t pin, float centre) {
+        joystickPin = pin;
+        analogDevice = device;
+        centrePoint = centre;
+    }
+
+    ~AnalogJoystickToButtons() override = default;
+
+    uint8_t readValue(pinid_t pin) override {
+        bool ret = (pin == 0) ? currentDir == LEFT : currentDir == RIGHT;
+        if(inverted) ret = !ret;
+        return ret;
+    }
+
+    uint8_t readPort(pinid_t pin) override {
+        return inverted ? ~currentDir : currentDir;
+    }
+
+    bool runLoop() override {
+        auto value = analogDevice->getCurrentFloat(joystickPin);
+        auto offLowest = centrePoint - 0.15;
+        auto offHighest = centrePoint + 0.15;
+        if(value < offLowest) {
+            currentDir = LEFT;
+        }
+        else if(value > offHighest) {
+            currentDir = RIGHT;
+        }
+        else {
+            currentDir = NONE;
+        }
+        return true;
+    }
+
+    void pinDirection(pinid_t pin, uint8_t mode) override {
+        if(mode == INPUT) {
+            inverted = false;
+            return;
+        }
+        if(mode == INPUT_PULLUP) {
+            inverted = true;
+            return;
+        }
+        // only input and input pull up are supported.
+        errorOccurred = true;
+    }
+
+    bool hasErrorOccurred() const { return errorOccurred; }
+
+    //
+    // The following functions are not supported, as this abstraction is only for local joystick input.
+    //
+
+    void writeValue(pinid_t pin, uint8_t value) override { }
+
+    void writePort(pinid_t pin, uint8_t portVal) override { }
+
+    // we let the base class handle attach interrupt, if its supported it should work in change mode for analog in
+    //void attachInterrupt(pintype_t pin, RawIntHandler interruptHandler, uint8_t mode) override { }
+};
+
 /**
  * This is the preferred way to create an instance of a joystick encoder and set it as the
  * default encoder for switches library.
@@ -102,10 +176,14 @@ public:
  * @param analogPin the pin onto which the joystick is connected
  * @param callback the callback that will receive changes in value
  */
-inline void setupAnalogJoystickEncoder(AnalogDevice* analogDevice, uint8_t analogPin, EncoderCallbackFn callback) {
+inline void setupAnalogJoystickEncoder(AnalogDevice* analogDevice, pinid_t analogPin, EncoderCallbackFn callback) {
     auto joystickEncoder = new JoystickSwitchInput(analogDevice, analogPin, callback);
     switches.setEncoder(joystickEncoder);
     taskManager.scheduleOnce(250, joystickEncoder);
+}
+
+inline IoAbstractionRef joystickTwoButtonExpander(AnalogDevice* analogDevice, pinid_t analogPin, float centrePoint) {
+    return new AnalogJoystickToButtons(analogDevice, analogPin, centrePoint);
 }
 
 #endif // _JOYSTICK_SWITCH_INPUT_H_

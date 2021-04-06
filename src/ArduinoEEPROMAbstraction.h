@@ -49,23 +49,23 @@ public:
     }
 
     void write8(EepromPosition pos, uint8_t val) override {
-        eepromProxy->write((uint8_t)pos, val);
+        eepromProxy->write(pos, val);
     }
 
     void write16(EepromPosition pos, uint16_t val) override {
-        eepromProxy->write((uint8_t)pos, val);
+        eepromProxy->write(pos, val);
         val >>= 8;
-        eepromProxy->write((uint8_t)pos + 1, val);
+        eepromProxy->write(pos + 1, (uint8_t)val);
     }
 
    	void write32(EepromPosition pos, uint32_t val) override {
-        eepromProxy->write((uint8_t)pos, val);
+        eepromProxy->write(pos, (uint8_t)val);
         val >>= 8;
-        eepromProxy->write((uint8_t)pos + 1, val);
+        eepromProxy->write(pos + 1, (uint8_t)val);
         val >>= 8;
-        eepromProxy->write((uint8_t)pos + 2, val);
+        eepromProxy->write(pos + 2, (uint8_t)val);
         val >>= 8;
-        eepromProxy->write((uint8_t)pos + 3, val);
+        eepromProxy->write(pos + 3, (uint8_t)val);
     }
 
 	void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) override {

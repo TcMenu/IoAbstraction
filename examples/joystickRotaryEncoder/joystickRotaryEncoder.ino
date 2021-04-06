@@ -9,15 +9,18 @@
 #include<TaskManagerIO.h>
 #include <IoAbstraction.h>
 #include <JoystickSwitchInput.h>
+#include "../../src/IoAbstraction.h"
 
 #define ANALOG_INPUT_PIN A1
-
+#define ANALOG_LEFT_RIGHT_PIN A2
+#define MULTI_IO_ARDUINO_PIN_MAX 100
 // we need to create an analog device that the joystick encoder will use to get readings.
 // In this case on arduino analog pins.
 ArduinoAnalogDevice analogDevice;
 
-// and we must tell switches where the buttons are located, in this case on arduino pins.
-IoAbstractionRef arduinoPins = ioUsingArduino();
+// We now want to receive button input from both Arduino pins, and two extra simulated button pins that
+// are acutally when the joystick moves left and right. So we need a multiIoAbstraction.
+MultiIoAbstractionRef multiIo = multiIoExpander(MULTI_IO_ARDUINO_PIN_MAX);
 
 void onEncoderChange(int newValue) {
     Serial.print("New joystick value: ");
@@ -35,8 +38,13 @@ void setup() {
 
     Serial.println("Starting joystick rotary encoder example");
 
-    // first initialise switches using pull up switch logic.
-    switches.initialise(arduinoPins, true);
+    // now we add an expander that handles the left and right function of the joystick as two buttons, these could
+    // be useful for next and back functions for example. The mid point for calibration will be half max value in
+    // our case, if your potentiometer differs, set the calibration accordingly. Joystick pins will start at 100.
+    multiIoAddExpander(multiIo, joystickTwoButtonExpander(&analogDevice, ANALOG_LEFT_RIGHT_PIN, .5F), 10);
+
+    // first initialise switches using the multi io expander and pull up switch logic.
+    switches.initialise(multiIo, true);
 
     // now register the joystick
     setupAnalogJoystickEncoder(&analogDevice, ANALOG_INPUT_PIN, onEncoderChange);
@@ -47,6 +55,23 @@ void setup() {
 
     // now set the range to 500 and current value to 250
     switches.changeEncoderPrecision(500, 250);
+
+    // now we set up the left function to operate like a switch, it's on the joystick expander on the multi io
+    // so it's addressed with the offset we provided earlier
+    switches.addSwitch(MULTI_IO_ARDUINO_PIN_MAX + ANALOG_JOYSTICK_LOWER_PIN, [](pinid_t pin, bool held) {
+        Serial.print("Left direction, held="); Serial.println(held);
+    }, 20);
+
+    // now we set up the right function to operate like a switch, it's on the joystick expander on the multi io
+    // so it's addressed with the offset we provided earlier
+    switches.addSwitch(MULTI_IO_ARDUINO_PIN_MAX + ANALOG_JOYSTICK_HIGHER_PIN, [](pinid_t pin, bool held) {
+        Serial.print("Right direction, held="); Serial.println(held);
+    }, 20);
+
+    // now we set up the joystick click switch, it's on a regular device pin, so it's pin is addressed as usual.
+    switches.addSwitch(A3, [](pinid_t pin, bool held) {
+        Serial.print("Joystick Clicked, held="); Serial.println(held);
+    });
 
     // and that's it, task manager and switches does the register
     Serial.println("Started joystick example");
