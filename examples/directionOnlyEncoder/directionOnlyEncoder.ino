@@ -13,17 +13,17 @@
 #include <TaskManagerIO.h>
 
 // The pin onto which we connected the rotary encoders switch
-const int spinwheelClickPin = A3;
+const int spinwheelClickPin = 4;
 
 // The two pins where we connected the A and B pins of the encoder. I recomend you dont change these
 // as the pin must support interrupts.
-const int encoderAPin = 2;
-const int encoderBPin = 3;
+const int encoderAPin = 5;
+const int encoderBPin = 6;
 
 //
 // When the spinwheel is clicked, this function will be run as we registered it as a callback
 //
-void onSpinwheelClicked(uint8_t pin, bool heldDown) {
+void onSpinwheelClicked(pinid_t pin, bool heldDown) {
   Serial.print("Button pressed ");
   Serial.println(heldDown ? "Held" : "Pressed");
 }

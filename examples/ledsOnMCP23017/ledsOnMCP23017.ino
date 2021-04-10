@@ -47,7 +47,7 @@ void onKeyPressed(uint8_t key, bool held) {
 void setup() {
     // startup wire and serial.
     Wire.begin();
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     // this is optional, in a real world system you could probably just connect the
     // reset pin of the device to Vcc, but when prototyping you'll want a reset

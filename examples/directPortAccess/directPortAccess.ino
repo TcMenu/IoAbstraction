@@ -34,7 +34,7 @@ uint8_t ledState = 0xaa;
 
 void setup() {
     Wire.begin();
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     Serial.println("Multi IO expander example");
 
@@ -46,10 +46,14 @@ void setup() {
     delayMicroseconds(100);
     digitalWrite(RESET_23017_PIN, HIGH);
 
+    Serial.println("Finished reset, adding the 23017");
+
     // when using multiIO the pins are arranged with each device owning some of the pins, in this case
     // Arduino: 0..99
     // 23017: 100..119
     allDevices.addIoExpander(ioFrom23017(0x20), 120);
+
+    Serial.println("Setting up IoExpander inputs and outputs");
 
     // in this case we want all the pins as output, so we set all the pins we are
     // going to use first to the right state.
@@ -60,6 +64,8 @@ void setup() {
 }
 
 void loop() {
+    Serial.println("In loop, writing to ports and doing sync");
+
     // and now we write to the port directly. Use caution before writing directly
     // to ports, read the arduino guides on this subject first.
     allDevices.writePort(PORT_L_OFFSET, ledState);

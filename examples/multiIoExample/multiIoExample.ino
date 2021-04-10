@@ -51,7 +51,7 @@ void onSwitchPressed(uint8_t key, bool held) {
 //
 void setup() {
   Wire.begin();
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   Serial.println("Multi IoExpander example");
   

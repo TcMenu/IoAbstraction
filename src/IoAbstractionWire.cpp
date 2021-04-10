@@ -306,14 +306,14 @@ void MCP23017IoAbstraction::setInvertInputPin(pinid_t pin, bool shouldInvert) {
     toggleBitInRegister(IPOL_ADDR, pin, shouldInvert);
 }
 
-IoAbstractionRef ioFrom23017(uint8_t addr, WireType wireImpl) {
+IoAbstractionRef ioFrom23017(pinid_t addr, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff, wireImpl);
 }
 
-IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
+IoAbstractionRef ioFrom23017(pinid_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, intMode, interruptPin, 0xff, wireImpl);
 }
 
-IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) {
+IoAbstractionRef ioFrom23017IntPerPort(pinid_t addr, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) {
 	return new MCP23017IoAbstraction(addr, intMode, intPinA, intPinB, wireImpl);
 }

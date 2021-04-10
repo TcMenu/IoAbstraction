@@ -3,8 +3,8 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#ifndef _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_
-#define _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_
+#ifndef IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_
+#define IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_
 
 /**
  * @file EepromAbstractionWire.h
@@ -12,33 +12,7 @@
  * Contains the i2c variants of the EepromAbstraction
  */
 
-#include "PlatformDetermination.h"
-
-#ifdef IOA_USE_MBED
-#include <mbed.h>
-#include <i2c_api.h>
-typedef I2C* WireType;
-
-class I2CLocker {
-private:
-    I2C* i2cPtr;
-public:
-    I2CLocker(I2C* i2c) {
-        i2cPtr = i2c;
-        i2c->lock();
-    }
-
-    ~I2CLocker() {
-        i2cPtr->unlock();
-    }
-};
-
-#else // not IOA_USE_MBED
-#include <Arduino.h>
-#include <Wire.h>
-typedef TwoWire* WireType;
-#endif // IOA_USE_MBED
-
+#include "PlatformDeterminationWire.h"
 #include "EepromAbstraction.h"
 #include <TaskManager.h>
 
@@ -88,9 +62,9 @@ public:
 #ifdef IOA_USE_MBED
 	I2cAt24Eeprom(uint8_t address, uint8_t pageSize, I2C* wireImpl);
 #else // not IOA_USE_MBED
-    I2cAt24Eeprom(uint8_t address, uint8_t pageSize, TwoWire* wireImpl = &Wire);
+    I2cAt24Eeprom(uint8_t address, uint8_t pageSize, WireType wireImpl = &Wire);
 #endif // IOA_USE_MBED
-	virtual ~I2cAt24Eeprom() {}
+	~I2cAt24Eeprom() override = default;
 
 	/** 
 	 * This indicates if an I2C error has ocrrued at any point since the last call to error.
@@ -99,16 +73,16 @@ public:
 	bool hasErrorOccurred() override;
 
 	uint8_t read8(EepromPosition position) override;
-	virtual void write8(EepromPosition position, uint8_t val);
+	void write8(EepromPosition position, uint8_t val) override;
 
-	virtual uint16_t read16(EepromPosition position);
-	virtual void write16(EepromPosition position, uint16_t val);
+	uint16_t read16(EepromPosition position) override;
+	void write16(EepromPosition position, uint16_t val) override;
 
-	virtual uint32_t read32(EepromPosition position);
-	virtual void write32(EepromPosition position, uint32_t val);
+	uint32_t read32(EepromPosition position) override;
+	void write32(EepromPosition position, uint32_t val) override;
 
-	virtual void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len);
-	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len);
+	void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) override;
+	void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) override;
 private:
 	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
 	void writeByte(EepromPosition position, uint8_t val);
@@ -123,4 +97,4 @@ private:
     void waitForReady();
 };
 
-#endif /* _IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */
+#endif /* IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */

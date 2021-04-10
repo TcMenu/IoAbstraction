@@ -8,7 +8,7 @@
 #include <IoAbstraction.h>
 #include <ResistiveTouchScreen.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_PCD8544.h>
+#include <Adafruit_ST7735.h>
 
 #define YPOS_PIN 32
 #define XNEG_PIN 33
@@ -21,10 +21,11 @@
 using namespace iotouch;
 
 // the touch screen itself
-ValueStoringResistiveTouchScreen touchScreen(XPOS_PIN, XNEG_PIN, YPOS_PIN, YNEG_PIN, BaseResistiveTouchScreen::PORTRAIT);
+ValueStoringResistiveTouchScreen touchScreen(XPOS_PIN, XNEG_PIN, YPOS_PIN, YNEG_PIN, TouchInterrogator::PORTRAIT);
 
 // couple of display options here, anything with a touch interface attached!
 Adafruit_PCD8544 gfx(MY_CS, MY_DC, MY_RST);
+//Adafruit_ST7735 gfx(MY_CS, MY_DC, MY_RST);
 //Adafruit_ILI9341 gfx(MY_CS, MY_DC);
 
 int oldX = 0, oldY = 0;

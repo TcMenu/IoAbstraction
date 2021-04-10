@@ -44,12 +44,12 @@ public:
     }
 
     // when a key is pressed, this is called
-    void onPressed(uint8_t /*pin*/, bool held) override {
+    void onPressed(pinid_t /*pin*/, bool held) override {
         logKeyPressed(whatKey, held);
     }
 
     // when a key is released this is called.
-    void onReleased(uint8_t /*pin*/, bool held) override {
+    void onReleased(pinid_t /*pin*/, bool held) override {
         Serial.print("Release ");
         logKeyPressed(whatKey, held);
     }
@@ -67,11 +67,11 @@ void setup() {
 
     // now we add the switches, each one just logs the key press, the last parameter to addSwitch
     // is the repeat frequency is optional, when not set it implies not repeating.
-    switches.addSwitch(DF_KEY_DOWN, [](uint8_t /*pin*/, bool held) { logKeyPressed("DOWN", held);}, 20);
-    switches.addSwitch(DF_KEY_UP, [](uint8_t /*pin*/, bool held) { logKeyPressed("UP", held);}, 20);
-    switches.addSwitch(DF_KEY_LEFT, [](uint8_t /*pin*/, bool held) { logKeyPressed("LEFT", held);}, 20);
-    switches.addSwitch(DF_KEY_RIGHT, [](uint8_t /*pin*/, bool held) { logKeyPressed("RIGHT", held);}, 20);
-    switches.onRelease(DF_KEY_RIGHT, [](uint8_t /*pin*/, bool) { Serial.println("RIGHT has been released");});
+    switches.addSwitch(DF_KEY_DOWN, [](pinid_t /*pin*/, bool held) { logKeyPressed("DOWN", held);}, 20);
+    switches.addSwitch(DF_KEY_UP, [](pinid_t /*pin*/, bool held) { logKeyPressed("UP", held);}, 20);
+    switches.addSwitch(DF_KEY_LEFT, [](pinid_t /*pin*/, bool held) { logKeyPressed("LEFT", held);}, 20);
+    switches.addSwitch(DF_KEY_RIGHT, [](pinid_t /*pin*/, bool held) { logKeyPressed("RIGHT", held);}, 20);
+    switches.onRelease(DF_KEY_RIGHT, [](pinid_t /*pin*/, bool) { Serial.println("RIGHT has been released");});
     
     switches.addSwitchListener(DF_KEY_SELECT, &selectKeyListener);
     
