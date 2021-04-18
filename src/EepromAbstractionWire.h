@@ -59,11 +59,7 @@ public:
 	 * Create an I2C EEPROM object giving it's address and the page size of the device.
 	 * Page sizes are defined in this header file.
 	 */
-#ifdef IOA_USE_MBED
-	I2cAt24Eeprom(uint8_t address, uint8_t pageSize, I2C* wireImpl);
-#else // not IOA_USE_MBED
-    I2cAt24Eeprom(uint8_t address, uint8_t pageSize, WireType wireImpl = &Wire);
-#endif // IOA_USE_MBED
+    I2cAt24Eeprom(uint8_t address, uint8_t pageSize, WireType wireImpl = defaultWireTypePtr);
 	~I2cAt24Eeprom() override = default;
 
 	/** 
@@ -84,17 +80,10 @@ public:
 	void readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) override;
 	void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) override;
 private:
-	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len);
+	uint8_t findMaximumInPage(uint16_t romDest, uint8_t len) const;
 	void writeByte(EepromPosition position, uint8_t val);
 	uint8_t readByte(EepromPosition position);
-
-#ifdef IOA_USE_MBED
-    void writeAddressWire(uint16_t memAddr, const char* data = nullptr, int len = 0);
-#else
-    void writeAddressWire(uint16_t memAddr);
-#endif
-
-    void waitForReady();
+    void writeAddressWire(uint16_t memAddr, const uint8_t* data = nullptr, int len = 0);
 };
 
 #endif /* IOABSTRACTION_EEPROMABSTRACTIONWIRE_H_ */

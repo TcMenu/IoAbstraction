@@ -248,23 +248,20 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t 
  */
 IoAbstractionRef ioFrom23017IntPerPort(pinid_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB, WireType wireImpl);
 
-#ifndef IOA_USE_MBED
 inline IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin = 0xff) {
-    return ioFrom8574(addr, interruptPin, &Wire);
+    return ioFrom8574(addr, interruptPin, defaultWireTypePtr);
 };
 
 inline IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB) {
-    return ioFrom23017IntPerPort(addr, intMode, interruptPinA, interruptPinB, &Wire);
+    return ioFrom23017IntPerPort(addr, intMode, interruptPinA, interruptPinB, defaultWireTypePtr);
 }
 
 inline IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin) {
-    return ioFrom23017(addr, intMode, interruptPin, &Wire);
+    return ioFrom23017(addr, intMode, interruptPin, defaultWireTypePtr);
 }
 
 inline IoAbstractionRef ioFrom23017(pinid_t addr) {
-    return ioFrom23017(addr, &Wire);
+    return ioFrom23017(addr, defaultWireTypePtr);
 }
-
-#endif
 
 #endif /* _IOABSTRACTION_IOABSTRACTIONWIRE_H_ */

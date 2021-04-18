@@ -15,10 +15,6 @@
   ],
   "dependencies": [
     {
-      "name": "Wire",
-      "frameworks": "arduino"
-    },
-    {
       "name": "TaskManagerIO"
     }
   ],

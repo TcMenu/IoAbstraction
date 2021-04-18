@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
+ */
+
 /**
  * Support for STM32F4xx battery backed up RAM as an IoAbstraction EepromAbstraction. This implementation always caches
  * the EEPROM memory into RAM to avoid having to enable and disable the clock on each read. However, you could easily

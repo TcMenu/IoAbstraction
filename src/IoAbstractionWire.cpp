@@ -44,39 +44,19 @@ void PCF8574IoAbstraction::writePort(pinid_t /*pin*/, uint8_t value) {
 	needsWrite = true;
 }
 
-#ifdef IOA_USE_MBED
 bool PCF8574IoAbstraction::runLoop(){
-    I2CLocker locker(wireImpl);
+    TaskMgrLock locker(i2cLock);
     bool writeOk = true;
     if (needsWrite) {
         needsWrite = false;
-        writeOk = wireImpl->write(address, (char*)&toWrite, 1) == 0;
+        writeOk = ioaWireWriteWithRetry(wireImpl, address, &toWrite, 1);
     }
 
     if(pinsConfiguredRead) {
-        writeOk = writeOk || (wireImpl->read(address, (char*)&lastRead, 1) == 0);
+        writeOk = writeOk || ioaWireRead(wireImpl, address, &lastRead, 1);
     }
     return writeOk;
 }
-#else
-bool PCF8574IoAbstraction::runLoop(){
-	bool writeOk = true;
-	if (needsWrite) {
-		needsWrite = false;
-		wireImpl->beginTransmission(address);
-		wireImpl->write(toWrite);
-		writeOk = wireImpl->endTransmission() == 0;
-	}
-	
-	if(pinsConfiguredRead) {
-		wireImpl->requestFrom(address, (uint8_t)1);
-		if (wireImpl->available()) {
-			lastRead = wireImpl->read();
-		}
-	}
-	return writeOk;
-}
-#endif
 
 void PCF8574IoAbstraction::attachInterrupt(pinid_t /*pin*/, RawIntHandler intHandler, uint8_t /*mode*/) {
 	// if there's an interrupt pin set
@@ -107,7 +87,7 @@ void MCP23017IoAbstraction::initDevice() {
 	if(intPinB == 0xff && intPinA != 0xff) {
 		bitSet(controlReg, IOCON_MIRROR_BIT);
 	}
-	else if(intPinA != 0xff && intPinB != 0xff) {
+	else if(intPinA != 0xff) {
 		bitClear(controlReg, IOCON_MIRROR_BIT);
 	}
 
@@ -169,6 +149,7 @@ void MCP23017IoAbstraction::writePort(pinid_t pin, uint8_t value) {
 }
 
 bool MCP23017IoAbstraction::runLoop() {
+    TaskMgrLock locker(i2cLock);
 	if(needsInit) initDevice();
 
 	bool writeOk = true;
@@ -197,87 +178,41 @@ bool MCP23017IoAbstraction::runLoop() {
 	return writeOk;
 }
 
-#ifdef IOA_USE_MBED
-
 bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
-    I2CLocker locker(wireImpl);
-    char data[3];
-    data[0] = reg;
-	data[1] = (char)command;
-	data[2] = (char)(command>>8U);
-	return wireImpl->write(address, data, sizeof(data)) == 0;
+	uint8_t data[3];
+	data[0] = reg;
+    data[1] = (uint8_t)command;
+    data[2] = (uint8_t)(command>>8);
+	return ioaWireWriteWithRetry(wireImpl, address, data, sizeof data);
 }
 
 bool MCP23017IoAbstraction::writeToDevice8(uint8_t reg, uint8_t command) {
-    I2CLocker locker(wireImpl);
-    char data[2];
+    uint8_t data[2];
     data[0] = reg;
-    data[1] = (char)command;
-    return wireImpl->write(address, data, sizeof(data)) == 0;
+    data[1] = (uint8_t)command;
+    return ioaWireWriteWithRetry(wireImpl, address, data, sizeof data);
 }
 
 uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
-    I2CLocker locker(wireImpl);
+	ioaWireWriteWithRetry(wireImpl, address, &reg, 1, 0, false);
 
-    wireImpl->write(address, (char*)&reg, 1);
-	char data[2];
-	wireImpl->read(address, data, sizeof(data));
+	uint8_t data[2];
+	ioaWireRead(wireImpl, address, data, sizeof data);
 	// read will get port A first then port B.
-	return data[0] | (data[1] << 8);
-}
-
-uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
-    I2CLocker locker(wireImpl);
-
-    char sz[1];
-    sz[0] = reg;
-    wireImpl->write(address, sz, 1);
-
-    char data[1];
-	wireImpl->read(address, data, (uint8_t)1);
-	return data[0];
-}
-#else
-bool MCP23017IoAbstraction::writeToDevice(uint8_t reg, uint16_t command) {
-	wireImpl->beginTransmission(address);
-	wireImpl->write(reg);
-
-	// write port A then port B.
-	wireImpl->write((uint8_t)command);
-	wireImpl->write((uint8_t)(command>>8));
-	return wireImpl->endTransmission() == 0;
-}
-
-bool MCP23017IoAbstraction::writeToDevice8(uint8_t reg, uint8_t command) {
-	wireImpl->beginTransmission(address);
-	wireImpl->write(reg);
-
-	// write only one port.
-	wireImpl->write((uint8_t)command);
-	return wireImpl->endTransmission() == 0;
-}
-
-uint16_t MCP23017IoAbstraction::readFromDevice(uint8_t reg) {
-	wireImpl->beginTransmission(address);
-	wireImpl->write(reg);
-	wireImpl->endTransmission(false);
-
-	wireImpl->requestFrom(address, (uint8_t)2);
-	// read will get port A first then port B.
-	uint8_t portA = wireImpl->read();
-	uint16_t portB = (wireImpl->read() << 8);
+	uint8_t portA = data[0];
+	uint16_t portB = data[1] << 8U;
 	return portA | portB;
 }
 
 uint8_t MCP23017IoAbstraction::readFromDevice8(uint8_t reg) {
-	wireImpl->beginTransmission(address);
-	wireImpl->write(reg);
-	wireImpl->endTransmission(false);
+    ioaWireWriteWithRetry(wireImpl, address, &reg, 1, 0);
 
-	wireImpl->requestFrom(address, (uint8_t)1);
-	return wireImpl->read();
+	uint8_t buffer[2];
+    if(ioaWireRead(wireImpl, address, buffer, 1)){
+       return buffer[0];
+    }
+    return 0;
 }
-#endif
 
 void MCP23017IoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) {
 	// only if there's an interrupt pin set
