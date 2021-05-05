@@ -14,71 +14,12 @@
 #include "PlatformDetermination.h"
 #include <TaskManagerIO.h>
 
-#ifdef IOA_USE_MBED
-
-#include <mbed.h>
-#include <stdint.h>
-#include <SimpleCollections.h>
-
-// the following defines allow you to pass regular arduino pin modes in mbed
-
-#define INPUT PullNone
-#define INPUT_PULLUP PullUp
-#define OUTPUT 0xff
-#define RISING 0x01
-#define FALLING 0x02
-#define CHANGE 0x03
-#define PROGMEM
-#define HIGH 1
-#define LOW 0
-
-#define bitRead(value, bit) (((value) & (1 << (bit))) != 0)
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
-
-class GpioWrapper {
-private:
-    uint32_t pin;
-    gpio_t gpio;
-    InterruptIn* interruptHandler;
-    uint8_t pinMode;
-public:
-    GpioWrapper() {
-        pin = (uint32_t)-1;
-        interruptHandler = NULL;
-    }
-    GpioWrapper(uint32_t pin) {
-        this->pin = pin;
-        interruptHandler = NULL;
-    }
-    GpioWrapper(const GpioWrapper& other) {
-        this->pin = other.pin;
-        this->interruptHandler = other.interruptHandler;
-        this->pinMode = other.pinMode;
-        memcpy(&this->gpio, &other.gpio, sizeof(gpio_t));
-    }
-    GpioWrapper& operator=(const GpioWrapper& other) {
-        if(this == &other) return *this;
-        this->pin = other.pin;
-        this->pinMode = other.pinMode;
-        this->interruptHandler = other.interruptHandler;
-        memcpy(&this->gpio, &other.gpio, sizeof(gpio_t));
-        return *this;
-    }
-    uint32_t getPin() const { return pin; }
-    uint32_t getKey() const { return pin; }
-    gpio_t* getGpio() { return &gpio; }
-    void setPinMode(uint8_t mode) { pinMode = mode; }
-    uint8_t getPinMode() { return pinMode; }
-    InterruptIn* getInterruptIn() { return interruptHandler; }
-    void setInterruptIn(InterruptIn* in) { interruptHandler = in; }
-};
-
-#else // NOT MBED
-
-#include <Arduino.h>
-
+#if defined(IOA_USE_MBED)
+# include "mbed/MbedDigitalIO.h"
+#elif defined(ESP32)
+# include "esp32/ESP32DigitalIO.h"
+#else
+# include <Arduino.h>
 #endif //IOA_USE_MBED
 
 /**
@@ -163,13 +104,15 @@ typedef BasicIoAbstraction* IoAbstractionRef;
  * Gives a reference to the Arduino pin implementation of IoAbstraction.
  */
 #ifdef IOA_USE_MBED
-IoAbstractionRef internalDigitalIo();
 #define pgm_read_byte_near(x) (*(x))
-#else
-#define internalDigitalIo ioUsingArduino
-IoAbstractionRef ioUsingArduino();
+#elif defined(IOA_USE_ARDUINO)
+#define ioUsingArduino internalDigitalIo
 #endif
 
+/**
+ * @return the device abstraction for digital pins, on ESP32 this abstraction does not need Arduino present.
+ */
+IoAbstractionRef internalDigitalIo();
 
 /**
  * Works in the same way as regular `pinMode` but this works for any IoAbstractionRef that you wish to set the pin mode on. 
