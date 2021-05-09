@@ -40,7 +40,7 @@ private:
     GpioWrapper *allocatePinIfNeedBe(uint8_t pinToAlloc);
 #endif //IOA_USE_MBED
 public:
-	virtual ~BasicIoAbstraction() { }
+	virtual ~BasicIoAbstraction() = default;
 
 	/**
 	 * sets the pin direction for a pin controlled by this abstraction - as per `pinMode`

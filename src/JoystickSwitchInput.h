@@ -100,7 +100,7 @@ public:
 
 class AnalogJoystickToButtons : public BasicIoAbstraction {
 private:
-    enum CurrentJoystickDirection : byte { LEFT = 0x01, RIGHT = 0x02, NONE = 0x00 };
+    enum CurrentJoystickDirection : uint8_t { LEFT = 0x01, RIGHT = 0x02, NONE = 0x00 };
     AnalogDevice* analogDevice;
     pinid_t joystickPin;
     CurrentJoystickDirection currentDir = NONE;

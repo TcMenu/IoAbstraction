@@ -38,7 +38,7 @@ public:
     explicit ArduinoAnalogDevice(uint8_t readBitResolution = IOA_ANALOGIN_RES, uint8_t writeBitResolution = IOA_ANALOGOUT_RES);
 
     int getMaximumRange(AnalogDirection dir, pinid_t /*pin*/) override {
-        return (dir == DIR_OUT) ? writeResolution : readResolution;
+        return (dir == DIR_IN) ?  readResolution : writeResolution;
     }
 
     int getBitDepth(AnalogDirection direction, pinid_t /*pin*/) override {

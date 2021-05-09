@@ -9,10 +9,11 @@
 #include <AnalogDeviceAbstraction.h>
 #include <TaskManagerIO.h>
 #include <DeviceEvents.h>
+#include <Wire.h>
 
 // This is the output pin, where analog output will be sent.
 // on SAMD MKR boards this is the DAC, for Uno, MEGA change to a PWM pin
-#define PWM_OR_DAC_PIN 10
+#define PWM_OR_DAC_PIN 15
 
 // This is the input pin where analog input is received.
 #define ANALOG_IN_PIN A0

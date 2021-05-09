@@ -3,6 +3,7 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include <IoLogging.h>
 #include "../PlatformDetermination.h"
 
 #if !defined(ESP32) && defined(IOA_USE_ARDUINO)
@@ -18,12 +19,12 @@ AnalogDevice* internalAnalogIo() {
 ArduinoAnalogDevice::ArduinoAnalogDevice(uint8_t readBitResolution, uint8_t writeBitResolution) {
 #if IOA_ANALOGIN_RES > 10
     // some boards have the option for greater analog resolution on input. It needs to be configured
-		analogReadResolution(readBitResolution);
+    analogReadResolution(readBitResolution);
 #endif
 #if (IOA_ANALOGOUT_RES > 8) && !defined(ESP8266)
     // some boards have the option for greater analog output resolution, but then it needs configuring.
-		// except on esp8266 where 1024 pwm resolution is standard
-		analogWriteResolution(writeBitResolution);
+    // except on esp8266 where 1024 pwm resolution is standard
+    analogWriteResolution(writeBitResolution);
 #endif
     this->readBitResolution = readBitResolution;
     this->writeBitResolution = writeBitResolution;

@@ -1,5 +1,6 @@
 
 
+#include <BasicInterruptAbstraction.h>
 #include "PlatformDetermination.h"
 #include "BasicIoAbstraction.h"
 
@@ -18,17 +19,24 @@ uint8_t BasicIoAbstraction::readValue(pinid_t pin) {
 }
 
 void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) {
-    pintype_t intPin = digitalPinToInterrupt(pin);
-    internalHandleInterrupt(intPin, interruptHandler, mode);
+    internalHandleInterrupt(pin, interruptHandler, mode);
 }
 
+
 void BasicIoAbstraction::writePort(pinid_t port, uint8_t portVal) {
+#ifndef IOA_ARDUINO_MBED
 	*portOutputRegister(digitalPinToPort(port)) = portVal;
+#endif
 }
 
 uint8_t BasicIoAbstraction::readPort(pinid_t port) {
+#ifndef IOA_ARDUINO_MBED
 	return *portInputRegister(digitalPinToPort(port));
+#else
+    return 0;
+#endif
 }
+
 
 IoAbstractionRef arduinoAbstraction = NULL;
 IoAbstractionRef ioUsingArduino() {

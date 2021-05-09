@@ -53,7 +53,7 @@ bool PCF8574IoAbstraction::runLoop(){
     }
 
     if(pinsConfiguredRead) {
-        writeOk = writeOk || ioaWireRead(wireImpl, address, &lastRead, 1);
+        writeOk = writeOk && ioaWireRead(wireImpl, address, &lastRead, 1);
     }
     return writeOk;
 }
@@ -104,10 +104,12 @@ void MCP23017IoAbstraction::initDevice() {
 void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
+
 	// for debugging to see the commands being sent, uncomment below
-	serdebugF4("toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
-	serdebugFHex("Value: ", reg);
+	//serdebugF4("toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
+	//serdebugFHex("Value: ", reg);
 	// end debugging code
+
 	writeToDevice(regAddr, reg);
 }
 

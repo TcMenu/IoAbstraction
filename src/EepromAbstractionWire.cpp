@@ -4,6 +4,7 @@
  */
 
 #include "PlatformDetermination.h"
+#include "IoLogging.h"
 #include <EepromAbstractionWire.h>
 
 #define READY_TRIES_COUNT 100
@@ -28,7 +29,8 @@ uint8_t I2cAt24Eeprom::findMaximumInPage(uint16_t destEeprom, uint8_t len) const
     uint16_t currentGo = min((uint16_t)pageSize, uint16_t(offs + len)) - offs;
 
 	// dont exceed the buffer length of the  wire library
-	return min(currentGo, (uint16_t)WIRE_BUFFER_SIZE);
+    auto absoluteMax = WIRE_BUFFER_SIZE - 2;
+	return min(currentGo, (uint16_t) absoluteMax);
 }
 
 uint8_t I2cAt24Eeprom::read8(EepromPosition position) {
@@ -82,10 +84,10 @@ uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
     TaskMgrLock locker(i2cLock);
 
     writeAddressWire(position);
-    uint8_t data[1];
-    errorOccurred = errorOccurred || !ioaWireRead(wireImpl, eepromAddr, data, sizeof(data));
+    uint8_t data = 0;
+    errorOccurred = errorOccurred || !ioaWireRead(wireImpl, eepromAddr, &data, 1);
 
-    return (uint8_t)*data;
+    return data;
 }
 
 void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
@@ -93,7 +95,6 @@ void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
     uint8_t data[1];
     data[0] = (char)val;
     writeAddressWire(position, data, 1);
-    errorOccurred = errorOccurred || !ioaWireWriteWithRetry(wireImpl, eepromAddr, data, sizeof(data));
 }
 
 void I2cAt24Eeprom::writeAddressWire(EepromPosition memAddr, const uint8_t *data, int len) {
@@ -105,8 +106,10 @@ void I2cAt24Eeprom::writeAddressWire(EepromPosition memAddr, const uint8_t *data
     uint8_t ch[34];
     ch[0] = memAddr >> 8U;
     ch[1] = memAddr & 0xffU;
-    if(data != nullptr) memcpy(ch + 2, data, len);
-    errorOccurred = errorOccurred || !ioaWireWriteWithRetry(wireImpl, eepromAddr, ch, len + 2, READY_TRIES_COUNT);
+    if(data != nullptr && len > 0) {
+        memcpy(ch + 2, data, len);
+    }
+    errorOccurred = errorOccurred || ioaWireWriteWithRetry(wireImpl, eepromAddr, ch, len + 2, READY_TRIES_COUNT) == false;
 }
 
 void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) {
@@ -122,14 +125,14 @@ void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, ui
     }
 }
 
-void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) {
+void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t origLen) {
     TaskMgrLock locker(i2cLock);
     int romOffset = 0;
-    while(len > 0 && !errorOccurred) {
-        int currentGo = findMaximumInPage(romDest + romOffset, len);
-        if(currentGo > 14) currentGo -= 2; // if we are getting close to potential page size, reduce slightly
+    int leftToGo = origLen;
+    while(leftToGo > 0 && !errorOccurred) {
+        int currentGo = findMaximumInPage(romDest + romOffset, leftToGo);
         writeAddressWire(romDest + romOffset, &memSrc[romOffset], currentGo);
-        len -= currentGo;
+        leftToGo -= currentGo;
         romOffset += currentGo;
     }
 }

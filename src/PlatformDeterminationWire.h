@@ -24,7 +24,7 @@ extern WireType AvrTwi;
 void ioaWireBegin();
 #else
 # define IOA_USE_ARDUINO_WIRE
-class TwoWire;
+#include <Wire.h>
 typedef TwoWire* WireType;
 void ioaWireBegin();
 #endif // IOA_USE_MBED

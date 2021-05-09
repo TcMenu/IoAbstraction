@@ -27,7 +27,7 @@ void ioaWireBegin() {
 
 void ioaWireSetSpeed(WireType wireType, long frequency) {
     TaskMgrLock locker(i2cLock);
-    if(!begun) ioaWireBegin(wireType);
+    if(!begun) ioaWireBegin();
     wireType->setClock(frequency);
 }
 
@@ -41,7 +41,7 @@ bool ioaWireRead(WireType pI2c, int addr, uint8_t* buffer, size_t len) {
         }
         return idx == len;
     }
-    else return false;
+    return false;
 }
 
 bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, size_t len, int retriesAllowed, bool sendStop) {
@@ -68,7 +68,6 @@ bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, si
     auto writeOk = pI2c->endTransmission(sendStop) == 0;
 
     return writeOk;
-
 }
 
 #endif
