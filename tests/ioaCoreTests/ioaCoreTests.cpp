@@ -8,43 +8,50 @@
 char memToWrite[110] = { };
 char readBuffer[110] = { };
 
-//test(testI2cArrayWrites) {
-//    I2cAt24Eeprom eeprom(0x50, PAGESIZE_AT24C128);
-//    romClear(eeprom, 700);
-//    serdebug("Run array tests on i2c rom");
-//
-//    strcpy(memToWrite, "This is a very large string to write into the rom to ensure it crosses memory boundaries in the rom");
-//    eeprom.writeArrayToRom(710, (const uint8_t*)memToWrite, sizeof(memToWrite));
-//
-//    serdebug("I2C eeprom array written.");
-//
-//    eeprom.readIntoMemArray((uint8_t*)readBuffer, 710, sizeof(memToWrite));
-//    assertStringCaseEqual(memToWrite, readBuffer);
-//    serdebug("Read into mem done");
-//}
+bool romClear(EepromAbstraction& eeprom, EepromPosition pos) {
+    for(int i=0;i<100;i++) {
+        eeprom.write8(pos + i, 0xaa);
+
+        if(eeprom.read8(pos + i) != 0xaa) return false;
+    }
+    return true;
+}
+
+test(testI2cArrayWrites) {
+    I2cAt24Eeprom eeprom(0x50, PAGESIZE_AT24C128);
+    assertTrue(romClear(eeprom, 700));
+    serdebug("Run array tests on i2c rom");
+
+    strcpy(memToWrite, "This is a very large string to write into the rom to ensure it crosses memory boundaries in the rom");
+    eeprom.writeArrayToRom(710, (const uint8_t*)memToWrite, sizeof(memToWrite));
+
+    serdebug("I2C eeprom array written.");
+
+    eeprom.readIntoMemArray((uint8_t*)readBuffer, 710, sizeof(memToWrite));
+    assertStringCaseEqual(memToWrite, readBuffer);
+    serdebug("Read into mem done");
+}
 
 test(testI2cSingleWrites) {
     serdebug("Run single tests on i2c rom");
     I2cAt24Eeprom eeprom(0x50, PAGESIZE_AT24C128);
+    assertTrue(romClear(eeprom, 700));
+
     eeprom.write8(700, 0xFF);
     assertEqual(0xFF, eeprom.read8(700));
     eeprom.write8(700, 0xDD);
     assertEqual(0xDD, eeprom.read8(700));
 
-//    eeprom.write16(701, 0xf00d);
-//    eeprom.write32(703, 0xbeeff00d);
-//
-//    yield();
-//    serdebug("I2C reads...");
-//
-//    assertEqual((uint8_t)0xfe, eeprom.read8(700));
-//    assertEqual((uint16_t)0xf00d, eeprom.read16(701));
-//    assertEqual((uint32_t)0xbeeff00d, eeprom.read32(703));
-//
-//    // now try other values to ensure the prior test worked
-//    eeprom.write8(700, 0xaa);
-//    assertEqual((uint8_t)0xaa, eeprom.read8(700));
-//    assertFalse(eeprom.hasErrorOccurred());
+    eeprom.write16(701, 0xf00d);
+    eeprom.write32(703, 0xbeeff00d);
+
+    yield();
+    serdebug("I2C reads...");
+
+    assertEqual((uint16_t)0xf00d, eeprom.read16(701));
+    assertEqual((uint32_t)0xbeeff00d, eeprom.read32(703));
+
+    assertFalse(eeprom.hasErrorOccurred());
 }
 
 test(badI2cEepromDoesNotLockCode) {

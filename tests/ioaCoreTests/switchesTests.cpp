@@ -49,6 +49,12 @@ public:
         encoderCurrentVal = 0;
     }
 
+    void teardown() override {
+        mockIo.resetIo();
+        taskManager.reset();
+        switches.setEncoder(nullptr);
+    }
+
     void assertPressedState(bool shouldBePressed) {
         // wait until the call back fires or we time out
         int loopCount = 0;
@@ -119,7 +125,6 @@ testF(SwitchesFixture, testPressingASingleButton) {
     mockIo.resetIo();
     for(int i=0; i<25;i++)  mockIo.setValueForReading(i, 0x0004);
     assertReleasedState(true);
-
 
     // make sure getting to held took near to 400 millis.
     assertMoreOrEqual(uint32_t(millis() - millisStart), (uint32_t)380);
@@ -217,50 +222,4 @@ testF(SwitchesFixture, testUpDownEncoder) {
 
     // make sure the IO was used correctly
     assertEqual(mockIo.getErrorMode(), NO_ERROR);
-}
-
-#define abSet(pinA, pinB) ((pinA) | ((pinB) << 1))
-
-testF(SwitchesFixture, testRotaryEncoder) {
-    // This is a smoke test, never ever rely on this to exhaustively test the
-    // rotary encoder. It just makes sure it has a chance of working by running
-    // it through some common cases. A full test is a must if the encoder is changed.
-    switches.initialise(&mockIo, true);
-
-    // here we define all the states that the encoder will go through to go up, then down
-
-    // A is 0x01 B is 0x02 - B will be stable when A changes
-    // initial state = 0, 1
-    mockIo.resetIo();
-    mockIo.setValueForReading(0, abSet(0, 1)); // initial state of inputs
-    mockIo.setValueForReading(1, abSet(0, 1));
-    mockIo.setValueForReading(2, abSet(1, 0)); // one click CCY
-    mockIo.setValueForReading(3, abSet(0, 0));
-    mockIo.setValueForReading(4, abSet(1, 1)); // one click CY
-    mockIo.setValueForReading(5, abSet(0, 1)); // should be ignored as flicker
-    mockIo.setValueForReading(5, abSet(1, 1)); // should be ignored as flicker
-
-    // set up a hardware rotary encoder on pins two and three
-    setupRotaryEncoderWithInterrupt(0, 1, encoderCallback);
-    assertTrue(mockIo.isIntRegisteredAs(0, CHANGE));
-
-    // and set its range to 10 starting at 5
-    switches.changeEncoderPrecision(10, 5);
-    assertEqual(5, encoderCurrentVal);
-
-    runInterruptLoopTimes(2);
-
-    // and check it has gone down.
-    assertEqual(encoderCurrentVal, 4);
-    assertEqual(callsMade, 2);
-
-    runInterruptLoopTimes(4);
-
-    assertEqual(encoderCurrentVal, 5);
-    assertEqual(callsMade, 3);
-
-    assertEqual(mockIo.getErrorMode(), NO_ERROR);
-
-    // finally delete the encoder we created earlier.
-    delete switches.getEncoder();
 }
