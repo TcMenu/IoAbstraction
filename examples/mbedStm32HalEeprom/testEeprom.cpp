@@ -52,13 +52,16 @@ int main() {
     eeprom.refresh();
 
     // and schedule a read back
-    taskManager.scheduleFixedRate(2500, [integerValue]() {
+    taskManager.scheduleFixedRate(2500, []() {
         uint8_t byteRead = eeprom.read8(6);
         uint16_t shortRead = eeprom.read16(4);
         uint32_t longRead = eeprom.read32(0);
-        serdebugF3("byte read  (read-back, original)", byteRead, integerValue);
-        serdebugF2("short read (read-back", shortRead);
-        serdebugF2("long read  (read-back, original)", longRead);
+        serdebugF3("byte read  (read-back, match)", byteRead, (byteRead == 42));
+        serdebugF3("short read (read-back, match)", shortRead, (shortRead == 0xfade));
+        serdebugF3("long read  (read-back, match)", longRead, (longRead == 0xd00db00d));
+
+        eeprom.readIntoMemArray((uint8_t*)readBuffer, 8, sizeof stringToWrite);
+        serdebugF2("array = ", readBuffer);
     });
 
     while(running) {

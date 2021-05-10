@@ -9,42 +9,60 @@
  * that reset is held in the right state, otherwise instability will result.
  */
 
-#include <Wire.h>
 #include <IoAbstraction.h>
 #include <IoLogging.h>
 #include <TaskManagerIO.h>
 #include <IoAbstractionWire.h>
+
+// uncomment the line below for compilation on mbed, comment out for Arduino
+//#define COMPILE_FOR_MBED
+
+#ifdef COMPILE_FOR_MBED
+#include <mbed.h>
+BufferedSerial serPort(USBTX, USBRX);
+MBedLogger LoggingPort(serPort);
+I2C i2c(PF_0, PF_1);
+#else
+#include <Wire.h>
+#endif
 
 //
 // we normally try and group input and output on different ports, it is more efficient and
 // works better under load.
 //
 
-// the pins where the encoder is connected
-const int encoderA = 6;
-const int encoderB = 7;
-const int encoderOK = 5;
+// Daves Test environment II the pins where the encoder is connected
+//const int encoderA = 6;
+//const int encoderB = 7;
+//const int encoderOK = 5;
+//const int ledA = 8;
+//const int ledB = 9;
+//const int attachedInterruptPin = 2;
 
-// the pins where the LEDs are connected
-const int ledA = 8;
-const int ledB = 9;
+const int encoderA = 12;
+const int encoderB = 14;
+const int encoderOK = 13;
+const int ledA = 6;
+const int ledB = 7;
+const int attachedInterruptPin = 14;
+
 
 // Arduino 23017 interrupt pin connection, and reset pin connection
-const int arduinoInterruptPin = 2;
 const int resetPin23017 = 32;
 
-IoAbstractionRef io23017 = ioFrom23017(0x20, ACTIVE_LOW_OPEN, arduinoInterruptPin);
+IoAbstractionRef io23017;
 
 //
 // this function is called by switches whenever the button is pressed.
 //
 void onKeyPressed(pinid_t key, bool held) {
-    serdebugF("key pressed");
+    serdebugF3("key pressed", key, held);
     ioDeviceDigitalWrite(io23017, ledA, HIGH);
     ioDeviceDigitalWriteS(io23017, ledB, HIGH);
 }
 
 void onKeyReleased(pinid_t key, bool held) {
+    serdebugF3("key released", key, held);
     ioDeviceDigitalWrite(io23017, ledA, LOW);
     ioDeviceDigitalWriteS(io23017, ledB, LOW);
 }
@@ -56,17 +74,25 @@ void onEncoderChange(int encoderValue) {
 }
 
 void setup() {
-    // startup wire and serial.
-    Wire.begin();
+
+#ifdef __MBED__
+    serPort.set_baud(115200);
+    ioaWireBegin(&i2c);
+#else
+    ioaWireBegin();
     Serial.begin(115200);
+#endif
 
     // this is optional, in a real world system you could probably just connect the
     // reset pin of the device to Vcc, but when prototyping you'll want a reset
     // on every restart.
-    pinMode(resetPin23017, OUTPUT);
-    digitalWrite(resetPin23017, LOW);
-    delayMicroseconds(100);
-    digitalWrite(resetPin23017, HIGH);
+    auto* deviceIo = internalDigitalIo();
+    ioDevicePinMode(deviceIo, resetPin23017, OUTPUT);
+    ioDeviceDigitalWriteS(deviceIo, resetPin23017, LOW);
+    taskManager.yieldForMicros(100);
+    ioDeviceDigitalWriteS(deviceIo, resetPin23017, HIGH);
+
+    io23017 = ioFrom23017(0x20, ACTIVE_LOW_OPEN, attachedInterruptPin);
 
     serdebugF("Starting LED example on 23017 example");
 
@@ -84,3 +110,12 @@ void loop() {
     // instead schedule stuff to be done.
     taskManager.runLoop();
 }
+
+#ifdef COMPILE_FOR_MBED
+int main() {
+    setup();
+    while(true) {
+        loop();
+    }
+}
+#endif

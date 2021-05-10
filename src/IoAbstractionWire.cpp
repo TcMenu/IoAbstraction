@@ -247,7 +247,7 @@ IoAbstractionRef ioFrom23017(pinid_t addr, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff, wireImpl);
 }
 
-IoAbstractionRef ioFrom23017(pinid_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, intMode, interruptPin, 0xff, wireImpl);
 }
 

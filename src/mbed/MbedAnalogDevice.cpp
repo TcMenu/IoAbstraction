@@ -15,7 +15,9 @@ AnalogDevice* internalAnalogIo() {
 }
 
 void MBedAnalogDevice::initPin(pinid_t pin, AnalogDirection direction) {
-    if(devices.getByKey(pin) == nullptr) devices.add(AnalogPinReference(pin, direction));
+    if(devices.getByKey(pin) == nullptr) {
+        devices.add(AnalogPinReference(pin, direction));
+    }
 }
 
 unsigned int MBedAnalogDevice::getCurrentValue(pinid_t pin) {

@@ -105,6 +105,7 @@ private:
     pinid_t joystickPin;
     CurrentJoystickDirection currentDir = NONE;
     bool errorOccurred = false;
+    bool initialisedYet = false;
     bool inverted = false;
     float centrePoint;
 public:
@@ -143,6 +144,10 @@ public:
     }
 
     void pinDirection(pinid_t pin, uint8_t mode) override {
+        if(!initialisedYet) {
+            initialisedYet = true;
+            analogDevice->initPin(joystickPin, DIR_IN);
+        }
         if(mode == INPUT) {
             inverted = false;
             return;

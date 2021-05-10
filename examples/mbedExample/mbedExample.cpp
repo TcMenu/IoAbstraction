@@ -14,19 +14,21 @@
 #include <EepromAbstractionWire.h>
 
 int myCount = 0;
+float currentOutputLevel = 0.0F;
 
 // to be able to use IoLogging within your application add the following
 BufferedSerial serPort(USBTX, USBRX);
 MBedLogger LoggingPort(serPort);
 
-IoAbstractionRef ioRef = internalDigitalIo();
+#define DEVICE_PIN_RANGE 150
+MultiIoAbstractionRef multiIo = multiIoExpander(DEVICE_PIN_RANGE);
 MBedAnalogDevice analogDevice;
 
 I2C i2c(PF_0, PF_1);
 #define START_OFFS 3000
 
 // if you want to run the eeprom tests, uncomment below
-//#define HAS_EEPROM_ATTACHED
+#define HAS_EEPROM_ATTACHED
 
 volatile bool exitApp = false;
 
@@ -63,9 +65,11 @@ void checkTheEeprom();
 ExecutableTask myTask(100);
 
 void scheduleSomeTasks() {
+    ioDevicePinMode(multiIo, LED3, OUTPUT);
+
     taskManager.scheduleFixedRate(1, [] {
         serdebugF2("Second counter: ", myCount);
-        ioDeviceDigitalWriteS(ioRef, LED1, (myCount % 2) == 0);
+        ioDeviceDigitalWriteS(multiIo, LED3, (myCount % 2) == 0);
     }, TIME_SECONDS);
 
     taskManager.scheduleFixedRate(100, [] {
@@ -77,11 +81,19 @@ void scheduleSomeTasks() {
     }, TIME_SECONDS);
 }
 
+void runSomeAnalogTasks() {
+    analogDevice.initPin(LED1, DIR_PWM);
+    analogDevice.initPin(LED2, DIR_PWM);
+    taskManager.scheduleFixedRate(1, [] {
+        currentOutputLevel += 0.001F;
+        if(currentOutputLevel > 1.0F) currentOutputLevel = 0.0F;
+        analogDevice.setCurrentFloat(LED2, 1.0F - currentOutputLevel);
+        analogDevice.setCurrentFloat(LED1, currentOutputLevel);
+    });
+}
+
 int main() {
     serPort.set_baud(115200);
-
-    ioDevicePinMode(ioRef, LED1, OUTPUT);
-    analogDevice.initPin(A0, DIR_IN);
 
 #ifdef HAS_EEPROM_ATTACHED
     checkTheEeprom();
@@ -91,19 +103,30 @@ int main() {
 
     scheduleSomeTasks();
 
-    switches.initialise(ioRef, false);
+    multiIoAddExpander(multiIo, joystickTwoButtonExpander(&analogDevice, A1, .5F), 10);
+
+    switches.initialise(multiIo, false);
     switches.addSwitch(USER_BUTTON, buttonPressed, 20);
     switches.onRelease(USER_BUTTON, buttonReleased);
     switches.addSwitch(D8, buttonPressed, NO_REPEAT, true);
+    switches.addSwitch(DEVICE_PIN_RANGE + ANALOG_JOYSTICK_LOWER_PIN, [](pinid_t, bool held) {
+        serdebugF2("Left on joystick", held);
+    });
+    switches.addSwitch(DEVICE_PIN_RANGE + ANALOG_JOYSTICK_HIGHER_PIN, [](pinid_t, bool held) {
+        serdebugF2("Right on joystick", held);
+    });
 
     setupAnalogJoystickEncoder(&analogDevice, A0, [](int value) {
         serdebugF2("JoystickValue: ", value);
     });
     switches.getEncoder()->changePrecision(250, 125);
 
+    runSomeAnalogTasks();
+
     while(!exitApp) {
         taskManager.runLoop();
     }
+    return 0;
 }
 
 const char stringSource[] = "This is a really long string that we need to write into the rom and read back";
