@@ -83,7 +83,7 @@ public:
 
 };
 
-#ifdef IOA_USE_MBED
+#if defined(IOA_USE_MBED)
 #include "mbed/MbedAnalogDevice.h"
 #elif defined(ESP32)
 # include "esp32/ESP32AnalogDevice.h"

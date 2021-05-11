@@ -35,6 +35,7 @@ private:
     bool onAdc1;
     uint8_t adcChannelNum;
     pinid_t pin;
+    uint8_t attenuation;
     int lastCached = 0;
 public:
     pinid_t getKey() const { return pin; }
@@ -42,10 +43,13 @@ public:
     EspAnalogInputMode(const EspAnalogInputMode& other);
 
     void pinSetup(int pin_);
-    void alterPinAttenuation(uint8_t atten) const;
+    void alterPinAttenuation(uint8_t atten);
+
+    bool isOnDAC1() const { return onAdc1;}
+    uint8_t getChannel() const { return adcChannelNum;}
 
     uint16_t getCurrentReading();
-}
+};
 
 class ESP32AnalogDevice : public AnalogDevice {
 private:

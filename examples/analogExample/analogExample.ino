@@ -44,7 +44,6 @@ AnalogDevice* analog = internalAnalogIo();
 void setup() {
     Serial.begin(115200);
 
-
     // set up the device pin directions upfront.
     analog->initPin(ANALOG_IN_PIN, DIR_IN);
     analog->initPin(PWM_OR_DAC_PIN, DIR_OUT);
@@ -64,14 +63,23 @@ void setup() {
         Serial.println('%');
 
 #ifdef ESP32
+        auto* espAnalog = reinterpret_cast<ESP32AnalogDevice*>(analog);
         // On ESP32 boards, where the analogWrite function doesn't exist we use the underlying functions
         // to access either the DAC or LEDC subsystem, if you want to get hold of the ledc channel you can.
-        EspAnalogOutputMode* outputMode = analog.getEspOutputMode(PWM_OR_DAC_PIN);
+        EspAnalogOutputMode* outputMode = espAnalog->getEspOutputMode(PWM_OR_DAC_PIN);
         if(outputMode != nullptr) {
             Serial.print("ESP32 Output type: ");
             Serial.print(outputMode->isDac());
             Serial.print(", ledc (pwm channel): ");
             Serial.println(outputMode->getPwmChannel());
+        }
+
+        EspAnalogInputMode* inputMode = espAnalog->getEspInputMode(ANALOG_IN_PIN);
+        if(inputMode != nullptr) {
+            Serial.print("ESP32 Input on dac1: ");
+            Serial.print(inputMode->isOnDAC1());
+            Serial.print(", channel: ");
+            Serial.println(inputMode->getChannel());
         }
 #endif
     });

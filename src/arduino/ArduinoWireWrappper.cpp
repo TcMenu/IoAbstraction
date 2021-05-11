@@ -17,17 +17,13 @@ SimpleSpinLock i2cLock;
 
 WireType defaultWireTypePtr = &Wire;
 
-volatile bool begun = false;
-
 void ioaWireBegin() {
     TaskMgrLock locker(i2cLock);
-    begun = true;
     defaultWireTypePtr->begin();
 }
 
 void ioaWireSetSpeed(WireType wireType, long frequency) {
     TaskMgrLock locker(i2cLock);
-    if(!begun) ioaWireBegin();
     wireType->setClock(frequency);
 }
 

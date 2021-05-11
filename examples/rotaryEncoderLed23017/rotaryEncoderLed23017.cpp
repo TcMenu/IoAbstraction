@@ -44,7 +44,7 @@ const int encoderB = 14;
 const int encoderOK = 13;
 const int ledA = 6;
 const int ledB = 7;
-const int attachedInterruptPin = 14;
+const int attachedInterruptPin = 26;
 
 
 // Arduino 23017 interrupt pin connection, and reset pin connection
@@ -79,7 +79,7 @@ void setup() {
     serPort.set_baud(115200);
     ioaWireBegin(&i2c);
 #else
-    ioaWireBegin();
+    Wire.begin(4, 15);
     Serial.begin(115200);
 #endif
 

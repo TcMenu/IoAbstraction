@@ -3,10 +3,11 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include <IoLogging.h>
 #include "PlatformDetermination.h"
 #include "BasicIoAbstraction.h"
 
-#if defined(IOA_USE_ARDUINO) && defined(ESP32)
+#if defined(IOA_USE_ARDUINO) && defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
 
 IoAbstractionRef arduinoAbstraction = nullptr;
 IoAbstractionRef ioUsingArduino() {
@@ -24,13 +25,20 @@ gpio_mode_t toEsp32Mode(uint8_t mode) {
 }
 
 void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
+    // pins 32 onwards are input only and do not have pull functions
+    if(pin >= 32 && (mode == INPUT_PULLDOWN || mode == INPUT_PULLUP)) {
+        mode = INPUT;
+    }
+
     gpio_config_t config;
-    config.pin_bit_mask = 1 << pin;
+    config.pin_bit_mask = uint64_t(1U) << uint64_t(pin);
     config.mode = toEsp32Mode(mode);
     config.pull_up_en = (mode == INPUT_PULLUP) ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE;
     config.pull_down_en = (mode == INPUT_PULLDOWN) ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE;
     config.intr_type = GPIO_INTR_DISABLE;
-    gpio_config(&config);
+    if(ESP_OK != gpio_config(&config)) {
+        serdebugF3("ESP digital config error on ", pin, mode);
+    }
 }
 
 void BasicIoAbstraction::writeValue(pinid_t pin, uint8_t value) {
@@ -41,20 +49,30 @@ uint8_t BasicIoAbstraction::readValue(pinid_t pin) {
     return gpio_get_level(static_cast<gpio_num_t>(pin));
 }
 
-void rawCbHandler(void* handler) {
-    reinterpret_cast<RawIntHandler>(handler)();
+void ISR_ATTR rawCbHandler(void* handler) {
+    auto intCb = reinterpret_cast<RawIntHandler>(handler);
+    intCb();
 }
 
 void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) {
     if(!esp32InterruptDriverLoaded) {
-        if(ESP_OK == gpio_install_isr_service(ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED)) {
+        const auto defaultFlags = 0;
+        if(ESP_OK == gpio_install_isr_service(defaultFlags)) {
             esp32InterruptDriverLoaded = true;
+            serdebugF("Interrupt driver loaded");
+        }
+        else {
+            serdebugF("Interrupt driver did not load");
         }
     }
     auto gpioRef = static_cast<gpio_num_t>(pin);
-    gpio_set_intr_type(gpioRef, mode == CHANGE ? GPIO_INTR_ANYEDGE : mode == RISING ? GPIO_INTR_POSEDGE : GPIO_INTR_NEGEDGE);
-    gpio_isr_handler_add(gpioRef, rawCbHandler, (void*)interruptHandler);
-    gpio_intr_enable(gpioRef);
+    auto espIntMode = mode == CHANGE ? GPIO_INTR_ANYEDGE : mode == RISING ? GPIO_INTR_POSEDGE : GPIO_INTR_NEGEDGE;
+    bool ok = gpio_set_intr_type(gpioRef, espIntMode) == ESP_OK;
+    ok = ok && gpio_isr_handler_add(gpioRef, rawCbHandler, (void*)interruptHandler) == ESP_OK;
+
+    serdebugF4("Interrupt add for pin ", pin, mode, ok);
+    serdebugF2("reg ", (long)interruptHandler);
+
 }
 
 void BasicIoAbstraction::writePort(pinid_t port, uint8_t portVal) {

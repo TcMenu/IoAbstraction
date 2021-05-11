@@ -2,7 +2,7 @@
  * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
-#if !defined(ESP32_DIGITAL_IO_H) && defined(ESP32)
+#if !defined(ESP32_DIGITAL_IO_H) && defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
 #define ESP32_DIGITAL_IO_H
 
 // if we are in ESP32 direct mode, then we must define the minimum things that digital IO uses.

@@ -27,6 +27,11 @@ const int encoderBPin = 17;
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
 
+// an LED that flashes as the encoder changes
+const int ledOutputPin = 26;
+
+auto boardIo = internalDigitalIo();
+
 //
 // When the spinwheel is clicked, this function will be run as we registered it as a callback
 //
@@ -48,11 +53,17 @@ void onRepeatButtonClicked(pinid_t pin, bool heldDown) {
 void onEncoderChange(int newValue) {
   Serial.print("Encoder change ");
   Serial.println(newValue);
+
+  // here we turn the led on and off as the encoder moves.
+  ioDeviceDigitalWriteS(boardIo, ledOutputPin, newValue % 2);
 }
 
 void setup() {
 
   Serial.begin(115200);
+
+  // here we initialise as output the output pin we'll use
+  ioDevicePinMode(boardIo, ledOutputPin, OUTPUT);
 
   // First we set up the switches library, giving it the task manager and tell it to use arduino pins
   // We could also of chosen IO through an i2c device that supports interrupts.

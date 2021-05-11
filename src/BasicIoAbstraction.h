@@ -16,7 +16,7 @@
 
 #if defined(IOA_USE_MBED)
 # include "mbed/MbedDigitalIO.h"
-#elif defined(ESP32)
+#elif defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
 # include "esp32/ESP32DigitalIO.h"
 #else
 # include <Arduino.h>

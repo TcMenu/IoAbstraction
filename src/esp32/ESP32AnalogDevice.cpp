@@ -11,7 +11,7 @@
 #include <driver/adc.h>
 #include <AnalogDeviceAbstraction.h>
 
-EspAnalogInputMode::EspAnalogInputMode() : onAdc1(false), adcChannelNum(0), pin(0) {}
+EspAnalogInputMode::EspAnalogInputMode() : onAdc1(false), adcChannelNum(0), pin(0), attenuation(ADC_ATTEN_DB_11) {}
 
 EspAnalogInputMode::EspAnalogInputMode(const EspAnalogInputMode& other) = default;
 
@@ -33,28 +33,33 @@ void EspAnalogInputMode::pinSetup(int pin_) {
             adcChannelNum = ch;
         }
     }
-    if(!foundPin) return;
-    pin = pin_;
-
-    alterPinAttenuation(ADC_ATTEN_DB_11);
-}
-
-void EspAnalogInputMode::alterPinAttenuation(uint8_t atten) const {
-    if(onAdc1) {
-        adc1_config_channel_atten(static_cast<adc1_channel_t>(adcChannelNum), static_cast<adc_atten_t>(atten));
+    if(foundPin) {
+        pin = pin_;
+        alterPinAttenuation(ADC_ATTEN_DB_11);
+        serdebugF4("ADC configured (11dB atten) ", pin, onAdc1, adcChannelNum);
     }
     else {
-        adc2_config_channel_atten(static_cast<adc2_channel_t>(adcChannelNum), static_cast<adc_atten_t>(atten));
+        serdebugF2("Did not find adc setting for ", pin);
     }
+}
 
+void EspAnalogInputMode::alterPinAttenuation(uint8_t atten) {
+    attenuation = atten;
 }
 
 uint16_t EspAnalogInputMode::getCurrentReading() {
+    // if the ADC is on the dac channel it must be turned off first.
+    if(pin == DAC1 || pin == DAC2) {
+        dac_output_disable(pin == DAC1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2);
+    }
+
     if(onAdc1) {
+        adc1_config_channel_atten(static_cast<adc1_channel_t>(adcChannelNum), static_cast<adc_atten_t>(attenuation));
         return adc1_get_raw(static_cast<adc1_channel_t>(adcChannelNum));
     }
     else {
         int adcVal;
+        adc2_config_channel_atten(static_cast<adc2_channel_t>(adcChannelNum), static_cast<adc_atten_t>(attenuation));
         if(adc2_get_raw(static_cast<adc2_channel_t>(adcChannelNum), ADC_WIDTH_BIT_12, &adcVal) == ESP_OK) {
             lastCached = adcVal;
             return adcVal;
@@ -112,6 +117,7 @@ void ESP32AnalogDevice::initPin(pinid_t pin, AnalogDirection direction) {
     else {
         EspAnalogInputMode inputMode;
         inputMode.pinSetup(pin);
+        gpioToInputKey.add(inputMode);
     }
 }
 
