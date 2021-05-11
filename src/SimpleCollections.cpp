@@ -32,7 +32,9 @@ bool BtreeStorage::add(const void *newItem) {
 
     // given the insert position, work out the number of items to move
     int amtToMove = (currentSize - insertionPoint);
-    serdebugF4("add ", insertionPoint, keyAccessor(newItem), amtToMove);
+
+    // for debugging
+    // serdebugF4("add ", insertionPoint, keyAccessor(newItem), amtToMove);
 
     // move the instances in reverse order using their assignment operator.
     if(amtToMove > 0) {

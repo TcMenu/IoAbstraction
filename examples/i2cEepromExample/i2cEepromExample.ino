@@ -26,7 +26,7 @@ const unsigned int romStart = 800;
 // comment / uncomment to select
 I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 
-const char strData[100] = { "This is a really long string that should need to be handled in many parts with wait states"};
+const char strData[100] = { "This is a quite long string that should need to be handled in many parts with wait states"};
 
 void setup() {
 	Serial.begin(115200);
@@ -37,12 +37,17 @@ void setup() {
 
 	Serial.println("Eeprom example starting");
 
+	// clear the ROM first..
+	for(int i=romStart;i<(romStart+100);i++) anEeprom.write8(i, 0);
+    Serial.println(anEeprom.hasErrorOccurred() ? "Write failure" : "Write success");
+
 	// now write the values to the rom. 8, 16 and 32 bit
 	anEeprom.write8(romStart, (byte)42);
 	anEeprom.write16(romStart + 1, 0xface);
 	anEeprom.write32(romStart + 3, 0xf00dface);
-	
-	// lastly write an array to the rom.
+    Serial.println(anEeprom.hasErrorOccurred() ? "Write failure" : "Write success");
+
+    // lastly write an array to the rom.
 	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
 
     Serial.println(anEeprom.hasErrorOccurred() ? "Write failure" : "Write success");

@@ -1,13 +1,17 @@
 /*
- * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * Copyright (c) 2018-present https://www.thecoderscorner.com (Nutricherry LTD).
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#include <TaskManagerIO.h>
-#include <IoLogging.h>
 #include "PlatformDeterminationWire.h"
 
-#ifdef IOA_USE_AVR_TWI_DIRECT
+//
+// Protected by IOA_DEVELOPMENT_EXPERIMENTAL
+// experimental at the moment and should not be used in any code
+//
+#if defined(IOA_USE_AVR_TWI_DIRECT) && defined(IOA_DEVELOPMENT_EXPERIMENTAL)
+#include <TaskManagerIO.h>
+#include <IoLogging.h>
 
 #ifndef DEF_TWI_FREQ
 #define DEF_TWI_FREQ 100000UL
@@ -35,8 +39,8 @@ class AvrTwiManager : public BaseEvent {
 public:
     enum TwiStatus: uint8_t {
         I2C_SEND_ADDRESS, I2C_ADDRESS_SENT, I2C_SEND_DATA, I2C_RECV_DATA,
-        I2C_START_NACK = 0x80, I2C_OPERATION_SUCCESS, READY_FOR_USE, NOT_ENABLED,
-        I2C_HW_ERROR = 0xFF
+        I2C_START_NACK = 0x80, I2C_PARTIAL_READ, I2C_OPERATION_SUCCESS, READY_FOR_USE,
+        NOT_ENABLED, I2C_HW_ERROR = 0xFF
     };
 
     enum TwiMode: uint8_t {
@@ -47,9 +51,9 @@ private:
     uint8_t buffer[TWI_BUFFER_LENGTH] = {};
     TwiStatus twiStatus = NOT_ENABLED;
     TwiMode twiMode = TWI_MODE_IDLE;
-    uint8_t address = 0;
     uint8_t length = 0;
     uint8_t position = 0;
+    bool eventRegistered = false;
 
 public:
     ~AvrTwiManager() override = default;
@@ -75,7 +79,7 @@ public:
 
     uint32_t timeOfNextCheck() override;
 
-    void sendAddress();
+    void sendAddress(uint8_t addr);
 
 private:
     bool waitWithTimeout(unsigned long timeout = 10000UL);
@@ -83,7 +87,7 @@ private:
     void prepareNextPhase();
     void sendByteOnWire();
     void readByteFromWire();
-    void startTwi(uint8_t addr, TwiStatus status, TwiMode mode, uint8_t len);
+    bool startTwi(uint8_t addr, TwiStatus status, TwiMode mode, uint8_t len);
 };
 
 void AvrTwiManager::initTwi() {
@@ -94,23 +98,16 @@ void AvrTwiManager::initTwi() {
     digitalWrite(SDA, 1);
     digitalWrite(SCL, 1);
 
-    TWSR &= ~_BV(TWPS1);
-    TWSR &= ~_BV(TWPS0);
-
+    TWSR = 0;
     setFrequency(DEF_TWI_FREQ);
-
-    TWDR = 0xff;
-
-    TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT);
+    if(!eventRegistered) {
+        eventRegistered = true;
+        taskManager.registerEvent(this);
+    }
 }
 
 void AvrTwiManager::exec() {
-    if(!waitWithTimeout()) return;
-
     switch(twiStatus) {
-        case I2C_SEND_ADDRESS:
-            sendAddress();
-            break;
         case I2C_ADDRESS_SENT:
             prepareNextPhase();
             break;
@@ -120,44 +117,50 @@ void AvrTwiManager::exec() {
         case I2C_RECV_DATA:
             readByteFromWire();
              break;
-        case I2C_HW_ERROR:
-        case I2C_START_NACK:
-        case NOT_ENABLED:
-        case READY_FOR_USE:
         default:
             break;
     }
 }
 
+inline bool stateRequiresTrigger(AvrTwiManager::TwiStatus twiStatus) {
+    return (twiStatus == AvrTwiManager::I2C_ADDRESS_SENT || twiStatus == AvrTwiManager::I2C_SEND_DATA
+            || twiStatus == AvrTwiManager::I2C_RECV_DATA);
+}
+
 uint32_t AvrTwiManager::timeOfNextCheck() {
     if(twiStatus > 0x7f) {
-        return millisToMicros(50);
+        return secondsToMicros(10);
     }
     else {
-        // Probable faulty HW, exit immediately in this case.
-        if(twiStatus != I2C_HW_ERROR && (TWCR & _BV(TWINT))) {
+        if(stateRequiresTrigger(twiStatus) && (TWCR & _BV(TWINT))) {
             setTriggered(true);
         }
         return 10;
     }
 }
 
-void AvrTwiManager::sendAddress() {
+void AvrTwiManager::sendAddress(uint8_t addr) {
+    serdebugF("sendaddr");
+
     // send a start event
-    TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN) | _BV(TWIE);
+    TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN);
     if(!waitWithTimeout()) return;
+
+    serdebugF("started");
 
     // check if we started, if not we have a hardware level problem
     uint8_t statusReg = (TWSR & TWSR_STATUS_MASK);
     if(statusReg != TWSR_VAL_START && statusReg != TWSR_VAL_REPEATED_START) {
-        twiStatus = I2C_HW_ERROR;
+        twiStatus = I2C_START_NACK;
+        serdebugF("TWI not acked");
         return;
     }
 
     // now send the address on the bus and set the mode to waiting for address account for read bit here too.
     uint8_t readBit = twiMode == TWI_MODE_READ ? 1 : 0;
-    TWDR = (address << 1) | readBit;
-    TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWIE);
+    TWDR = (addr << 1) | readBit;
+    TWCR = _BV(TWINT) | _BV(TWEN);
+    serdebugF("done");
 
     // and we are done!
     twiStatus = I2C_ADDRESS_SENT;
@@ -170,8 +173,8 @@ bool AvrTwiManager::waitWithTimeout(unsigned long timeout) {
     }
     long then = micros();
     while(!(TWCR & _BV(TWINT))) {
-        if ((micros() - then) > timeout) {
-            serdebugF4("I2C HW Fault! timeout (now, then, tm). ", micros(), then, timeout);
+        if ((micros() - then) > 10000) {
+            serdebugF4("I2C ERROR! timeout (now, then, tm). ", micros(), then, 10000);
             twiStatus = I2C_HW_ERROR;
             return false;
         }
@@ -179,27 +182,41 @@ bool AvrTwiManager::waitWithTimeout(unsigned long timeout) {
     return true;
 }
 
+void avrTwiStop(unsigned long timeout = 100000UL) {
+    serdebugF("stopping");
+    long then = micros();
+    TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO);
+
+    // wait for stop
+    while (TWCR & (1 << TWSTO)) {
+        if((micros() - then) > timeout) {
+            serdebugF("I2C stop failed");
+            break;
+        }
+    }
+    serdebugF("stopped");
+}
+
 void AvrTwiManager::prepareNextPhase() {
-    serdebugF("prepare");
+    serdebugF("nxtp");
+
     auto statusBits = (TWSR & TWSR_STATUS_MASK);
     if(statusBits != TWSR_VAL_SLW_W_ACK && statusBits != TWSR_VAL_SLW_R_ACK) {
         twiStatus = I2C_START_NACK;
         return;
     }
-    serdebugF("prepare2");
 
-    // if we are checking for device ready then just stop here.
     if(twiMode == TWI_MODE_IS_READY) {
-        TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO) | _BV(TWIE);
+        // if we are checking for device ready then just stop here.
+        avrTwiStop();
         twiStatus = I2C_OPERATION_SUCCESS;
-        waitWithTimeout();
-        serdebugF("prepare3");
     }
     else if(twiMode == TWI_MODE_READ) {
         twiStatus = I2C_RECV_DATA;
         readByteFromWire();
     }
     else if(twiMode == TWI_MODE_WRITE || twiMode == TWI_MODE_WRITE_NO_STOP) {
+        serdebugF("Send data");
         twiStatus = I2C_SEND_DATA;
         sendByteOnWire();
     }
@@ -207,15 +224,15 @@ void AvrTwiManager::prepareNextPhase() {
 
 void AvrTwiManager::sendByteOnWire() {
     if(position < length) {
+        serdebugF3("Send data", position, buffer[position]);
+
         TWDR = buffer[position];
-        TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWIE);
+        TWCR = _BV(TWINT) | _BV(TWEN);
         ++position;
     }
     else {
         if(twiMode == TWI_MODE_WRITE) {
-            TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO) | _BV(TWIE);
-            twiStatus = I2C_OPERATION_SUCCESS;
-            waitWithTimeout();
+            avrTwiStop();
         }
         twiStatus = I2C_OPERATION_SUCCESS;
     }
@@ -227,7 +244,7 @@ void AvrTwiManager::readByteFromWire() {
         buffer[position++] = TWDR;
         TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWIE);
         if(!more) {
-            twiStatus = position == length ? I2C_OPERATION_SUCCESS : I2C_START_NACK;
+            twiStatus = (position == length) ? I2C_OPERATION_SUCCESS : I2C_PARTIAL_READ;
         }
     }
     else {
@@ -236,6 +253,7 @@ void AvrTwiManager::readByteFromWire() {
 }
 
 bool AvrTwiManager::waitForCompletion(TwiStatus expectedStatus, unsigned long timeout) {
+    serdebugF3("wait comp", twiStatus, expectedStatus);
     unsigned long then = micros();
     while(twiStatus != expectedStatus && twiStatus < 0x80) {
         if((micros() - then) > timeout) {
@@ -246,63 +264,58 @@ bool AvrTwiManager::waitForCompletion(TwiStatus expectedStatus, unsigned long ti
         taskManager.yieldForMicros(10);
     }
 
-    auto completedStatus = twiStatus;
-    if(expectedStatus == READY_FOR_USE && twiStatus != I2C_HW_ERROR) {
+    bool err = twiStatus == I2C_START_NACK || twiStatus == I2C_HW_ERROR || twiStatus == I2C_PARTIAL_READ;
+
+    if(expectedStatus == READY_FOR_USE) {
+        serdebugF("rfu");
         twiStatus = READY_FOR_USE;
     }
+    serdebugF("end w-comp");
 
-    return completedStatus == expectedStatus;
+    return !err;
 }
 
 bool AvrTwiManager::receiveData(uint8_t addr, uint8_t *data, uint8_t len) {
     if(!data || len > TWI_BUFFER_LENGTH) return false;
-    if(waitForCompletion(READY_FOR_USE)) {
-        startTwi(addr, I2C_SEND_ADDRESS, TWI_MODE_READ, len);
-        bool done = waitForCompletion(I2C_OPERATION_SUCCESS);
-        if(done) {
-            memcpy(data, buffer, len);
-            return true;
-        }
+    waitForCompletion(READY_FOR_USE);
+    startTwi(addr, I2C_SEND_ADDRESS, TWI_MODE_READ, len);
+    bool done = waitForCompletion(I2C_OPERATION_SUCCESS);
+    if(done) {
+        memcpy(data, buffer, len);
+        return true;
     }
     return false;
 
 }
 
 bool AvrTwiManager::isReady(uint8_t addr) {
-    if(waitForCompletion(READY_FOR_USE)) {
-        startTwi(addr, I2C_SEND_ADDRESS, TWI_MODE_IS_READY, 0);
-        return waitForCompletion(I2C_OPERATION_SUCCESS);
-    }
+    waitForCompletion(READY_FOR_USE);
+    startTwi(addr, I2C_SEND_ADDRESS, TWI_MODE_IS_READY, 0);
+    return waitForCompletion(I2C_OPERATION_SUCCESS);
     return false;
 }
 
 bool AvrTwiManager::sendData(uint8_t addr, const uint8_t *data, uint8_t len, bool stop) {
     if(!data || len > TWI_BUFFER_LENGTH) return false;
-    if(waitForCompletion(READY_FOR_USE)) {
-        memcpy(buffer, data, len);
-        startTwi(addr, I2C_SEND_ADDRESS, twiMode = stop ? TWI_MODE_WRITE : TWI_MODE_WRITE_NO_STOP, len);
-        return waitForCompletion(I2C_OPERATION_SUCCESS);
-    }
-    return false;
+    serdebugF("send1");
+    waitForCompletion(READY_FOR_USE);
+    memcpy(buffer, data, len);
+    startTwi(addr, I2C_SEND_ADDRESS, twiMode = stop ? TWI_MODE_WRITE : TWI_MODE_WRITE_NO_STOP, len);
+    serdebugF("send2");
+    return waitForCompletion(I2C_OPERATION_SUCCESS);
 }
 
-void AvrTwiManager::startTwi(uint8_t addr, AvrTwiManager::TwiStatus status, AvrTwiManager::TwiMode mode, uint8_t len) {
+bool AvrTwiManager::startTwi(uint8_t addr, AvrTwiManager::TwiStatus status, AvrTwiManager::TwiMode mode, uint8_t len) {
     twiStatus = status;
     twiMode = mode;
     position = 0;
     length = len;
-    address = addr;
-    exec();
+    sendAddress(addr);
+    return twiStatus == I2C_ADDRESS_SENT;
 }
 
 AvrTwiManager IoaTwi;
 WireType defaultWireTypePtr = &IoaTwi;
-
-ISR(TWI_vect) {
-    IoaTwi.markTriggeredAndNotify();
-    digitalWrite(LED_BUILTIN, HIGH);
-    TWCR = (1 << TWINT) | _BV(TWIE);
-}
 
 void ioaWireBegin() {
     IoaTwi.initTwi();

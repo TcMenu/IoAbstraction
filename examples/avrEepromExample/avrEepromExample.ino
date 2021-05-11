@@ -17,13 +17,14 @@
 #include <EepromAbstraction.h>
 #include <ArduinoEEPROMAbstraction.h>
 #include <TaskManagerIO.h>
+#include <Wire.h>
 
 const unsigned int romStart = 400;
 
 AvrEeprom anEeprom;
 ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
 
-const char strData[15] = { "Hello Eeprom"};
+const char strData[15] = { "Hello EEPROM"};
 
 void setup() {
 	Serial.begin(115200);
@@ -34,7 +35,7 @@ void setup() {
 	// now write the values to the rom. 8, 16 and 32 bit
 	anEeprom.write8(romStart, (byte)42);
 	anEeprom.write16(romStart + 1, 0xface);
-	anEeprom.write32(romStart + 3, 0xf00dface);
+	anEeprom.write32(romStart + 3, 0xf00dd00d);
 	
 	// lastly write an array to the rom.
 	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);

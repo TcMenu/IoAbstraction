@@ -53,7 +53,7 @@ bool PCF8574IoAbstraction::runLoop(){
     }
 
     if(pinsConfiguredRead) {
-        writeOk = writeOk || ioaWireRead(wireImpl, address, &lastRead, 1);
+        writeOk = writeOk && ioaWireRead(wireImpl, address, &lastRead, 1);
     }
     return writeOk;
 }
@@ -104,10 +104,12 @@ void MCP23017IoAbstraction::initDevice() {
 void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value) {
 	uint16_t reg = readFromDevice(regAddr);
 	bitWrite(reg, theBit, value);
+
 	// for debugging to see the commands being sent, uncomment below
-	serdebugF4("toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
-	serdebugFHex("Value: ", reg);
+	//serdebugF4("toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
+	//serdebugFHex("Value: ", reg);
 	// end debugging code
+
 	writeToDevice(regAddr, reg);
 }
 
@@ -245,7 +247,7 @@ IoAbstractionRef ioFrom23017(pinid_t addr, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff, wireImpl);
 }
 
-IoAbstractionRef ioFrom23017(pinid_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
+IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPin, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, intMode, interruptPin, 0xff, wireImpl);
 }
 

@@ -17,14 +17,14 @@
 typedef I2C* WireType;
 void ioaWireBegin(I2C* pI2cToUse);
 # define IOA_USE_MBED_WIRE
-#elif defined(IOA_USE_AVR_TWI_DIRECT) && defined(__AVR__)
+#elif defined(IOA_USE_AVR_TWI_DIRECT) && defined(__AVR__) && defined(IOA_DEVELOPMENT_EXPERIMENTAL)
 class AvrTwiManager;
 typedef AvrTwiManager* WireType;
 extern WireType AvrTwi;
 void ioaWireBegin();
 #else
 # define IOA_USE_ARDUINO_WIRE
-class TwoWire;
+#include <Wire.h>
 typedef TwoWire* WireType;
 void ioaWireBegin();
 #endif // IOA_USE_MBED

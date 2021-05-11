@@ -100,11 +100,12 @@ public:
 
 class AnalogJoystickToButtons : public BasicIoAbstraction {
 private:
-    enum CurrentJoystickDirection : byte { LEFT = 0x01, RIGHT = 0x02, NONE = 0x00 };
+    enum CurrentJoystickDirection : uint8_t { LEFT = 0x01, RIGHT = 0x02, NONE = 0x00 };
     AnalogDevice* analogDevice;
     pinid_t joystickPin;
     CurrentJoystickDirection currentDir = NONE;
     bool errorOccurred = false;
+    bool initialisedYet = false;
     bool inverted = false;
     float centrePoint;
 public:
@@ -143,6 +144,10 @@ public:
     }
 
     void pinDirection(pinid_t pin, uint8_t mode) override {
+        if(!initialisedYet) {
+            initialisedYet = true;
+            analogDevice->initPin(joystickPin, DIR_IN);
+        }
         if(mode == INPUT) {
             inverted = false;
             return;
