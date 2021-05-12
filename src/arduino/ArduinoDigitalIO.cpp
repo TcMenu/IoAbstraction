@@ -4,7 +4,7 @@
 #include "PlatformDetermination.h"
 #include "BasicIoAbstraction.h"
 
-#if defined(IOA_USE_ARDUINO) && !defined(ESP32)
+#if defined(IOA_USE_ARDUINO) && !(defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS))
 
 void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
     pinMode(pin, mode);
