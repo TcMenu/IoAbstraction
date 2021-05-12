@@ -229,6 +229,10 @@ Note that although the Arduino constructor allows the bit depth to be set, it on
     analog.setCurrentValue(PWM_PIN, newValue);
 ```
 
+## ESP32 extras mode
+
+On ESP32 we are slowly adding support for direct IDF, as it's been requested by one of our clients. This will slowly appear over several releases. To enable this mode you can set the flag `IOA_USE_ESP32_EXTRAS`. Once you do this IDF functions are used for all digital IO functions. We always use IDF functions for analog input and DAC output, and are slowly moving toward direct LTDC functions for PWM instead of wrappers. 
+
 ## Other links
 
 [https://www.thecoderscorner.com/electronics/microcontrollers/switches-inputs/basic-io-abstraction-library-pins-or-8574/]
