@@ -90,12 +90,10 @@ bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, si
 #else 
 
 bool ioaWireRead(WireType pI2c, int address, uint8_t* buffer, size_t len) {
-    TaskMgrLock locker(i2cLock);
     return pI2c->read(address, (char*)buffer, len, false) == 0;
 }
 
 bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, size_t len, int retriesAllowed, bool sendStop) {
-    TaskMgrLock locker(i2cLock);
     int tries = 0;
     while(pI2c->write(address, (const char*)buffer, len, !sendStop) !=0) {
         if(tries > retriesAllowed) return false;

@@ -5,7 +5,6 @@
 
 #include <TaskManagerIO.h>
 #include <IoLogging.h>
-#include <SimpleSpinLock.h>
 #include "PlatformDeterminationWire.h"
 
 SimpleSpinLock i2cLock;
@@ -18,17 +17,14 @@ SimpleSpinLock i2cLock;
 WireType defaultWireTypePtr = &Wire;
 
 void ioaWireBegin() {
-    TaskMgrLock locker(i2cLock);
     defaultWireTypePtr->begin();
 }
 
 void ioaWireSetSpeed(WireType wireType, long frequency) {
-    TaskMgrLock locker(i2cLock);
     wireType->setClock(frequency);
 }
 
 bool ioaWireRead(WireType pI2c, int addr, uint8_t* buffer, size_t len) {
-    TaskMgrLock locker(i2cLock);
     if(pI2c->requestFrom(addr, len)) {
         uint8_t idx = 0;
         while(pI2c->available() && idx < len) {
@@ -41,7 +37,6 @@ bool ioaWireRead(WireType pI2c, int addr, uint8_t* buffer, size_t len) {
 }
 
 bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, size_t len, int retriesAllowed, bool sendStop) {
-    TaskMgrLock locker(i2cLock);
     bool firstTime = true;
     bool i2cReady = retriesAllowed == 0;
     while(retriesAllowed && !i2cReady) {

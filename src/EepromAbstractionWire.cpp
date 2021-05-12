@@ -38,20 +38,17 @@ uint8_t I2cAt24Eeprom::read8(EepromPosition position) {
 }
 
 void I2cAt24Eeprom::write8(EepromPosition position, uint8_t val) {
-    TaskMgrLock locker(i2cLock);
     if(read8(position) == val) return;
     writeByte(position, val);
 }
 
 uint16_t I2cAt24Eeprom::read16(EepromPosition position) {
-    TaskMgrLock locker(i2cLock);
     uint16_t ret = ((uint16_t)readByte(position++) << 8U);
     ret |= readByte(position);
     return ret;
 }
 
 void I2cAt24Eeprom::write16(EepromPosition position, uint16_t val) {
-    TaskMgrLock locker(i2cLock);
     if(read16(position) == val) return;
 
     auto hiByte = (uint8_t)(val >> 8U);
@@ -61,8 +58,6 @@ void I2cAt24Eeprom::write16(EepromPosition position, uint16_t val) {
 }
 
 uint32_t I2cAt24Eeprom::read32(EepromPosition position) {
-    TaskMgrLock locker(i2cLock);
-
     uint32_t ret = ((uint32_t)readByte(position++)) << 24U;
     ret |= ((uint32_t)readByte(position++)) << 16U;
     ret |= ((uint32_t)readByte(position++)) << 8U;
@@ -71,7 +66,6 @@ uint32_t I2cAt24Eeprom::read32(EepromPosition position) {
 }
 
 void I2cAt24Eeprom::write32(EepromPosition position, uint32_t val) {
-    TaskMgrLock locker(i2cLock);
     if(read32(position) == val) return;
 
     writeByte(position++, (uint8_t)(val >> 24U));
@@ -81,8 +75,6 @@ void I2cAt24Eeprom::write32(EepromPosition position, uint32_t val) {
 }
 
 uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
-    TaskMgrLock locker(i2cLock);
-
     writeAddressWire(position);
     uint8_t data = 0;
     errorOccurred = errorOccurred || !ioaWireRead(wireImpl, eepromAddr, &data, 1);
@@ -91,7 +83,6 @@ uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
 }
 
 void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
-    TaskMgrLock locker(i2cLock);
     uint8_t data[1];
     data[0] = (char)val;
     writeAddressWire(position, data, 1);
@@ -113,7 +104,6 @@ void I2cAt24Eeprom::writeAddressWire(EepromPosition memAddr, const uint8_t *data
 }
 
 void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) {
-    TaskMgrLock locker(i2cLock);
     int romOffset = 0;
     while(len > 0 && !errorOccurred) {
         int currentGo = findMaximumInPage(romSrc + romOffset, len);
@@ -126,7 +116,6 @@ void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, ui
 }
 
 void I2cAt24Eeprom::writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t origLen) {
-    TaskMgrLock locker(i2cLock);
     int romOffset = 0;
     int leftToGo = origLen;
     while(leftToGo > 0 && !errorOccurred) {

@@ -45,7 +45,6 @@ void PCF8574IoAbstraction::writePort(pinid_t /*pin*/, uint8_t value) {
 }
 
 bool PCF8574IoAbstraction::runLoop(){
-    TaskMgrLock locker(i2cLock);
     bool writeOk = true;
     if (needsWrite) {
         needsWrite = false;
@@ -151,7 +150,6 @@ void MCP23017IoAbstraction::writePort(pinid_t pin, uint8_t value) {
 }
 
 bool MCP23017IoAbstraction::runLoop() {
-    TaskMgrLock locker(i2cLock);
 	if(needsInit) initDevice();
 
 	bool writeOk = true;
