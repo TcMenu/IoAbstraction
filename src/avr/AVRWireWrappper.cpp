@@ -326,18 +326,14 @@ bool ioaWireReady(WireType wire, int address) {
 }
 
 void ioaWireSetSpeed(WireType wireType, long frequency) {
-    TaskMgrLock locker(i2cLock);
     IoaTwi.setFrequency(frequency);
 }
 
 bool ioaWireRead(WireType pI2c, int addr, uint8_t* buffer, size_t len) {
-    TaskMgrLock locker(i2cLock);
     return IoaTwi.receiveData(addr, buffer, len);
 }
 
 bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, size_t len, int retriesAllowed, bool sendStop) {
-    TaskMgrLock locker(i2cLock);
-
     bool ready = retriesAllowed == 0;
     while(retriesAllowed != 0 && !ready) {
         ready = IoaTwi.isReady(retriesAllowed);
