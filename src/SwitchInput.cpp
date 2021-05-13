@@ -306,11 +306,12 @@ void RotaryEncoder::increment(int8_t incVal) {
 	}	
 }
 
-HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode) : RotaryEncoder(callback) {
+HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) : RotaryEncoder(callback) {
 	this->pinA = pinA;
 	this->pinB = pinB;
 	this->lastChange = micros();
     this->accelerationMode = accelerationMode;
+	this->encoderType = encoderType;
 
 	// set the pin directions to input with pull ups enabled
 	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
@@ -380,19 +381,38 @@ void HardwareRotaryEncoder::encoderChanged() {
 	uint8_t a = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
 	uint8_t b = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
 
-	if(a != aLast) {
-		aLast = a;
-		if(b != cleanFromB) {
-			cleanFromB = b;
-			if(a) {	
-				unsigned long timeNow = micros();
-				int amt = amountFromChange(timeNow - lastChange);
-				increment(a != b ? -amt : amt);
-				lastChange = timeNow;
+	if(encoderType == QUARTER_CYCLE){
+		if((a != aLast) || (b != cleanFromB)) {
+			aLast = a;
+			if((a != aLast) || (b != cleanFromB)) {
+				cleanFromB = b;
+				if((a || cleanFromB) || (a == 0 && b == 0)) {	
+					unsigned long timeNow = micros();
+					int amt = amountFromChange(timeNow - lastChange);
+					increment(a != b ? -amt : amt);
+					lastChange = timeNow;
+				}
 			}
-		}
+		}		
 	}
+	else {
+		if(a != aLast) {
+			aLast = a;
+			if(b != cleanFromB) {
+				cleanFromB = b;
+				if(a) {	
+					unsigned long timeNow = micros();
+					int amt = amountFromChange(timeNow - lastChange);
+					increment(a != b ? -amt : amt);
+					lastChange = timeNow;
+				}
+			}
+		}	
+	}
+
 }
+
+
 
 /******** UP DOWN BUTTON ENCODER *******/
 
@@ -425,8 +445,8 @@ void registerInterrupt(pinid_t pin) {
 	taskManager.addInterrupt(switches.getIoAbstraction(), pin, CHANGE);
 }
 
-void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode) {
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) {
 	if (switches.getIoAbstraction() == nullptr) switches.initialise(internalDigitalIo(), true);
 
-	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode));
+	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
 }
