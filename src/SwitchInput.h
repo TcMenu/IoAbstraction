@@ -227,6 +227,19 @@ enum HWAccelerationMode : uint8_t {
 };
 
 /**
+ * This enumeration is used to define how an encoder's detents relate to
+ * its output states
+ */
+enum EncoderType : uint8_t {
+    /** Detent after every signal change, A or B */
+    QUARTER_CYCLE,
+    /** Detent on every position where A == B */
+    HALF_CYCLE,
+    /** Detent after every full cycle of both signals, A and B */ 
+    FULL_CYCLE
+};
+
+/**
  * An implementation of RotaryEncoder that supports the most common types of rotary encoder, needed no additional hardware
  * in most cases. The A input must be an interrupt pin.
  * @see setupRotaryEncoderWithInterrupt
@@ -239,11 +252,13 @@ private:
 	uint8_t aLast;
 	uint8_t cleanFromB;
     HWAccelerationMode accelerationMode;
+	EncoderType encoderType;
 	
 public:
-	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR);
+	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType = FULL_CYCLE);
 	void encoderChanged() override;
     void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
+	void setEncoderType(EncoderType encoderType) { encoderType =  encoderType; }
 private:
 	int amountFromChange(unsigned long change);
 };
@@ -447,7 +462,7 @@ extern SwitchInput switches;
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
  */
-void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR);
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
 
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
