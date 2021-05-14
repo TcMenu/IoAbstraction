@@ -128,7 +128,7 @@ For the vast majority of encoders there is no need to provide the encoder type. 
     /** Detent after every full cycle of both signals, A and B */ 
     FULL_CYCLE
 
-Then lastly we set the precision of the encoder (IE the range)
+Then lastly we set the precision of the encoder (IE the range), if the current and maximum value are both 1, then the mode is direction only.
 
 	// After initialising, we set the maximum value (from 0) that the encoder represents
 	// along with the current value
