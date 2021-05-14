@@ -105,7 +105,7 @@ First we must register the callback function that will be called when there's a 
 		// do something with new value..
 	}
 
-Then we must create an encoder using one of the three examples below
+Then we create an encoder using one of the three examples below
 
 	// Example 1, Real encoder, we need to set up the pins that the encoder uses and provide a callback
 	setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
@@ -118,6 +118,15 @@ Then we must create an encoder using one of the three examples below
 	HardwareRotaryEncoder* secondEncoder = new HardwareRotaryEncoder(secondEncoderAPin, secondEncoderBPin, onSecondEncoderChange);
 	switches.setEncoder(0, firstEncoder);
 	switches.setEncoder(1, secondEncoder);
+
+For the vast majority of encoders there is no need to provide the encoder type. If you have a quarter cycle rotary encoder, there is an extra optional constructor parameter for the encoder type, thanks go to @ddd999 for this support. The options are listed below: 
+
+    /** Detent after every signal change, A or B */
+    QUARTER_CYCLE,
+    /** Detent on every position where A == B */
+    HALF_CYCLE,
+    /** Detent after every full cycle of both signals, A and B */ 
+    FULL_CYCLE
 
 Then lastly we set the precision of the encoder (IE the range)
 
