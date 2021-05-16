@@ -9,7 +9,6 @@
 #include <SimpleCollections.h>
 #include <AnalogDeviceAbstraction.h>
 
-#define GPIO_INVALID -1
 #define ESP32_DAC1 25
 #define ESP32_DAC2 26
 
@@ -19,14 +18,14 @@ private:
     uint16_t pwmChannel;
     uint16_t pwmWidth;
 public:
-    EspAnalogOutputMode(pinid_t pin);
+    explicit EspAnalogOutputMode(pinid_t pin);
     EspAnalogOutputMode(const EspAnalogOutputMode& other);
 
     bool isDac() const { return pin == ESP32_DAC1 || pin == ESP32_DAC2; }
     pinid_t getKey() const { return pin; }
     uint16_t getPwmChannel() const { return pwmChannel; }
     void setPwmChannel(uint16_t ch) { pwmChannel = ch; }
-    void pinSetup(int pin_);
+    void pinSetup();
     void write(unsigned int newVal) const;
 };
 
@@ -39,7 +38,7 @@ private:
     uint16_t lastCached = 0;
 public:
     pinid_t getKey() const { return pin; }
-    EspAnalogInputMode(pinid_t pin);
+    explicit EspAnalogInputMode(pinid_t pin);
     EspAnalogInputMode(const EspAnalogInputMode& other);
 
     void pinSetup();

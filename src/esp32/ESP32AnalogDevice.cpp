@@ -76,7 +76,7 @@ uint16_t EspAnalogInputMode::getCurrentReading() {
     }
 }
 
-EspAnalogOutputMode::EspAnalogOutputMode(pinid_t pin) : pin(pin), pwmChannel(-1), pwmWidth(5000) {}
+EspAnalogOutputMode::EspAnalogOutputMode(pinid_t pin) : pin(pin), pwmChannel(0xff), pwmWidth(5000) {}
 
 EspAnalogOutputMode::EspAnalogOutputMode(const EspAnalogOutputMode& other)  {
     pin = other.pin;
@@ -84,8 +84,7 @@ EspAnalogOutputMode::EspAnalogOutputMode(const EspAnalogOutputMode& other)  {
     pwmWidth = other.pwmWidth;
 }
 
-void EspAnalogOutputMode::pinSetup(int pin_) {
-    this->pin = pin_;
+void EspAnalogOutputMode::pinSetup() {
     if(!isDac()) {
         // for other than the dac ports, we need to set up PWM
         ledcSetup(pwmChannel, pwmWidth, 8);
@@ -120,7 +119,7 @@ void ESP32AnalogDevice::initPin(pinid_t pin, AnalogDirection direction) {
             gpio = gpioToPwmKey.getByKey(pin);
             gpio->setPwmChannel(gpioToPwmKey.count());
         }
-        gpio->pinSetup(pin);
+        gpio->pinSetup();
     }
     else {
         auto* gpio = gpioToInputKey.getByKey(pin);
