@@ -11,40 +11,48 @@
 #include <driver/adc.h>
 #include <AnalogDeviceAbstraction.h>
 
-EspAnalogInputMode::EspAnalogInputMode() : onAdc1(false), adcChannelNum(0), pin(0), attenuation(ADC_ATTEN_DB_11) {}
+EspAnalogInputMode::EspAnalogInputMode(pinid_t pin) : onAdc1(false), adcChannelNum(0xff), pin(pin), attenuation(ADC_ATTEN_DB_11) {}
 
 EspAnalogInputMode::EspAnalogInputMode(const EspAnalogInputMode& other) = default;
 
-void EspAnalogInputMode::pinSetup(int pin_) {
-    bool foundPin = false;
-    for(int ch=ADC1_CHANNEL_0;ch<ADC1_CHANNEL_MAX;ch++) {
-        gpio_num_t gpio=GPIO_NUM_0;
-        if(adc1_pad_get_io_num(static_cast<adc1_channel_t>(ch), &gpio) == ESP_OK && gpio == pin_) {
-            foundPin = true;
-            onAdc1 = true;
-            adcChannelNum = ch;
+void EspAnalogInputMode::pinSetup() {
+    if(adcChannelNum == 0xff) {
+        for (int ch = ADC1_CHANNEL_0; ch < ADC1_CHANNEL_MAX; ch++) {
+            gpio_num_t gpio = GPIO_NUM_0;
+            if (adc1_pad_get_io_num(static_cast<adc1_channel_t>(ch), &gpio) == ESP_OK && gpio == pin) {
+                onAdc1 = true;
+                adcChannelNum = ch;
+                break;
+            }
         }
     }
-    for(int ch=ADC2_CHANNEL_0;ch<ADC2_CHANNEL_MAX;ch++) {
-        gpio_num_t gpio=GPIO_NUM_0;
-        if(adc2_pad_get_io_num(static_cast<adc2_channel_t>(ch), &gpio) == ESP_OK && gpio == pin_) {
-            foundPin = true;
-            onAdc1 = false;
-            adcChannelNum = ch;
+
+    if(adcChannelNum == 0xff) {
+        for (int ch = ADC2_CHANNEL_0; ch < ADC2_CHANNEL_MAX; ch++) {
+            gpio_num_t gpio = GPIO_NUM_0;
+            if (adc2_pad_get_io_num(static_cast<adc2_channel_t>(ch), &gpio) == ESP_OK && gpio == pin) {
+                onAdc1 = false;
+                adcChannelNum = ch;
+                break;
+            }
         }
     }
-    if(foundPin) {
-        pin = pin_;
+
+    // there's a chance that this GPIO may have previously been registered as output, we should
+    // ensure that it's initialised as input with no pull up/down.
+    if(adcChannelNum != 0xff) {
         alterPinAttenuation(ADC_ATTEN_DB_11);
-        serdebugF4("ADC configured (11dB atten) ", pin, onAdc1, adcChannelNum);
+        gpio_config_t config;
+        config.intr_type = GPIO_INTR_DISABLE;
+        config.mode = GPIO_MODE_INPUT;
+        config.pin_bit_mask = uint64_t(1) << uint64_t(pin);
+        config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+        config.pull_up_en = GPIO_PULLUP_DISABLE;
+        gpio_config(&config);
     }
     else {
         serdebugF2("Did not find adc setting for ", pin);
     }
-}
-
-void EspAnalogInputMode::alterPinAttenuation(uint8_t atten) {
-    attenuation = atten;
 }
 
 uint16_t EspAnalogInputMode::getCurrentReading() {
@@ -68,11 +76,7 @@ uint16_t EspAnalogInputMode::getCurrentReading() {
     }
 }
 
-EspAnalogOutputMode::EspAnalogOutputMode() {
-    pin = GPIO_INVALID;
-    pwmChannel = -1;
-    pwmWidth = 5000;
-}
+EspAnalogOutputMode::EspAnalogOutputMode(pinid_t pin) : pin(pin), pwmChannel(-1), pwmWidth(5000) {}
 
 EspAnalogOutputMode::EspAnalogOutputMode(const EspAnalogOutputMode& other)  {
     pin = other.pin;
@@ -80,9 +84,8 @@ EspAnalogOutputMode::EspAnalogOutputMode(const EspAnalogOutputMode& other)  {
     pwmWidth = other.pwmWidth;
 }
 
-void EspAnalogOutputMode::pinSetup(int pin_, int pwmChannel_) {
+void EspAnalogOutputMode::pinSetup(int pin_) {
     this->pin = pin_;
-    this->pwmChannel = pwmChannel_;
     if(!isDac()) {
         // for other than the dac ports, we need to set up PWM
         ledcSetup(pwmChannel, pwmWidth, 8);
@@ -110,14 +113,23 @@ ESP32AnalogDevice::ESP32AnalogDevice() {
 
 void ESP32AnalogDevice::initPin(pinid_t pin, AnalogDirection direction) {
     if(direction != DIR_IN) {
-        EspAnalogOutputMode outputMode;
-        outputMode.pinSetup(pin, gpioToPwmKey.count());
-        gpioToPwmKey.add(outputMode);
+        auto* gpio = gpioToPwmKey.getByKey(pin);
+        if(!gpio) {
+            EspAnalogOutputMode outputMode(pin);
+            gpioToPwmKey.add(outputMode);
+            gpio = gpioToPwmKey.getByKey(pin);
+            gpio->setPwmChannel(gpioToPwmKey.count());
+        }
+        gpio->pinSetup(pin);
     }
     else {
-        EspAnalogInputMode inputMode;
-        inputMode.pinSetup(pin);
-        gpioToInputKey.add(inputMode);
+        auto* gpio = gpioToInputKey.getByKey(pin);
+        if(!gpio) {
+            EspAnalogInputMode inputMode(pin);
+            gpioToInputKey.add(inputMode);
+            gpio = gpioToInputKey.getByKey(pin);
+        }
+        gpio->pinSetup();
     }
 }
 

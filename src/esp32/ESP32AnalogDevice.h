@@ -19,14 +19,14 @@ private:
     uint16_t pwmChannel;
     uint16_t pwmWidth;
 public:
-    EspAnalogOutputMode();
+    EspAnalogOutputMode(pinid_t pin);
     EspAnalogOutputMode(const EspAnalogOutputMode& other);
 
     bool isDac() const { return pin == ESP32_DAC1 || pin == ESP32_DAC2; }
     pinid_t getKey() const { return pin; }
     uint16_t getPwmChannel() const { return pwmChannel; }
-
-    void pinSetup(int pin_, int pwmChannel_);
+    void setPwmChannel(uint16_t ch) { pwmChannel = ch; }
+    void pinSetup(int pin_);
     void write(unsigned int newVal) const;
 };
 
@@ -36,14 +36,14 @@ private:
     uint8_t adcChannelNum;
     pinid_t pin;
     uint8_t attenuation;
-    int lastCached = 0;
+    uint16_t lastCached = 0;
 public:
     pinid_t getKey() const { return pin; }
-    EspAnalogInputMode();
+    EspAnalogInputMode(pinid_t pin);
     EspAnalogInputMode(const EspAnalogInputMode& other);
 
-    void pinSetup(int pin_);
-    void alterPinAttenuation(uint8_t atten);
+    void pinSetup();
+    void alterPinAttenuation(uint8_t atten) { attenuation = atten; }
 
     bool isOnDAC1() const { return onAdc1;}
     uint8_t getChannel() const { return adcChannelNum;}
