@@ -89,7 +89,7 @@ typedef void(*KeyCallbackFn)(pinid_t key, bool heldDown);
  * The signature of a callback function for rotary encoders, registered when initialising the encoder setupUpDownButtonEncoder
  * @param newValue the value the encoder changed to
  */
-typedef void(*EncoderCallbackFn)(int newValue);
+typedef bool(*EncoderCallbackFn)(int newValue);
 
 /**
  * An internal class that represents the state of a single key being managed by switches.
