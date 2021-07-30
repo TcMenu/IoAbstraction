@@ -38,7 +38,7 @@ public:
 	void clearError() {errorFlag = false;}
 
 	void checkBounds(EepromPosition pos, int len) {
-		if(pos + len >= memSize) {
+		if(uint16_t(pos + len) >= memSize) {
             serdebugF2("checkbounds exceeded: ", pos+len);
 			errorFlag = true;
 		}
