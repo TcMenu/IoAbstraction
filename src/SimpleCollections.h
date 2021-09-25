@@ -74,9 +74,9 @@ namespace ioaTreeInternal {
 
         void *underlyingData() { return binTree; }
 
-        int getCapacity() const { return currentCapacity; }
+        bsize_t getCapacity() const { return currentCapacity; }
 
-        int getCurrentSize() const { return currentSize; }
+        bsize_t getCurrentSize() const { return currentSize; }
 
     private:
         bool checkCapacity();
