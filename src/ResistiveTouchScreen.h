@@ -282,12 +282,11 @@ namespace iotouch {
     class ValueStoringResistiveTouchScreen : public TouchScreenManager {
     private:
         float lastX, lastY, touchPressure;
+        TouchInterrogator& interrogator;
         TouchState touchState;
-        ResistiveTouchInterrogator resistiveInterrogator;
     public:
-        ValueStoringResistiveTouchScreen(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin, ResistiveTouchInterrogator::TouchRotation rotation) :
-                TouchScreenManager(&resistiveInterrogator, rotation),
-                resistiveInterrogator(xpPin, xnPin, ypPin, ynPin){}
+        ValueStoringResistiveTouchScreen(TouchInterrogator& interrogator, TouchInterrogator::TouchRotation rotation)
+            : TouchScreenManager(&interrogator, rotation), interrogator(interrogator) {}
 
         void sendEvent(float locationX, float locationY, float pressure, TouchState touched) override {
             lastX = locationX;

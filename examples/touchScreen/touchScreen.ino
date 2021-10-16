@@ -1,7 +1,8 @@
 /**
- * A simple example of how to use a touch screen with IoAbstraction, it takes the touch screen inputs
- * and reports them to the serial port every few hunderd millis. It's possible to extend the touch
- * base class too and be event-driven, but that's not discussed here.
+ * A simple example of how to use a resistive touch screen directly with IoAbstraction.
+ * This example shows how to integrate directly with a resistive touch screen without any additional devices, using
+ * analog inputs. This example takes the readings and reports them to the serial port every few hunderd millis.
+ * It's possible to extend the touch base class too and be event-driven, but that's not discussed here.
  */
 
 #include <Arduino.h>
@@ -21,12 +22,12 @@
 using namespace iotouch;
 
 // the touch screen itself
-ValueStoringResistiveTouchScreen touchScreen(XPOS_PIN, XNEG_PIN, YPOS_PIN, YNEG_PIN, TouchInterrogator::PORTRAIT);
+ResistiveTouchInterrogator interrogator(XPOS_PIN, XNEG_PIN, YPOS_PIN, YNEG_PIN);
+ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchInterrogator::PORTRAIT);
 
 // couple of display options here, anything with a touch interface attached!
-Adafruit_PCD8544 gfx(MY_CS, MY_DC, MY_RST);
 //Adafruit_ST7735 gfx(MY_CS, MY_DC, MY_RST);
-//Adafruit_ILI9341 gfx(MY_CS, MY_DC);
+Adafruit_ILI9341 gfx(MY_CS, MY_DC);
 
 int oldX = 0, oldY = 0;
 
