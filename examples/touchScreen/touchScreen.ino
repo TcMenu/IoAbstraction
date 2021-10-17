@@ -9,7 +9,7 @@
 #include <IoAbstraction.h>
 #include <ResistiveTouchScreen.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_ST7735.h>
+#include <Adafruit_ILI9341.h>
 
 #define YPOS_PIN 32
 #define XNEG_PIN 33
