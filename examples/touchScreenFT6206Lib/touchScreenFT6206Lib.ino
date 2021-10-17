@@ -1,7 +1,7 @@
 /**
  * A simple example of how to use either XPT2046 or FT6206 libraries for touch screen with IoAbstraction.
  * This example shows how to use the adafruit FT6206 or XPT2046 library with this touch screen.
- * This example takes the readings and reports them to the serial port every few hunderd millis.
+ * This example takes the readings and reports them to the serial port every few hundred millis.
  * It's possible to extend the touch base class too and be event-driven, but that's not discussed here.
  *
  * Why use this rather than the libraries directly:
@@ -18,7 +18,8 @@
 #define KNOWN_DEVICE_TOUCH_RANGE 4096.0F
 
 //
-// Pick a library from the two below and uncomment the lines for that library.
+// Pick a library from the two below and uncomment the lines for that library. This includes the appropriate library
+// header, and creates an instance of the library touch object.
 //
 
 // For Paul Stoffregen's touch screen XPT2046 (or ThingPulse fork)
@@ -28,17 +29,19 @@
 XPT2046_Touchscreen touchDevice(CS_PIN, 0xFF);
 //end XPT2046
 
-
 // For Adafruit's FT6206 touch screen library
 //#include <Adafruit_FT6206>
 //#define TOUCH_CLASS Adafruit_FT6206
 //Adafruit_FT6206 touchDevice;
 // end FT6206
 
+
 using namespace iotouch;
 
 /**
- * Implements the touch interrogator class, this purely gets the current reading from the device when requested.
+ * Here we implement the glue between the IoAbstraction touch screen and the library. It is essentially one method
+ * that is called frequently to determine the state of the touch screen called `internalProcessTouch`. We create a
+ * single instance of this class and pass it to the `ResistiveTouchScreen` when it's created.
  */
 class AdaLibTouchInterrogator : public TouchInterrogator {
 private:
@@ -63,7 +66,13 @@ public:
     }
 } interrogator(touchDevice);
 
-// the touch screen itself
+/**
+ * Now we create the resistive touch screen instance, this is the class within IoAbstraction that handles the touch
+ * interface. In the simplest case you can use the ValueStoringResistiveTouchScreen, but you can also extend from
+ * ResistiveTouchScreen, see the reference documentation for more on this.
+ *
+ * Notice that we pass in the above created "glue" interrogator and the desired rotation.
+ */
 ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchInterrogator::PORTRAIT);
 
 void setup() {
