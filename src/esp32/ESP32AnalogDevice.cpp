@@ -8,7 +8,6 @@
 #include "ESP32AnalogDevice.h"
 #include <SimpleCollections.h>
 #include <driver/dac.h>
-#include <driver/adc.h>
 #include <AnalogDeviceAbstraction.h>
 
 EspAnalogInputMode::EspAnalogInputMode(pinid_t pin) : onAdc1(false), adcChannelNum(0xff), pin(pin), attenuation(ADC_ATTEN_DB_11) {}
@@ -68,7 +67,7 @@ uint16_t EspAnalogInputMode::getCurrentReading() {
     else {
         int adcVal;
         adc2_config_channel_atten(static_cast<adc2_channel_t>(adcChannelNum), static_cast<adc_atten_t>(attenuation));
-        if(adc2_get_raw(static_cast<adc2_channel_t>(adcChannelNum), ADC_WIDTH_BIT_DEFAULT, &adcVal) == ESP_OK) {
+        if(adc2_get_raw(static_cast<adc2_channel_t>(adcChannelNum), IOA_ESP_BIT_SELECTION, &adcVal) == ESP_OK) {
             lastCached = adcVal;
             return adcVal;
         }
@@ -107,7 +106,7 @@ void EspAnalogOutputMode::write(unsigned int newVal) const {
 ESP32AnalogDevice* ESP32AnalogDevice::theInstance = nullptr;
 
 ESP32AnalogDevice::ESP32AnalogDevice() {
-    adc1_config_width(ADC_WIDTH_BIT_DEFAULT);
+    adc1_config_width(IOA_ESP_BIT_SELECTION);
 }
 
 void ESP32AnalogDevice::initPin(pinid_t pin, AnalogDirection direction) {

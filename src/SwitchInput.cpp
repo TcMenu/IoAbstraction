@@ -264,12 +264,14 @@ RotaryEncoder::RotaryEncoder(EncoderCallbackFn callback) {
 	this->currentReading = 0;
 	this->maximumValue = 0;
     this->lastSyncStatus = true;
+    this->rollover = false;
     this->intent = CHANGE_VALUE;
 }
 
-void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue) {
+void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax) {
 	this->maximumValue = maxValue;
 	this->currentReading = currentValue;
+	this->rollover = rolloverOnMax;
 	if(maxValue == 0 && currentValue == 0U) intent = DIRECTION_ONLY;
 	callback(currentReading);
 }
@@ -282,28 +284,30 @@ void RotaryEncoder::setUserIntention(EncoderUserIntention intention) {
     }
 }
 
-void RotaryEncoder::increment(int8_t incVal) {
-    // first check if we are in direction only mode (max = 0)
-    if(maximumValue == 0) {
-        callback(incVal);
-        return;
-    }
+// this abs accounts for some boards where abs is a double precision function
+#define safeAbs(x) ((x) < 0 ? -(x) : (x))
 
-    // otherwise run through all the possibilities
-	if(incVal >= 0) {
-		if(currentReading != maximumValue) {
-			currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
-			callback(currentReading);
+void RotaryEncoder::increment(int8_t incVal) {
+	if(maximumValue == 0) {
+		// first check if we are in direction only mode (max = 0)
+		currentReading = static_cast<uint16_t>(incVal);
+	}
+	else if(incVal >= 0) {
+		if(rollover) {
+			currentReading = (currentReading + incVal);
+			if (currentReading > maximumValue) currentReading = currentReading - maximumValue - 1;
+		}
+		else {
+			min((uint16_t)(currentReading + incVal), maximumValue);
 		}
 	}
-	else if(currentReading != 0 && currentReading < abs(incVal)) {
-		currentReading = 0;
-		callback(currentReading);
+	else if(currentReading < abs(incVal)) {
+		currentReading = rollover? maximumValue - safeAbs(incVal) + 1 : 0;
 	}
 	else if(currentReading != 0) {
-		currentReading += incVal; 
-		callback(currentReading);
-	}	
+		currentReading += incVal;
+	}
+	callback(incVal);
 }
 
 HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) : RotaryEncoder(callback) {

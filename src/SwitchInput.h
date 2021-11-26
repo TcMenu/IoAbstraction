@@ -159,9 +159,10 @@ protected:
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
     bool lastSyncStatus;
+    bool rollover;
     EncoderUserIntention intent;
 public:
-	RotaryEncoder(EncoderCallbackFn callback);
+	explicit RotaryEncoder(EncoderCallbackFn callback);
 	virtual ~RotaryEncoder() {;}
 
 	/**
@@ -171,7 +172,7 @@ public:
 	 * @param maxValue the largest value allowed or zero for direction only mode
 	 * @param currentValue the current value (zero for direction mode)
 	 */
-	void changePrecision(uint16_t maxValue, int currentValue);
+	void changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax = false);
 
 	/**
 	 * Gets the current value of the encoder.

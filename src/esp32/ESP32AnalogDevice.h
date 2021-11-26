@@ -8,6 +8,19 @@
 
 #include <SimpleCollections.h>
 #include <AnalogDeviceAbstraction.h>
+#include <driver/adc.h>
+
+// although in some environments a bit width default is available it's not everywhere
+#if defined(ADC_WIDTH_BIT_13)
+#define IOA_ADC_BITS 13
+#define IOA_ADC_MAX 8192
+#define IOA_ESP_BIT_SELECTION ADC_WIDTH_BIT_13
+#else
+#define IOA_ADC_BITS 12
+#define IOA_ADC_MAX 4096
+#define IOA_ESP_BIT_SELECTION ADC_WIDTH_BIT_12
+#endif
+
 
 #define ESP32_DAC1 25
 #define ESP32_DAC2 26
@@ -63,9 +76,9 @@ public:
 	 */
 	ESP32AnalogDevice();
 
-	int getMaximumRange(AnalogDirection dir, pinid_t /*pin*/) override { return (dir == DIR_OUT) ? 255 : 4095; }
+	int getMaximumRange(AnalogDirection dir, pinid_t /*pin*/) override { return (dir == DIR_OUT) ? 255 : IOA_ADC_MAX; }
 
-    int getBitDepth(AnalogDirection direction, pinid_t /*pin*/) override { return (direction == DIR_OUT) ? 8 : 12; }
+    int getBitDepth(AnalogDirection direction, pinid_t /*pin*/) override { return (direction == DIR_OUT) ? 8 : IOA_ADC_BITS; }
 
 	unsigned int getCurrentValue(pinid_t pin) override {
 	    auto input = gpioToInputKey.getByKey(pin);
