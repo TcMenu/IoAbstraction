@@ -221,9 +221,9 @@ void SwitchInput::pushSwitch(pinid_t pin, bool held) {
     keys.getByKey(pin)->trigger(held);
 }
 
-void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue) {
+void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover) {
 	if (slot < MAX_ROTARY_ENCODERS && encoder[slot] != nullptr) {
-		encoder[slot]->changePrecision(precision, currentValue);
+		encoder[slot]->changePrecision(precision, currentValue, rollover);
 	}
 }
 
@@ -288,17 +288,19 @@ void RotaryEncoder::setUserIntention(EncoderUserIntention intention) {
 #define safeAbs(x) ((x) < 0 ? -(x) : (x))
 
 void RotaryEncoder::increment(int8_t incVal) {
-	if(maximumValue == 0) {
+    if(maximumValue == 0) {
 		// first check if we are in direction only mode (max = 0)
-		currentReading = static_cast<uint16_t>(incVal);
+		 callback(incVal);
+         return;
 	}
-	else if(incVal >= 0) {
-		if(rollover) {
+
+    if(incVal >= 0) {
+        if(rollover) {
 			currentReading = (currentReading + incVal);
 			if (currentReading > maximumValue) currentReading = currentReading - maximumValue - 1;
-		}
+        }
 		else {
-			min((uint16_t)(currentReading + incVal), maximumValue);
+			currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
 		}
 	}
 	else if(currentReading < abs(incVal)) {
@@ -306,8 +308,8 @@ void RotaryEncoder::increment(int8_t incVal) {
 	}
 	else if(currentReading != 0) {
 		currentReading += incVal;
-	}
-	callback(incVal);
+    }
+	callback(currentReading);
 }
 
 HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) : RotaryEncoder(callback) {

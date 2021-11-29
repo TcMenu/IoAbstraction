@@ -122,7 +122,7 @@ void setup() {
     // now we set up the rotary encoder, first we give the A pin and the B pin.
     // we give the encoder a max value of 128, always minimum of 0.
     setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
-    switches.changeEncoderPrecision(maximumEncoderValue, 100);
+    switches.changeEncoderPrecision(0, maximumEncoderValue, 100, true);
 
     // Start 2nd encoder
     Serial.println("Setting up second encoder now");

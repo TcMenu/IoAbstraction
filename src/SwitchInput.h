@@ -384,7 +384,7 @@ public:
 	 * @param precision the maximum value to be set
 	 * @param currentValue the current value to be set.
 	 */
-	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue);
+	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover = false);
 
 	/**
 	 * Simulates a switch press by calling the callback directly without changing the internal state
