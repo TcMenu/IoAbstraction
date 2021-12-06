@@ -1,27 +1,34 @@
 # IoAbstraction for Arduino and mbed summary
 
+Dave Cherry / TheCodersCorner.com make this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
+
 This library provides several useful extensions that make programming Arduino / mbed for non-trivial apps simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation. The API is almost identical between Arduino and mbed making it easier to port between the two. 
 
-## Full API documentation
+## Documentation and questions
 
 Along with ths quick start guide and the examples also see:
 
 * [IoAbstraction documentation pages](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/)
 * [IoAbstraction reference documentation](https://www.thecoderscorner.com/ref-docs/ioabstraction/html)
+
+There is a forum where questions can be asked, but the rules of engagement are: **this is my hobby, I make it available because it helps others**. Don't expect immediate answers, make sure you've recreated the problem in a simple sketch that you can send to me. Please consider making at least a one time donation using the sponsor link above before using the forum.
+
 * [TCC Libraries community discussion forum](https://www.thecoderscorner.com/jforum/)
 * I also monitor the Arduino forum [https://forum.arduino.cc/], Arduino related questions can be asked there too.
 
 ## Installation for Arduino IDE
 
-This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependency, [TaskManagerIO](https://github.com/davetcc/TaskManagerIO). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
+This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependencies, [TaskManagerIO](https://github.com/davetcc/TaskManagerIO) and [SimpleCollections](https://github.com/davetcc/SimpleCollections). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
 
 ## Installation for PlatformIO (Arduino or mbed)
 
-Use the platformIO library manager to get the library. It's called 'IoAbstraction'. It should automatically include "TaskManagerIO" as it's a dependency.
+Use the platformIO library manager to get the library. It's called 'IoAbstraction'. It should automatically include "TaskManagerIO" and "SimpleCollections" as it's a dependency.
 
-## This library is based on TaskManagerIO
+## This library is based on TaskManagerIO and SimpleCollections
 
 Take a look at the [TaskManagerIO repo](https://github.com/davetcc/TaskManagerIO) for more information about how task manager works, this library relies heavily on task manager.
+
+Also, this library uses [SimpleCollections](https://github.com/davetcc/SimpleCollections) within switches and a few other areas.
 
 ## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
 
@@ -74,7 +81,7 @@ Before doing anything else, you must add taskManager's run loop to your loop met
 		taskManager.runLoop();
 	}
 
-Here's a simple example example using a switch:
+Here's a simple example using a switch:
 
 In setup we initialise it telling it to use arduino pins for IO, we could use shift registers or an i2c expander, and we also add a switch along with the event that should be:
 
