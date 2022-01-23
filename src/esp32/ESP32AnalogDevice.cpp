@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Dave Cherry).
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
 #ifdef ESP32
 
 #include "ESP32AnalogDevice.h"
+#include "IoLogging.h"
 #include <SimpleCollections.h>
 #include <driver/dac.h>
 #include <AnalogDeviceAbstraction.h>
