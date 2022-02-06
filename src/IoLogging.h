@@ -74,7 +74,7 @@ inline void serdebugHexDump(const char *title, const void* data, size_t strlen) 
     LoggingPort.println();
 
     const auto str = (const uint8_t *) data;
-    for (int ii = 0; ii < strlen; ii++) {
+    for (size_t ii = 0; ii < strlen; ii++) {
         LoggingPort.print((int) str[ii], HEX);
         LoggingPort.print(((ii % 8) == 7) ? '\n' : ' ');
     };
