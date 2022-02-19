@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 https://www.thecoderscorner.com (Nutricherry LTD).
+ * Copyright (c) 2018 https://www.thecoderscorner.com (Dave Cherry).
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
@@ -17,7 +17,7 @@
 
 #include <IoAbstraction.h>
 #include <TaskManager.h>
-#include "SimpleCollections.h"
+#include <SimpleCollections.h>
 
 #ifndef HOLD_THRESHOLD
 #define HOLD_THRESHOLD 20
@@ -159,9 +159,10 @@ protected:
 	uint16_t currentReading;
 	EncoderCallbackFn callback;
     bool lastSyncStatus;
+    bool rollover;
     EncoderUserIntention intent;
 public:
-	RotaryEncoder(EncoderCallbackFn callback);
+	explicit RotaryEncoder(EncoderCallbackFn callback);
 	virtual ~RotaryEncoder() {;}
 
 	/**
@@ -171,7 +172,7 @@ public:
 	 * @param maxValue the largest value allowed or zero for direction only mode
 	 * @param currentValue the current value (zero for direction mode)
 	 */
-	void changePrecision(uint16_t maxValue, int currentValue);
+	void changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax = false);
 
 	/**
 	 * Gets the current value of the encoder.
@@ -383,7 +384,7 @@ public:
 	 * @param precision the maximum value to be set
 	 * @param currentValue the current value to be set.
 	 */
-	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue);
+	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover = false);
 
 	/**
 	 * Simulates a switch press by calling the callback directly without changing the internal state
