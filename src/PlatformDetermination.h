@@ -15,7 +15,7 @@
 // This file is shared across IoTaskManager and IoAbstraction
 
 // list of devices is pulled from https://github.com/arduino/ArduinoCore-mbed/blob/master/full.variables
-// set IOA_FORCE_ARDUINO_MBED to force IoAbstraction to use Arduino-mbed mode.
+// set TMIOA_FORCE_ARDUINO_MBED to force IoAbstraction to use Arduino-mbed mode.
 #if defined(ARDUINO_NANO_RP2040_CONNECT) || \
     defined(ARDUINO_ARDUINO_NANO33BLE) || \
     defined(ARDUINO_RASPBERRY_PI_PICO) || \
@@ -24,7 +24,7 @@
     defined(ARDUINO_EDGE_CONTROL) || \
     defined(ARDUINO_NICLA) || \
     defined(ARDUINO_NICLA_VISION) || \
-    defined(IOA_FORCE_ARDUINO_MBED)
+    defined(TMIOA_FORCE_ARDUINO_MBED)
 // here we're in a hybrid of mbed and Arduino basically. We treat all abstractions as Arduino though.
 #include <Arduino.h>
 # define IOA_USE_ARDUINO
