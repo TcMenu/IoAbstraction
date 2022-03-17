@@ -19,8 +19,8 @@
 #include "EepromAbstraction.h"
 
 //
-// By default we cache the first 512 bytes of ROM into memory, we cache it to avoid having to leave the clock on
-// for longer periods. It is possible to remove this cache
+// By default, we cache the first 512 bytes of ROM into memory, we cache it to avoid having to leave the clock on
+// for longer periods. It is possible to remove this cache. You can increase or reduce its size below.
 #ifndef EEPROM_SIZE
 #define EEPROM_SIZE (EEPROM_WORD_SIZE * 4)
 #define EEPROM_WORD_SIZE 128

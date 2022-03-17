@@ -10,7 +10,7 @@
 
 void HalStm32EepromAbstraction::enableBackupRam()
 {
-    HAL_PWR_EnableBkUpAccess();  // access to backup domain..
+    HAL_PWR_EnableBkUpAccess();  // access to back-up domain..
     __HAL_RCC_PWR_CLK_ENABLE();  // enable the clock
 
     errorOccurred = HAL_PWREx_EnableBkUpReg() != HAL_OK;   // enable the backup regulator
@@ -65,7 +65,7 @@ void HalStm32EepromAbstraction::write8(EepromPosition position, uint8_t val) {
         errorOccurred = true;
     }
     else {
-        eepromBuffer[position] = val;
+        eepromBuffer[position] = (char)val;
     }
 }
 
@@ -74,15 +74,15 @@ uint16_t HalStm32EepromAbstraction::read16(EepromPosition position) {
         errorOccurred = true;
         return 0;
     }
-    return eepromBuffer[position] | (eepromBuffer[position + 1] << 8);
+    return eepromBuffer[position] | ((uint16_t)eepromBuffer[position + 1] << 8);
 }
 
 void HalStm32EepromAbstraction::write16(EepromPosition position, uint16_t val) {
     if (position + 2 >= EEPROM_SIZE) {
         errorOccurred = true;
     } else {
-        eepromBuffer[position] = uint8_t(val & 0xffU);
-        eepromBuffer[position + 1] = uint8_t(val >> 8U);
+        eepromBuffer[position] = char(val & 0xffU);
+        eepromBuffer[position + 1] = char(val >> 8U);
     }
 }
 
@@ -91,7 +91,8 @@ uint32_t HalStm32EepromAbstraction::read32(EepromPosition position) {
         errorOccurred = true;
         return 0;
     }
-    return eepromBuffer[position] | (eepromBuffer[position + 1] << 8) | (eepromBuffer[position + 2] << 16) | (eepromBuffer[position + 3] << 24);
+    return eepromBuffer[position] | ((uint32_t)eepromBuffer[position + 1] << 8U) | ((uint32_t)eepromBuffer[position + 2] << 16U) |
+                ((uint32_t)eepromBuffer[position + 3] << 24U);
 }
 
 void HalStm32EepromAbstraction::write32(EepromPosition position, uint32_t val) {
@@ -99,10 +100,10 @@ void HalStm32EepromAbstraction::write32(EepromPosition position, uint32_t val) {
         errorOccurred = true;
     }
     else {
-        eepromBuffer[position] = uint8_t(val & 0xff);
-        eepromBuffer[position + 1] = uint8_t((val >> 8U) & 0xffU);
-        eepromBuffer[position + 2] = uint8_t((val >> 16U) & 0xffU);
-        eepromBuffer[position + 3] = uint8_t((val >> 24U));
+        eepromBuffer[position] = char(val & 0xff);
+        eepromBuffer[position + 1] = char((val >> 8U) & 0xffU);
+        eepromBuffer[position + 2] = char((val >> 16U) & 0xffU);
+        eepromBuffer[position + 3] = char((val >> 24U));
     }
 }
 

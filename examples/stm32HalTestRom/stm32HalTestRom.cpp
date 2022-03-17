@@ -11,9 +11,11 @@
 #include <IoLogging.h>
 #include <TaskManagerIO.h>
 
+#ifdef __MBED__
 // to be able to use IoLogging within your application add the following
 BufferedSerial serPort(USBTX, USBRX);
 MBedLogger LoggingPort(serPort);
+#endif
 
 // create the EEPROM
 HalStm32EepromAbstraction eeprom;
@@ -27,8 +29,12 @@ char readBuffer[64];
 
 bool running = true;
 
-int main() {
+void setup() {
+#ifdef __MBED__
     serPort.set_baud(115200);
+#else
+    Serial.begin(115200);
+#endif
 
     // before anything else, initialise the ROM.
     eeprom.initialise(OFFSET_ROM_AREA);
@@ -43,7 +49,7 @@ int main() {
     eeprom.write32(0, 0xd00db00d);
     eeprom.write16(4, 0xfade);
     eeprom.write8(6, integerValue);
-    eeprom.writeArrayToRom(8, (const uint8_t*)stringToWrite, sizeof stringToWrite);
+    eeprom.writeArrayToRom(8, (const uint8_t *) stringToWrite, sizeof stringToWrite);
 
     // actually commit them into the memory
     eeprom.commit();
@@ -60,11 +66,22 @@ int main() {
         serdebugF3("short read (read-back, match)", shortRead, (shortRead == 0xfade));
         serdebugF3("long read  (read-back, match)", longRead, (longRead == 0xd00db00d));
 
-        eeprom.readIntoMemArray((uint8_t*)readBuffer, 8, sizeof stringToWrite);
+        eeprom.readIntoMemArray((uint8_t *) readBuffer, 8, sizeof stringToWrite);
         serdebugF2("array = ", readBuffer);
     });
+}
 
-    while(running) {
-        taskManager.runLoop();
+void loop() {
+    taskManager.runLoop();
+}
+
+#ifdef __MBED__
+
+int main() {
+    setup();
+    while(1) {
+        loop();
     }
 }
+
+#endif

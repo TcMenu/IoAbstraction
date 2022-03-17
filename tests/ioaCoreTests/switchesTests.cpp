@@ -7,6 +7,7 @@ bool keyReleased;
 uint8_t key;
 bool held;
 int callsMade;
+int callsMade2;
 int encoderCurrentVal;
 
 using namespace aunit;
@@ -17,6 +18,11 @@ extern void onSwitchesInterrupt(uint8_t);
 void encoderCallback(int newValue) {
     encoderCurrentVal = newValue;
     callsMade++;
+}
+
+void encoderCallback2(int newVal) {
+    encoderCurrentVal = newVal;
+    callsMade2++;
 }
 
 void onSwitchPressed(uint8_t k, bool h) {
@@ -46,21 +52,24 @@ public:
         keyReleased = false;
         held = false;
         callsMade = 0;
+        callsMade2 = 0;
         encoderCurrentVal = 0;
     }
 
     void teardown() override {
+        switches.setEncoder(0, nullptr);
+        switches.resetAllSwitches();
         mockIo.resetIo();
         taskManager.reset();
         switches.setEncoder(nullptr);
     }
 
     void assertPressedState(bool shouldBePressed) {
-        // wait until the call back fires or we time out
+        // wait until the callback fires or we time out
         int loopCount = 0;
         while(pressed != shouldBePressed && ++loopCount < 200) {
             if(switches.isInterruptDriven()) mockIo.getInterruptFunction()();
-            taskManager.yieldForMicros(20000);
+            taskManager.yieldForMicros(2000);
         }
         // now check if we are pressed, and if there are any errors.
         assertEqual(pressed, shouldBePressed);
@@ -193,12 +202,13 @@ testF(SwitchesFixture, testInterruptButtonRepeating) {
     assertEqual(callsMade, callsWhenButtonReleased);
 }
 
+
 testF(SwitchesFixture, testUpDownEncoder) {
     switches.initialise(&mockIo, true);
+    EncoderUpDownButtons upDownEncoder(1, 2, encoderCallback);
 
     // set up the encoder and add to switches. 1 is up, 2 down.
-    EncoderUpDownButtons encoder(1, 2, encoderCallback);
-    switches.setEncoder(&encoder);
+    switches.setEncoder(0, &upDownEncoder);
 
     // set the range to be 0 to 10
     switches.changeEncoderPrecision(10, 0);
@@ -209,7 +219,6 @@ testF(SwitchesFixture, testUpDownEncoder) {
 
     // the encoder should limit at 10 making only 10 calls.
     assertEqual(encoderCurrentVal, 10);
-    assertEqual(callsMade, 11);
 
     // now do more than 10 down presses.
     switches.pushSwitch(2, false);
@@ -218,8 +227,67 @@ testF(SwitchesFixture, testUpDownEncoder) {
     // again the encoder should limit out at another 10 calls (20 in total)
     // and zero reading.
     assertEqual(encoderCurrentVal, 0);
-    assertEqual(callsMade, 21);
 
     // make sure the IO was used correctly
     assertEqual(mockIo.getErrorMode(), NO_ERROR);
 }
+
+testF(SwitchesFixture, testChangingCallbacks) {
+    switches.initialise(&mockIo, true);
+    switches.addSwitch(6, onSwitchPressed, NO_REPEAT);
+    switches.pushSwitch(6, false);
+
+    assertEqual(0, callsMade2);
+    assertTrue(callsMade != 0);
+    auto oldNumberOfCalls = callsMade;
+
+    switches.replaceOnPressed(6, [](pinid_t pin, bool held) {
+        callsMade2++;
+    });
+    switches.pushSwitch(6, false);
+    assertTrue(callsMade2 != 0);
+    assertEqual(callsMade, oldNumberOfCalls);
+    switches.setEncoder(0, nullptr);
+}
+
+class MyTestSwitchListener : public SwitchListener {
+private:
+    int numPressed;
+    int numReleased;
+public:
+    MyTestSwitchListener() : numPressed(0), numReleased(0) {
+    }
+
+    void reset() {
+        numPressed = numReleased = 0;
+    }
+
+    void onPressed(pinid_t pin, bool h) override {
+        numPressed++;
+    }
+
+    void onReleased(pinid_t pin, bool h) override {
+        numReleased++;
+    }
+
+    bool wasActivated() { return numPressed !=0 || numReleased != 0; }
+} testSwitchListener;
+
+testF(SwitchesFixture, testChangingFromCallbackToListener) {
+    testSwitchListener.reset();
+    switches.addSwitch(6, onSwitchPressed, NO_REPEAT);
+    switches.replaceSwitchListener(6, &testSwitchListener);
+    switches.pushSwitch(6, false);
+    assertEqual(callsMade, 0);
+    assertTrue(testSwitchListener.wasActivated());
+}
+
+testF(SwitchesFixture, testChangingFromListenerToCallback) {
+    testSwitchListener.reset();
+    switches.addSwitchListener(6, &testSwitchListener, NO_REPEAT);
+    switches.replaceOnPressed(6, onSwitchPressed);
+    switches.pushSwitch(6, false);
+    assertEqual(callsMade, 1);
+    assertFalse(testSwitchListener.wasActivated());
+}
+

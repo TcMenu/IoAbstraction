@@ -17,6 +17,9 @@ bool romClear(EepromAbstraction& eeprom, EepromPosition pos) {
     return true;
 }
 
+// for devices where an I2C rom is not installed. We cannot directly test.
+#ifndef IOA_EXCLUDE_I2C_TESTS
+
 test(testI2cArrayWrites) {
     I2cAt24Eeprom eeprom(0x50, PAGESIZE_AT24C128);
     assertTrue(romClear(eeprom, 700));
@@ -63,6 +66,8 @@ test(badI2cEepromDoesNotLockCode) {
 
     serdebug("I2C bad EEPROM address test end.");
 }
+
+#endif
 
 test(testMockEeprom) {
     MockEepromAbstraction eeprom(256);

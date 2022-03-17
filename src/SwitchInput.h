@@ -78,16 +78,17 @@ public:
 };
 
 /** 
- * The signature for a callback function that is registered with addSwitch
+ * The signature for a callback function that is registered with addSwitch, you can also implement the SwitchListener
+ * interface instead to receive updates.
  * @param key the pin associated with the pin
  * @param heldDown if the button has been held down
- */ 
+ */
 typedef void(*KeyCallbackFn)(pinid_t key, bool heldDown);
 
-
 /**
- * The signature of a callback function for rotary encoders, registered when initialising the encoder setupUpDownButtonEncoder
- * @param newValue the value the encoder changed to
+ * The signature for the encoder callback, in addition to this, you can also implement the EncoderListener interface
+ * instead to receive updates.
+ * @param newValue the value of the rotary encoder
  */
 typedef void(*EncoderCallbackFn)(int newValue);
 
@@ -102,10 +103,10 @@ private:
 	uint8_t counter;
 	uint8_t acceleration;
 	uint8_t repeatInterval;
-	union {
+    union {
 		KeyCallbackFn callback;
 		SwitchListener* listener;
-	} notify;
+    } notify;
 	KeyCallbackFn callbackOnRelease;
 public:
     KeyboardItem();
@@ -132,6 +133,9 @@ public:
 	}
 	bool isUsingListener() { return bitRead(stateFlags, KEY_LISTENER_MODE_BIT); }
 	bool isLogicInverted() { return bitRead(stateFlags, KEY_LOGIC_IS_INVERTED); }
+
+	void changeOnPressed(KeyCallbackFn pFunction);
+	void changeListener(SwitchListener* listener);
 };
 
 /**
@@ -139,7 +143,7 @@ public:
  * intent that we need to capture, they are either using it for direction only, to scroll through items,
  * or to change a value.
  */
-enum EncoderUserIntention {
+enum EncoderUserIntention: uint8_t {
     /** User wishes to change or set a value */
     CHANGE_VALUE = 0,
     /** User wishes to scroll through a list of items */
@@ -149,21 +153,39 @@ enum EncoderUserIntention {
 };
 
 /**
+ * Optionally you can extend your class from EncoderListener and then receive the callbacks in the encoderHasChanged
+ * method instead of using a functional callback.
+ */
+class EncoderListener {
+public:
+    /**
+     * Called when the encoder has changed to a new value, you must implement this method in the class that extends from
+     * EncoderListener.
+     * @param newValue the new value of the encoder.
+     */
+    virtual void encoderHasChanged(int newValue)=0;
+};
+
+/**
  * Rotary encoder is the base class of both the hardware rotary encoder and the up / down button version. 
  * It handles storing the current value, setting and managing the range of allowed values and calling
  * back when the encoder changes.
  */
 class RotaryEncoder {
-protected:	
+protected:
+    enum EncoderFlagBits { LAST_SYNC_STATUS=0, WRAP_AROUND_MODE, OO_LISTENER_CALLBACK };
 	uint16_t maximumValue;
 	uint16_t currentReading;
-	EncoderCallbackFn callback;
-    bool lastSyncStatus;
-    bool rollover;
+    union {
+        EncoderCallbackFn callback;
+        EncoderListener* encoderListener;
+    } notify;
+    uint8_t flags;
     EncoderUserIntention intent;
 public:
 	explicit RotaryEncoder(EncoderCallbackFn callback);
-	virtual ~RotaryEncoder() {;}
+    explicit RotaryEncoder(EncoderListener* listener);
+    virtual ~RotaryEncoder() {;}
 
 	/**
 	 * Change the precision of the rotary encoder, setting the maximum allowable value and the current value. If you set the maximum value
@@ -175,9 +197,21 @@ public:
 	void changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax = false);
 
 	/**
+	 * Change the callback that will be used to notify of changes in the encoder value, this must never be null.
+	 * @param callbackFn the new callback function
+	 */
+	void replaceCallback(EncoderCallbackFn callbackFn);
+
+    /**
+     * Change the callback that will be used to notify of changes in the encoder value, this must never be null.
+     * @param callbackFn the new callback function
+     */
+    void replaceCallbackListener(EncoderListener* callbackFn);
+
+	/**
 	 * Gets the current value of the encoder.
 	 */
-	int getCurrentReading() { return currentReading; }
+	int getCurrentReading() const { return currentReading; }
 
 	/**
 	 * Sets the current value of the encoder.
@@ -201,7 +235,7 @@ public:
      * with devices over i2c to check if the comms worked.
      * @return true if the sync was successful, otherwise.
      */
-    bool didLastSyncSucceed() { return lastSyncStatus; }
+    bool didLastSyncSucceed() { return bitRead(flags, LAST_SYNC_STATUS); }
 
     /**
      * For joystick and up/down button encoders there is a difference between scroll using
@@ -212,6 +246,14 @@ public:
     void setUserIntention(EncoderUserIntention intention);
 
     EncoderUserIntention getUserIntention() { return intent; }
+
+    void runCallback(int newVal) {
+        if(bitRead(flags, OO_LISTENER_CALLBACK)) {
+            notify.encoderListener->encoderHasChanged(newVal);
+        } else {
+            notify.callback(newVal);
+        }
+    }
 };
 
 /**
@@ -268,9 +310,16 @@ private:
  * An emulation of a rotary encoder using switches for up and down.
  * @see setupUpDownButtonEncoder
  */
-class EncoderUpDownButtons : public RotaryEncoder {
+class EncoderUpDownButtons : public RotaryEncoder, public SwitchListener {
+private:
+    const pinid_t upPin, downPin;
+
 public:
 	EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed = 20);
+
+    void onPressed(pinid_t pin, bool held) override;
+    void onReleased(pinid_t pin, bool held) override;
+
 };
 
 #define SW_FLAG_PULLUP_LOGIC 0
@@ -345,6 +394,20 @@ public:
 	 * @param callbackOnRelease the function to be called back upon key release
 	 */
 	void onRelease(pinid_t pin, KeyCallbackFn callbackOnRelease);
+
+	/**
+	 * Allows for a change of the function to be called when a key is pressed for a given key
+	 * @param pin the pin on which the switch is attached
+	 * @param callbackOnPressed the function to be called when a key is pressed
+	 */
+	void replaceOnPressed(pinid_t pin, KeyCallbackFn callbackOnPressed);
+
+	/**
+	 * Allows for a change of the listener that reports when a key is pressed for a given key
+	 * @param pin the pin on which the switch is attached
+	 * @param newListener the new object to receive updates when a key is pressed
+	 */
+	void replaceSwitchListener(pinid_t pin, SwitchListener* newListener);
 
 	/**
 	 * Sets the rotary encoder to use, unless you have a custom one, prefer to use the setup methods
@@ -441,12 +504,26 @@ public:
      */
     bool didLastSyncSucceed() { return lastSyncStatus; }
 
+    /**
+     * Removes all switch definitions and resets switches as if it were just initialised.
+     * IMPORTANT: no attempt is made to deregister any resources or remove registered interrupts.
+     */
+    void resetAllSwitches() { keys.clear(); }
+
+    /**
+     * Remove a switch by it's pin reference. Returns true if able to remove the pin
+     * IMPORTANT: no attempt is made to deregister any resources or remove registered interrupts.
+     * @param pin the pin number to remove
+     * @return true if removed, otherwise false.
+     */
+    bool removeSwitch(pinid_t pin) {
+        return keys.removeByKey(pin);
+    }
+
 private:
     bool internalAddSwitch(pinid_t pin, bool invertLogic);
     
 	friend void onSwitchesInterrupt(pinid_t);
-	friend void switchEncoderUp(pinid_t, bool);
-	friend void switchEncoderDown(pinid_t, bool);
 };
 
 /**
@@ -459,18 +536,32 @@ extern SwitchInput switches;
  * will be called. This library will set pinA and pinB to INPUT_PULLUP, and debounces internally. In most
  * cases no additional components are needed. This function automatically adds the encoder to the global
  * switches instance.
+ *
+ * In new code prefer:
+ *
+ * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
+ *	    switches.setEncoder(0, enc);
+ *
  * @param pinA the first pin of the encoder, this pin must handle interrupts.
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
+ * @deprecated in new code prefer to create the object and reference it directly
  */
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
 
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
  * This function automatically adds the encoder to the global switches instance.
+ *
+ * In new code prefer:
+ *
+ * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
+ *	    switches.setEncoder(0, enc);
+ *
  * @param pinUp the up button
  * @param pinDown the down button
  * @param callback the function that will receive the new state on change.
+ * @deprecated in new code prefer to create the object and reference it directly
  */
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback);
 
