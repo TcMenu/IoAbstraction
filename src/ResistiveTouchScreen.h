@@ -147,6 +147,8 @@ namespace iotouch {
             float x;
             float y;
             auto touch = touchInterrogator->internalProcessTouch(&x, &y, rotation, calibrator);
+            if(x < 0.0F) x = 0.0F;
+            if(y < 0.0F) y = 0.0F;
             // now determine what state we are in, touched, not touched or held.
             auto oldTouchMode = touchMode;
             switch(touch) {

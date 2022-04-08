@@ -537,7 +537,7 @@ extern SwitchInput switches;
  * cases no additional components are needed. This function automatically adds the encoder to the global
  * switches instance.
  *
- * In new code prefer:
+ * Essentially this does:
  *
  * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
  *	    switches.setEncoder(0, enc);
@@ -545,7 +545,6 @@ extern SwitchInput switches;
  * @param pinA the first pin of the encoder, this pin must handle interrupts.
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
- * @deprecated in new code prefer to create the object and reference it directly
  */
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
 
@@ -553,7 +552,7 @@ void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallback
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
  * This function automatically adds the encoder to the global switches instance.
  *
- * In new code prefer:
+ * Essentially this does:
  *
  * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
  *	    switches.setEncoder(0, enc);
@@ -561,7 +560,6 @@ void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallback
  * @param pinUp the up button
  * @param pinDown the down button
  * @param callback the function that will receive the new state on change.
- * @deprecated in new code prefer to create the object and reference it directly
  */
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback);
 
