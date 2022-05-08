@@ -73,7 +73,7 @@ Let's now say we wanted to write one value and read two items on the same device
 
 ## SwitchInput - buttons that are debounced with event based callbacks
 
-This class provides an event based approach to handling switches and rotary encoders. It full debounces switches before calling back your event handler and handles both repeat key and held down states. In the case of rotary encoders an interrupt on PIN_A is required, as the library needs to react very quickly; it is also important to make sure you have no long running tasks, or you'll miss the delayed rise. Note that this component also uses task manager.
+This class provides an event based approach to handling switches and rotary encoders. It fully de-bounces encoders and switches before calling back your event handler, while handling press, release, repeat key and held down states. It is however important to make sure you have no long-running tasks, or you'll miss the delayed rise. Note that this component also uses task manager.
 
 Before doing anything else, you must add taskManager's run loop to your loop method, and your loop method must not do any long delay calls.
 
@@ -104,7 +104,7 @@ It is also possible to use initialiseInterrupt instead of initialise, when using
 
 ## RotaryEncoder - hardware and button emulation, even available with i2c IO expanders
 
-Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary encoder, and if you don't choose poll everything then PIN_A must raise an interrupt when changed (even if the interrupt is shared). No debouncing is needed, the library will switch on pull up resistors too, but you may need lower resistance pull-ups will long wire runs.
+Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary encoder, and if you choose "poll everything" mode then PIN_A doesn't need an interrupt. However, in any other mode you must register an interrupt for PIN_A (even if the interrupt is shared). No debouncing is needed, the library will switch on pull up resistors too, but you may need lower resistance pull-ups will long wire runs.
 
 For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-switches-handled-as-events/.
 
