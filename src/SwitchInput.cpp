@@ -348,7 +348,7 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, Encoder
 	this->aLast = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
 	this->cleanFromB = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
 
-	if(switches.isEncoderInterruptDriven()) {
+	if(!switches.isEncoderPollingEnabled()) {
 		registerInterrupt(pinA);
 	}
 }

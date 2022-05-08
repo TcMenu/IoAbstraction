@@ -513,7 +513,7 @@ public:
     }
 	
     /** @return if encoders are configured as polling or interrupt only */
-	bool isEncoderInterruptDriven() {return bitRead(swFlags, SW_FLAG_ENCODER_IS_POLLING);}
+	bool isEncoderPollingEnabled() {return bitRead(swFlags, SW_FLAG_ENCODER_IS_POLLING);}
 
 	bool isInterruptDriven() {return bitRead(swFlags, SW_FLAG_INTERRUPT_DRIVEN);}
 
