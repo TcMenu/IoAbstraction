@@ -85,24 +85,26 @@ Here's a simple example using a switch:
 
 In setup we initialise it telling it to use arduino pins for IO, we could use shift registers or an i2c expander, and we also add a switch along with the event that should be:
 
-	switches.initialise(ioUsingArduino(), pullUpLogic); // pull up logic is optional, defaults to PULL_DOWN buttons.
-	switches.addSwitch(spinwheelClickPin, onClicked, NO_REPEAT); // NO_REPEAT is optional, sets the repeat interval in 100s of second.
+    // our next task is to initialise swtiches, do this BEFORE doing anything else with switches.
+    // We choose to initialise in poll everything (requires no interrupts), but there are other modes too:
+    // (SWITCHES_NO_POLLING - interrupt only) or (SWITCHES_POLL_KEYS_ONLY - encoders on interrupt) 
+    switches.init(boardIo, SWITCHES_POLL_EVERYTHING, true);
+
+    // NO_REPEAT is optional, sets the repeat interval in 100s of second.
+	switches.addSwitch(spinwheelClickPin, onClicked, NO_REPEAT); 
 
 Then we create a function for onClicked, this will be called when the button is pressed:
 
 	void onClicked(uint8_t pin, bool heldDown) {
 		// pin: the pin that was pressed
-    		// heldDown: if the button has been held down
+        // heldDown: if the button has been held down
   	}
 
-It is also possible to use initialiseInterrupt instead of initialise, when using this mode the library does not poll the switches unless a button is pressed down. It's use
-is interchangable with initialise().
+It is also possible to use initialiseInterrupt instead of initialise, when using this mode the library does not poll the switches unless a button is pressed down. Its use is interchangeable with initialise().
 
 ## RotaryEncoder - hardware and button emulation, even available with i2c IO expanders
 
-Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary
-encoder, but note that for rotary encoders PIN_A must be an interrupt pin, such as pin 2 on most boards. No debouncing is needed, the library
-will switch on pull up resistors too, but you may need lower resistance pull ups will long wire runs.
+Switch input also fully supports rotary encoders (and simulated rotary encoders using up / down buttons). For this you just initialise the rotary encoder, and if you don't choose poll everything then PIN_A must raise an interrupt when changed (even if the interrupt is shared). No debouncing is needed, the library will switch on pull up resistors too, but you may need lower resistance pull-ups will long wire runs.
 
 For more see https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-switches-handled-as-events/.
 

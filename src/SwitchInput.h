@@ -325,6 +325,21 @@ public:
 #define SW_FLAG_PULLUP_LOGIC 0
 #define SW_FLAG_INTERRUPT_DRIVEN 1
 #define SW_FLAG_INTERRUPT_DEBOUNCE 2
+#define SW_FLAG_ENCODER_IS_POLLING 3
+
+/**
+ * An enumeration of values, one of which is used when calling switches.init to tell switches what to poll for, or
+ * not to poll at all.
+ */
+enum SwitchInterruptMode {
+    /** Do no polling, everything is interrupt driven, it doesn't matter if the interrupt is shared over many keys */
+    SWITCHES_NO_POLLING,
+    /** Poll for keys but the rotary encoder is managed by interrupt */
+    SWITCHES_POLL_KEYS_ONLY,
+    /** Poll for everything, there are no interrupts defined in this mode. Halves the switch poll interval.  */
+    SWITCHES_POLL_EVERYTHING
+};
+
 
 /**
  * Provides event based switches that are automatically debounced with repeatkey or hold notification.
@@ -345,7 +360,7 @@ private:
 	volatile uint8_t swFlags;
     bool lastSyncStatus;
 public:
-	/** 
+	/**
 	 * always use the global switches instance.
 	 * @see switches
 	 */
@@ -355,15 +370,36 @@ public:
 	 * initialise switch input so that it can start managing switches using polling via task manager every 1/20 of a second. If the switches are
 	 *  pull the library automatically uses INPUT_PULLUP. For most usages this will mean no external resistors are needed.
 	 * @param ioDevice the ioDevice where the switches are connected
-	 * @param usePullUpSwitching true if the switches are pull, false for pull down. 
+	 * @param usePullUpSwitching true if the switches are pull, false for pull down.
+	 * @deprecated please use init(IoAbstractionRef, SwitchInterruptMode) instead in new code
 	 */
 	void initialise(IoAbstractionRef ioDevice, bool usePullUpSwitching = false);
+
+    /**
+     * initialise switch input so that it can start managing switches either using polling via task manager or via an
+     * interrupt callback if so configured. Note that the configuration of `mode` defines the polling, and when set
+     * to NO_POLLING it means that switches completely relies on interrupts.
+     *
+     * You can define the default for pull up / pull down, and if the code is interrupt driven. If the switches
+     * are in pull-up mode the library automatically uses INPUT_PULLUP. At least for testing, this will mean no external
+     * resistors are needed. Prefer this in newer code to initialise which is kept around for backward compatibility.
+     *
+     * Switches and the encoder will use the same `ioDevice` that will be used to register any needed interrupts, set
+     * up pin direction
+     *
+     * @param ioDevice the ioDevice where the switches are connected
+     * @param interruptMode mode the interrupt mode to operate in
+     * @param defaultIsPullUp if true the default is pull up, otherwise the default is pull down
+     */
+    void init(IoAbstractionRef ioDevice, SwitchInterruptMode mode, bool defaultIsPullUp);
+
 	/**
 	 * initialise switch input so that it can start managing switches using an interrupt to determine switch changes. Polling is only used for
 	 * debounce or repeat key actions. If the switches are pull the library automatically uses INPUT_PULLUP. For most usages this will mean no 
 	 * external resistors are needed.
 	 * @param ioDevice the ioDevice where the switches are connected
 	 * @param usePullUpSwitching true if the switches are pull, false for pull down. 
+	 * @deprecated please use init(IoAbstractionRef, SwitchInterruptMode) instead in new code
 	 */
 	void initialiseInterrupt(IoAbstractionRef ioDevice, bool usePullUpSwitching = false);
 	
@@ -476,14 +512,12 @@ public:
         return (pullUp && !invertedLogic) || (!pullUp && invertedLogic);
     }
 	
-	/**
-	 * Returns true when the library is running in interrupt driven mode - IE not polling 
-	 */
+    /** @return if encoders are configured as polling or interrupt only */
+	bool isEncoderInterruptDriven() {return bitRead(swFlags, SW_FLAG_ENCODER_IS_POLLING);}
+
 	bool isInterruptDriven() {return bitRead(swFlags, SW_FLAG_INTERRUPT_DRIVEN);}
-	
-	/**
-	 * Returns true if in interrupt mode and current attempting a debounce
-	 */
+
+    /** @return if interrupt debouncing is in progress */
 	bool isInterruptDebouncing() {return bitRead(swFlags, SW_FLAG_INTERRUPT_DEBOUNCE);}
 
 	/**
@@ -522,7 +556,7 @@ public:
 
 private:
     bool internalAddSwitch(pinid_t pin, bool invertLogic);
-    
+
 	friend void onSwitchesInterrupt(pinid_t);
 };
 

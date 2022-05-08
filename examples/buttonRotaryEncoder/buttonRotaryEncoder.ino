@@ -14,20 +14,20 @@
 #include <TaskManagerIO.h>
 
 // The pin onto which we connected the rotary encoders switch
-const pinid_t spinwheelClickPin = USER_BTN;
+const pinid_t spinwheelClickPin = 11;
 
 // The pin onto which we connected the repeat button switch
-const pinid_t repeatButtonPin = PC9;
+const pinid_t repeatButtonPin = 10;
 
 // The two pins where we connected the A and B pins of the encoder, the A pin must support interrupts.
-const pinid_t encoderAPin = PC10;
-const pinid_t encoderBPin = PC8;
+const pinid_t encoderAPin = 8;
+const pinid_t encoderBPin = 9;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
 
 // an LED that flashes as the encoder changes
-const int ledOutputPin = LED_BUILTIN;
+const int ledOutputPin = 11;
 
 auto boardIo = internalDigitalIo();
 
@@ -61,14 +61,15 @@ void onEncoderChange(int newValue) {
 void setup() {
 
     Serial.begin(115200);
+    Serial.println("Starting rotary encoder example");
 
-    // here we initialise as output the output pin we'll use
+    // We want to make the onboard LED flash, so set the pin to be output
     ioDevicePinMode(boardIo, ledOutputPin, OUTPUT);
 
-    // First we set up the switches library, giving it the task manager and tell it to use arduino pins
-    // We could also of chosen IO through an i2c device that supports interrupts.
-    // If you want to use PULL DOWN instead of PULL UP logic, change the true to false below.
-    switches.initialise(boardIo, true);
+    // our next task is to initialise swtiches, do this BEFORE doing anything else with switches.
+    // We choose to initialise in poll everything (requires no interrupts), but there are other modes too:
+    // (SWITCHES_NO_POLLING - interrupt only) or (SWITCHES_POLL_KEYS_ONLY - encoders on interrupt)
+    switches.init(boardIo, SWITCHES_POLL_EVERYTHING, true);
 
     // now we add the switches, we don't want the spin-wheel button to repeat, so leave off the last parameter
     // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.

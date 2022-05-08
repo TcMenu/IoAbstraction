@@ -11,6 +11,7 @@
 SwitchInput switches;
 
 void registerInterrupt(pinid_t pin);
+void onSwitchesInterrupt(__attribute__((unused)) pinid_t pin);
 
 KeyboardItem::KeyboardItem() : stateFlags(NOT_PRESSED), previousState(NOT_PRESSED), pin(-1), counter(0), acceleration(0),
                                repeatInterval(NO_REPEAT), notify{}, callbackOnRelease{} {}
@@ -127,23 +128,37 @@ SwitchInput::SwitchInput() : encoder{} {
 }
 
 void SwitchInput::initialiseInterrupt(IoAbstractionRef device, bool usePullUpSwitching) {
-	this->ioDevice = device;
-	this->swFlags = 0;
-	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
-	bitSet(swFlags, SW_FLAG_INTERRUPT_DRIVEN);
-
-	// do not start any tasks here, we need to register interrupt on the pins instead.
+	this->init(device, SWITCHES_NO_POLLING, usePullUpSwitching);
 }
 
 void SwitchInput::initialise(IoAbstractionRef device, bool usePullUpSwitching) {
+	this->init(device, SWITCHES_POLL_KEYS_ONLY, usePullUpSwitching);
+}
+
+void SwitchInput::init(IoAbstractionRef device, SwitchInterruptMode mode, bool defaultIsPullUp) {
 	this->ioDevice = device;
+
+	// set up the flags
 	this->swFlags = 0;
-    	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, usePullUpSwitching);
+	bitWrite(swFlags, SW_FLAG_PULLUP_LOGIC, defaultIsPullUp);
+	bitWrite(swFlags, SW_FLAG_INTERRUPT_DRIVEN, (mode == SWITCHES_NO_POLLING));
+	bitWrite(swFlags, SW_FLAG_ENCODER_IS_POLLING, (mode == SWITCHES_POLL_EVERYTHING));
 
-	taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL, [] {
-		switches.runLoop();
-	});
+	if(mode == SWITCHES_POLL_KEYS_ONLY) {
+		serdebugF("Switches polling for keys");
+		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL, [] {
+			switches.runLoop();
+		});
+	} else if(mode == SWITCHES_POLL_EVERYTHING) {
+		serdebugF("Switches polling for everything");
+		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL / 2, [] {
+			switches.runLoop();
+			onSwitchesInterrupt(-1);
+		});
+	}
 
+	serdebugF4("Switches initialized (pull-up, int, encPoll)", bitRead(swFlags, SW_FLAG_PULLUP_LOGIC), bitRead(swFlags, SW_FLAG_INTERRUPT_DRIVEN),
+			   bitRead(swFlags, SW_FLAG_ENCODER_IS_POLLING));
 }
 
 bool SwitchInput::addSwitch(pinid_t pin, KeyCallbackFn callback,uint8_t repeat, bool invertLogic) {
@@ -333,7 +348,9 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, Encoder
 	this->aLast = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
 	this->cleanFromB = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
 
-	registerInterrupt(pinA);
+	if(switches.isEncoderInterruptDriven()) {
+		registerInterrupt(pinA);
+	}
 }
 
 void checkRunLoopAndRepeat() {
@@ -343,8 +360,8 @@ void checkRunLoopAndRepeat() {
 	// instead of running constantly, we only run when there's a need to, eg something
 	// is still in a debouncing state. Otherwise we wait for an interrupt.
 	// switches.runLoop returns true when it needs to run again.
-	if(switches.runLoop()) {
-		taskManager.scheduleOnce(20, [] { 
+	if(switches.runLoop() && switches.isInterruptDriven()) {
+		taskManager.scheduleOnce(20, [] {
 			checkRunLoopAndRepeat();
 		});
 	}
@@ -447,7 +464,7 @@ void EncoderUpDownButtons::onReleased(pinid_t pin, bool held) {
 /******** ENCODER SETUP METHODS ***********/
 
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback) {
-	if (switches.getIoAbstraction() == nullptr) switches.initialise(internalDigitalIo(), true);
+	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
 	auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
 	switches.setEncoder(enc);
@@ -459,7 +476,7 @@ void registerInterrupt(pinid_t pin) {
 }
 
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) {
-	if (switches.getIoAbstraction() == nullptr) switches.initialise(internalDigitalIo(), true);
+	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
 }

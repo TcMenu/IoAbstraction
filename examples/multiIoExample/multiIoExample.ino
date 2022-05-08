@@ -69,8 +69,10 @@ void setup() {
 
   Serial.println("Io is setup, adding switch");
 
-  // set up the button on port 0 of the expander.
-  switches.initialise(multiIo, true);
+  // set up the button on port 0 of the expander. we choose poll everything (including encoders here) but you could
+  // also SWITCHES_POLL_KEYS_ONLY and SWITCHES_NO_POLLING for interrupt mode.
+  switches.init(multiIo, SWITCHES_POLL_EVERYTHING, true);
+
   switches.addSwitch(EXPANDER1 + 0, onSwitchPressed);
   ioDevicePinMode(multiIo, EXPANDER1, INPUT);
 

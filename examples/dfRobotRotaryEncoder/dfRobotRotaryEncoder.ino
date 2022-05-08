@@ -81,7 +81,7 @@ void setup() {
     lcd.print("Rotary encoder:");
 
     // set up switches to use the DfRobot input facilities
-    switches.initialise(dfRobotKeys, false);
+    switches.init(dfRobotKeys, SWITCHES_POLL_EVERYTHING, false);
 
     // we setup a rotary encoder on the up and down buttons
     setupUpDownButtonEncoder(DF_KEY_UP, DF_KEY_DOWN, [](int reading) {

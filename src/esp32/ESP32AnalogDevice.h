@@ -11,7 +11,7 @@
 #include <driver/adc.h>
 
 // although in some environments a bit width default is available it's not everywhere
-#if defined(ADC_WIDTH_BIT_13)
+#if defined(SOC_ADC_MAX_BITWIDTH) && SOC_ADC_MAX_BITWIDTH == 13
 #define IOA_ADC_BITS 13
 #define IOA_ADC_MAX 8192
 #define IOA_ESP_BIT_SELECTION ADC_WIDTH_BIT_13

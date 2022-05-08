@@ -99,9 +99,14 @@ void setup() {
     ioDevicePinMode(io23017, ledA, OUTPUT);
     ioDevicePinMode(io23017, ledB, OUTPUT);
 
-    switches.initialiseInterrupt(io23017, true);
+    // here we initialise switches in interrupt mode, using pull up logic by default.
+    switches.init(io23017, SWITCHES_NO_POLLING, true);
+
+    // we now add both a press and release and handler.
     switches.addSwitch(encoderOK, onKeyPressed, 20);
     switches.onRelease(encoderOK, onKeyReleased);
+
+    // and set up an encoder on the same device.
     setupRotaryEncoderWithInterrupt(encoderA, encoderB, onEncoderChange);
 }
 
