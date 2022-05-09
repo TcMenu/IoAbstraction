@@ -151,8 +151,11 @@ void SwitchInput::init(IoAbstractionRef device, SwitchInterruptMode mode, bool d
 		});
 	} else if(mode == SWITCHES_POLL_EVERYTHING) {
 		serdebugF("Switches polling for everything");
-		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL / 2, [] {
-			switches.runLoop();
+		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL / 4, [] {
+            static uint8_t counter = 0;
+            if(++counter % 4 == 3) {
+                switches.runLoop();
+            }
 			onSwitchesInterrupt(-1);
 		});
 	}
