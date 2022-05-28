@@ -96,6 +96,8 @@ public:
 enum KeyMode: uint8_t {
     KEYMODE_NOT_PRESSED,
     KEYMODE_DEBOUNCE,
+    KEYMODE_DEBOUNCE1,
+    KEYMODE_DEBOUNCE2,
     KEYMODE_PRESSED,
     KEYMODE_REPEATING
 };
@@ -103,28 +105,41 @@ enum KeyMode: uint8_t {
 #define KEYBOARD_TASK_MILLIS 50
 
 /**
- * A keyboard manager that can determine if a key is pressed or released for a given
- * layout of keyboard. It is configured during initialisation with an IoAbstraction
- * that is used to access hardware, a specific keyboard layout and a listener that
- * will be called back when keys are pressed and released.
+ * A keyboard manager that can determine if a key is pressed or released for a given layout of keyboard. It is configured
+ * during initialisation with an IoAbstraction that is used to access hardware, a specific keyboard layout and a listener
+ * that will be called back when keys are pressed and released. The keyboard layout also sets what character is associated
+ * with each key.
+ *
+ * You can decide between polling operation and interrupt operation, if interrupt operation is chosen then all the row
+ * pins must be on interrupt capable pins, which on many boards is best achieved by using an MCP23017 for all the pins.
+ * Do not enable interrupt mode on a PCF8574 as the changing of the output pins will trigger the interrupt.
  */
-class MatrixKeyboardManager : public Executable {
+class MatrixKeyboardManager : public BaseEvent {
 private:
+    static MatrixKeyboardManager* INSTANCE;
     KeyboardListener* listener;
     KeyboardLayout* layout;
     IoAbstractionRef ioRef;
     uint8_t repeatTicks = 10;
     uint8_t repeatStartTicks = 30;
     char currentKey;
-    KeyMode keyMode;
+    volatile KeyMode keyMode;
     uint8_t counter;
+    bool interruptMode;
 public:
     MatrixKeyboardManager();
-    void initialise(IoAbstractionRef ref, KeyboardLayout* layout, KeyboardListener* listener);
+    void initialise(IoAbstractionRef ref, KeyboardLayout* layout, KeyboardListener* listener, bool interruptMode = false);
     void setRepeatKeyMillis(int startAfterMillis, int repeatMillis);
-    void exec();
+
+    uint32_t timeOfNextCheck() override;
+    void exec() override;
+
+    friend void rawKeyboardInterrupt();
 private:
-    void setToOuput(int i);
+    void setToOutput(int i);
+    void enableAllOutputsForInterrupt();
+
+    void doDebounce(char time);
 };
 
 #define MAKE_KEYBOARD_LAYOUT_3X4(varName) const char KEYBOARD_STD_3X4_KEYS[] PROGMEM = "123456789*0#"; KeyboardLayout varName(4, 3, KEYBOARD_STD_3X4_KEYS);

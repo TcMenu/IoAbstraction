@@ -54,25 +54,25 @@ public:
 	 */
 	ShiftRegisterIoAbstraction(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin,
 	                           pinid_t writeClockPin, pinid_t writeDataPin, pinid_t writeLatchPin, uint8_t numRead, uint8_t numWrite);
-	virtual ~ShiftRegisterIoAbstraction() { }
-	virtual void pinDirection(pinid_t pin, uint8_t mode);
-	virtual void writeValue(pinid_t pin, uint8_t value);
-	virtual uint8_t readValue(uint8_t pin);
+	~ShiftRegisterIoAbstraction() override { }
+	void pinDirection(pinid_t pin, uint8_t mode) override;
+	void writeValue(pinid_t pin, uint8_t value) override;
+	uint8_t readValue(uint8_t pin) override;
 	/**
 	 * Interrupts are not supported on shift registers
 	 */
-	virtual void attachInterrupt(pinid_t, RawIntHandler, uint8_t) {;}
-	virtual bool runLoop();
+	void attachInterrupt(pinid_t, RawIntHandler, uint8_t) override {;}
+	bool runLoop() override;
 	
 	/**
 	 * writes to the output shift register - currently always port 0
 	 */
-	virtual void writePort(pinid_t port, uint8_t portVal);
+	void writePort(pinid_t port, uint8_t portVal) override;
 
 	/**
 	 * reads from the input shift register - currently always port 3
 	 */
-	virtual uint8_t readPort(pinid_t port);
+	uint8_t readPort(pinid_t port) override;
 };
 
 class ShiftRegisterIoAbstraction165In : public BasicIoAbstraction {
@@ -91,21 +91,21 @@ public:
      * @see outputOnlyFromShiftRegister
      */
     ShiftRegisterIoAbstraction165In(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin, pinid_t numRead);
-    ~ShiftRegisterIoAbstraction165In() override { }
+    ~ShiftRegisterIoAbstraction165In() override = default;
 
     /** Input only abstraction, does nothing because only input is supported */
-    virtual void pinDirection(pinid_t pin, uint8_t mode) { }
+    void pinDirection(pinid_t pin, uint8_t mode) override { }
 
-    virtual uint8_t readValue(pinid_t pin);
-    virtual bool runLoop();
-    virtual uint8_t readPort(pinid_t port);
+    uint8_t readValue(pinid_t pin) override;
+    bool runLoop() override;
+    uint8_t readPort(pinid_t port) override;
 
     //
     // Features not implemented on this abstaction
     //
-    virtual void writePort(pinid_t port, uint8_t portVal) { }
-    virtual void writeValue(pinid_t pin, uint8_t value) { }
-    virtual void attachInterrupt(pinid_t, RawIntHandler, uint8_t) { }
+    void writePort(pinid_t port, uint8_t portVal) override { }
+    void writeValue(pinid_t pin, uint8_t value) override { }
+    void attachInterrupt(pinid_t, RawIntHandler, uint8_t) override { }
 
     uint8_t shiftInFor165() const;
 };
@@ -208,8 +208,8 @@ private:
 	pinid_t limits[MAX_ALLOWABLE_DELEGATES];
 	uint8_t numDelegates;
 public:
-	MultiIoAbstraction(pinid_t arduinoPinsNeeded = 100);
-	virtual ~MultiIoAbstraction();
+	explicit MultiIoAbstraction(pinid_t arduinoPinsNeeded = 100);
+	~MultiIoAbstraction() override;
 	void addIoExpander(IoAbstractionRef expander, pinid_t numOfPinsNeeded);
 
 	/** 
