@@ -57,7 +57,7 @@ public:
 	~ShiftRegisterIoAbstraction() override { }
 	void pinDirection(pinid_t pin, uint8_t mode) override;
 	void writeValue(pinid_t pin, uint8_t value) override;
-	uint8_t readValue(uint8_t pin) override;
+	uint8_t readValue(pinid_t pin) override;
 	/**
 	 * Interrupts are not supported on shift registers
 	 */

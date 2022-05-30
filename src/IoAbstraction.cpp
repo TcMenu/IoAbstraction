@@ -91,7 +91,7 @@ uint8_t ShiftRegisterIoAbstraction::readPort(pinid_t pin) {
 	}
 }
 
-uint8_t ShiftRegisterIoAbstraction::readValue(uint8_t pin) {
+uint8_t ShiftRegisterIoAbstraction::readValue(pinid_t pin) {
 	return ((lastRead & (1 << pin)) != 0) ? HIGH : LOW;
 }
 
