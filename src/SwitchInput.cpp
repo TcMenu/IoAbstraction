@@ -121,7 +121,7 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 	}
 }
 
-SwitchInput::SwitchInput() : encoder{} {
+SwitchInput::SwitchInput() : encoder{}, keys(MAX_KEYS) {
 	this->ioDevice = nullptr;
 	this->swFlags = 0;
     this->lastSyncStatus = true;

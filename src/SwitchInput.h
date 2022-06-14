@@ -22,6 +22,14 @@
 #ifndef HOLD_THRESHOLD
 #define HOLD_THRESHOLD 20
 #endif
+/*
+ * If you want more buttons, the library will reallocate as needed, however this is not efficient and in production
+ * probably better to set this value to about the number of switches needed.  Each button adds about 10 bytes of RAM,
+ * so on a tiny you could adjust downwards for example.
+ */
+#ifndef MAX_KEYS
+#define MAX_KEYS DEFAULT_LIST_SIZE
+#endif // MAX_KEYS defined
 
 // START user adjustable section
 
@@ -364,7 +372,7 @@ public:
 	 * always use the global switches instance.
 	 * @see switches
 	 */
-	SwitchInput();
+	explicit SwitchInput();
 
 	/**
 	 * initialise switch input so that it can start managing switches using polling via task manager every 1/20 of a second. If the switches are
