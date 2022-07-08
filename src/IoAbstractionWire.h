@@ -22,13 +22,14 @@
  * @see ioDevicePinMode for setting pin modes
  */
 class PCF8574IoAbstraction : public BasicIoAbstraction {
+public:
+    enum { NEEDS_WRITE_FLAG, PINS_CONFIGURED_READ_FLAG, PCF875_16BIT_FLAG};
 private:
 	WireType wireImpl;
 	uint8_t address;
-	uint8_t lastRead;
-	uint8_t toWrite;
-	bool needsWrite;
-	bool pinsConfiguredRead;
+	uint8_t lastRead[2];
+	uint8_t toWrite[2];
+	uint8_t flags;
 	uint8_t interruptPin;
 public:
 	/** 
@@ -37,11 +38,11 @@ public:
 	 * @param interruptPin the pin on the Arduino that the interrupt line is connected to
 	 * @param wireInstance the instance of wire to use for this device, for example &Wire.
 	 */
-	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance);
+	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance, bool mode16bit = false);
 	virtual ~PCF8574IoAbstraction() { }
 
 	/** Forces the device to start reading back state during syncs even if no pins are configured as read */
-	void overrideReadFlag() { pinsConfiguredRead = true; }
+	void overrideReadFlag() { bitWrite(flags, PINS_CONFIGURED_READ_FLAG, true); }
 
 	/** 
 	 * sets the pin direction on the device, notice that on this device input is achieved by setting the port to high 
@@ -214,6 +215,17 @@ private:
 IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl);
 
 /**
+ * Creates an instance of an IoAbstraction that works with a PCF8575 16 bit chip over i2c, which optionally
+ * has support for interrupts should it be needed. Note that only interrupt mode CHANGE is support,
+ * and a change on any pin raises an interrupt. All inputs are by default INPUT_PULLUP by device design.
+ * @param addr the i2c address of the device
+ * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
+ * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
+ * @return an IoAbstactionRef for the device
+ */
+IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImpl);
+
+/**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
  * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
  * capabilities. See the other helper methods if you want interrupts.
@@ -250,6 +262,10 @@ IoAbstractionRef ioFrom23017IntPerPort(pinid_t addr, Mcp23xInterruptMode intMode
 
 inline IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin = 0xff) {
     return ioFrom8574(addr, interruptPin, defaultWireTypePtr);
+};
+
+inline IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin = 0xff) {
+    return ioFrom8575(addr, interruptPin, defaultWireTypePtr);
 };
 
 inline IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB) {

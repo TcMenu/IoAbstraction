@@ -5,54 +5,59 @@
 
 #include <IoAbstractionWire.h>
 
-PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireImplementation) {
+PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireImplementation, bool mode16Bit) : lastRead{}, toWrite{} {
 	this->wireImpl = wireImplementation;
 	this->address = addr;
-	this->toWrite = 0x00;
-	this->lastRead = 0;
 	this->interruptPin = interruptPin;
-	this->needsWrite = true;
-	this->pinsConfiguredRead = false;
+    flags = 0;
+    bitWrite(flags, NEEDS_WRITE_FLAG, true);
+    bitWrite(flags, PCF875_16BIT_FLAG, mode16Bit);
+
 }
 
 void PCF8574IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
 	if (mode == INPUT || mode == INPUT_PULLUP) {
-		pinsConfiguredRead = true;
+		overrideReadFlag();
 		writeValue(pin, HIGH);
 	}
 	else {
 		writeValue(pin, LOW);
 	}
-	needsWrite = true;
+    bitWrite(flags, NEEDS_WRITE_FLAG, true);
 }
 
 void PCF8574IoAbstraction::writeValue(pinid_t pin, uint8_t value) {
-	bitWrite(toWrite, pin, value);
-	needsWrite = true;
+    int port = (pin > 7) ? 1 : 0;
+	bitWrite(toWrite[port], (pin % 8), value);
+    bitWrite(flags, NEEDS_WRITE_FLAG, true);
 }
 
 uint8_t PCF8574IoAbstraction::readValue(pinid_t pin) {
-	return (lastRead & (1 << pin)) ? HIGH : LOW;
+    int port = (pin > 7) ? 1 : 0;
+    return (lastRead[port] & (1 << pin)) ? HIGH : LOW;
 }
 
-uint8_t PCF8574IoAbstraction::readPort(pinid_t /*pin*/) {
-	return lastRead;
+uint8_t PCF8574IoAbstraction::readPort(pinid_t pin) {
+    int port = (pin > 7) ? 1 : 0;
+    return lastRead[port];
 }
 
-void PCF8574IoAbstraction::writePort(pinid_t /*pin*/, uint8_t value) {
-	toWrite = value;
-	needsWrite = true;
+void PCF8574IoAbstraction::writePort(pinid_t pin, uint8_t value) {
+    int port = (pin > 7) ? 1 : 0;
+    toWrite[port] = value;
+    bitWrite(flags, NEEDS_WRITE_FLAG, true);
 }
 
 bool PCF8574IoAbstraction::runLoop(){
     bool writeOk = true;
-    if (needsWrite) {
-        needsWrite = false;
-        writeOk = ioaWireWriteWithRetry(wireImpl, address, &toWrite, 1);
+    size_t bytesToTransfer = bitRead(flags, PCF875_16BIT_FLAG) ? 2 : 1;
+    if (bitRead(flags, NEEDS_WRITE_FLAG)) {
+        bitWrite(flags, NEEDS_WRITE_FLAG, false);
+        writeOk = ioaWireWriteWithRetry(wireImpl, address, toWrite, bytesToTransfer);
     }
 
-    if(pinsConfiguredRead) {
-        writeOk = writeOk && ioaWireRead(wireImpl, address, &lastRead, 1);
+    if(bitRead(flags, PINS_CONFIGURED_READ_FLAG)) {
+        writeOk = writeOk && ioaWireRead(wireImpl, address, lastRead, bytesToTransfer);
     }
     return writeOk;
 }
@@ -67,6 +72,10 @@ void PCF8574IoAbstraction::attachInterrupt(pinid_t /*pin*/, RawIntHandler intHan
 
 BasicIoAbstraction* ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl) {
 	return new PCF8574IoAbstraction(addr, interruptPin, wireImpl);
+}
+
+BasicIoAbstraction* ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImpl) {
+    return new PCF8574IoAbstraction(addr, interruptPin, wireImpl, true);
 }
 
 MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) {
