@@ -23,7 +23,7 @@
  */
 class PCF8574IoAbstraction : public BasicIoAbstraction {
 public:
-    enum { NEEDS_WRITE_FLAG, PINS_CONFIGURED_READ_FLAG, PCF875_16BIT_FLAG};
+    enum { NEEDS_WRITE_FLAG, PINS_CONFIGURED_READ_FLAG, PCF8575_16BIT_FLAG};
 private:
 	WireType wireImpl;
 	uint8_t address;

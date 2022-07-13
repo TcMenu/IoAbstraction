@@ -11,7 +11,7 @@ PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, W
 	this->interruptPin = interruptPin;
     flags = 0;
     bitWrite(flags, NEEDS_WRITE_FLAG, true);
-    bitWrite(flags, PCF875_16BIT_FLAG, mode16Bit);
+    bitWrite(flags, PCF8575_16BIT_FLAG, mode16Bit);
 
 }
 
@@ -50,8 +50,9 @@ void PCF8574IoAbstraction::writePort(pinid_t pin, uint8_t value) {
 
 bool PCF8574IoAbstraction::runLoop(){
     bool writeOk = true;
-    size_t bytesToTransfer = bitRead(flags, PCF875_16BIT_FLAG) ? 2 : 1;
+    size_t bytesToTransfer = bitRead(flags, PCF8575_16BIT_FLAG) ? 2 : 1;
     if (bitRead(flags, NEEDS_WRITE_FLAG)) {
+        serdebugF3("Write ", toWrite, bytesToTransfer)
         bitWrite(flags, NEEDS_WRITE_FLAG, false);
         writeOk = ioaWireWriteWithRetry(wireImpl, address, toWrite, bytesToTransfer);
     }
