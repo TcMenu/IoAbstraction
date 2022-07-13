@@ -30,9 +30,9 @@ Take a look at the [TaskManagerIO repo](https://github.com/davetcc/TaskManagerIO
 
 Also, this library uses [SimpleCollections](https://github.com/davetcc/SimpleCollections) within switches and a few other areas.
 
-## BasicIoAbstraction - easily interchange between pins, PCF8574, MCP23017 and shift registers.
+## BasicIoAbstraction - easily interchange between pins, PCF8574, PCF8575, MCP23017 and shift registers.
 
-Lets you choose to use Arduino pins, shift register Input/Output, PCF8574 i2c and MCP23017 i2c in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. There's even an abstraction that can combine together Arduino pins and one or more other expander! See the documentation (link further up) for more details.
+Lets you choose to use Arduino pins, shift register Input/Output, PCF8574, PCF8575, i2c and MCP23017 i2c in an inter-changable way. Use it in your sketch to treat shift registers or i2c expanders like pins. There's even an abstraction that can combine together Arduino pins and one or more other expander! See the documentation (link further up) for more details.
 
 If you are building a library and want it to work with either Arduino pins, shift registers or an IO expander for IO, then this library is probably a good starting point.
 
@@ -45,6 +45,8 @@ If we want to use the i2c wire based ioFrom8574 we must include the wire header 
 At the global level (outside of any function) we create an i2c expander on address 0x20:
 
 	IoAbstractionRef ioExpander = ioFrom8574(0x20);
+	IoAbstractionRef ioExpander = ioFrom8575(0x20);
+
 
 Or for Arduino pins instead..
 	
