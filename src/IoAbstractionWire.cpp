@@ -52,7 +52,6 @@ bool PCF8574IoAbstraction::runLoop(){
     bool writeOk = true;
     size_t bytesToTransfer = bitRead(flags, PCF8575_16BIT_FLAG) ? 2 : 1;
     if (bitRead(flags, NEEDS_WRITE_FLAG)) {
-        serdebugF3("Write ", toWrite, bytesToTransfer)
         bitWrite(flags, NEEDS_WRITE_FLAG, false);
         writeOk = ioaWireWriteWithRetry(wireImpl, address, toWrite, bytesToTransfer);
     }
