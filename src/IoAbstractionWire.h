@@ -16,14 +16,14 @@
 #include "IoAbstraction.h"
 
 /**
- * An implementation of BasicIoAbstraction that supports the PCF8574 i2c IO chip. Providing all possible capabilities
+ * An implementation of BasicIoAbstraction that supports the PCF8574/PCF8575 i2c IO chip. Providing all possible capabilities
  * of the chip in a similar manner to Arduino pins. 
  * @see ioFrom8574 for how to create an instance
  * @see ioDevicePinMode for setting pin modes
  */
 class PCF8574IoAbstraction : public BasicIoAbstraction {
 public:
-    enum { NEEDS_WRITE_FLAG, PINS_CONFIGURED_READ_FLAG, PCF8575_16BIT_FLAG};
+    enum { NEEDS_WRITE_FLAG, PINS_CONFIGURED_READ_FLAG, PCF8575_16BIT_FLAG, INVERTED_LOGIC };
 private:
 	WireType wireImpl;
 	uint8_t address;
@@ -37,8 +37,10 @@ public:
 	 * @param addr the I2C address on the bus
 	 * @param interruptPin the pin on the Arduino that the interrupt line is connected to
 	 * @param wireInstance the instance of wire to use for this device, for example &Wire.
+	 * @param mode16bit transfer 16 bits of data. Used in 8575 expander.
+	 * @param invertedLogic invert bits sent and received from the expander.
 	 */
-	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance, bool mode16bit = false);
+	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance, bool mode16bit = false, bool invertedLogic = false);
 	virtual ~PCF8574IoAbstraction() { }
 
 	/** Forces the device to start reading back state during syncs even if no pins are configured as read */
@@ -201,7 +203,7 @@ private:
 };
 
 // to remain compatible with old code
-#define ioFrom8754 ioFrom8574
+#define ioFrom8754 ioFrom8575
 
 /**
  * Creates an instance of an IoAbstraction that works with a PCF8574 chip over i2c, which optionally
@@ -210,9 +212,10 @@ private:
  * @param addr the i2c address of the device
  * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
  * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
+ * @param invertedLogic invert bits sent and received from the expander.
  * @return an IoAbstactionRef for the device
  */
-IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl);
+IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl, bool invertedLogic = false);
 
 /**
  * Creates an instance of an IoAbstraction that works with a PCF8575 16 bit chip over i2c, which optionally
@@ -221,9 +224,10 @@ IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImp
  * @param addr the i2c address of the device
  * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
  * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
+ * @param invertedLogic invert bits sent and received from the expander.
  * @return an IoAbstactionRef for the device
  */
-IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImpl);
+IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImpl, bool invertedLogic = false);
 
 /**
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
@@ -260,12 +264,12 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t 
  */
 IoAbstractionRef ioFrom23017IntPerPort(pinid_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB, WireType wireImpl);
 
-inline IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin = 0xff) {
-    return ioFrom8574(addr, interruptPin, defaultWireTypePtr);
+inline IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin = 0xff, bool invertedLogic = false) {
+    return ioFrom8574(addr, interruptPin, defaultWireTypePtr, invertedLogic);
 };
 
-inline IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin = 0xff) {
-    return ioFrom8575(addr, interruptPin, defaultWireTypePtr);
+inline IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin = 0xff, bool invertedLogic = false) {
+    return ioFrom8575(addr, interruptPin, defaultWireTypePtr, invertedLogic);
 };
 
 inline IoAbstractionRef ioFrom23017IntPerPort(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t interruptPinA, pinid_t interruptPinB) {
