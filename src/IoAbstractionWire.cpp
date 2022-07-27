@@ -34,7 +34,7 @@ void PCF8574IoAbstraction::writeValue(pinid_t pin, uint8_t value) {
 
 uint8_t PCF8574IoAbstraction::readValue(pinid_t pin) {
     int port = (pin > 7) ? 1 : 0;
-    return (lastRead[port] & (1 << pin)) ? HIGH : LOW;
+    return (lastRead[port] & (1 << (pin % 8))) ? HIGH : LOW;
 }
 
 uint8_t PCF8574IoAbstraction::readPort(pinid_t pin) {
