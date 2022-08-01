@@ -5,20 +5,27 @@
 
 #include <IoAbstractionWire.h>
 
-PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireImplementation, bool mode16Bit) : lastRead{}, toWrite{} {
+PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireImplementation, bool mode16Bit, bool invertedLogic) : lastRead{}, toWrite{} {
 	this->wireImpl = wireImplementation;
 	this->address = addr;
 	this->interruptPin = interruptPin;
     flags = 0;
     bitWrite(flags, NEEDS_WRITE_FLAG, true);
     bitWrite(flags, PCF8575_16BIT_FLAG, mode16Bit);
-
+    bitWrite(flags, INVERTED_LOGIC, invertedLogic);
 }
 
 void PCF8574IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
+	bool invertedLogic = bitRead(flags, INVERTED_LOGIC);
+
+	/*
+	 When inverted logic is set to true, we do the inversion in the runLoop().
+	 However, inputs need to be always set to HIGH in order the read to work.
+	 So it is necessary to flip the value here.
+	 */
 	if (mode == INPUT || mode == INPUT_PULLUP) {
 		overrideReadFlag();
-		writeValue(pin, HIGH);
+		writeValue(pin, !invertedLogic ? HIGH : LOW);
 	}
 	else {
 		writeValue(pin, LOW);
@@ -51,13 +58,25 @@ void PCF8574IoAbstraction::writePort(pinid_t pin, uint8_t value) {
 bool PCF8574IoAbstraction::runLoop(){
     bool writeOk = true;
     size_t bytesToTransfer = bitRead(flags, PCF8575_16BIT_FLAG) ? 2 : 1;
+    bool invertedLogic = bitRead(flags, INVERTED_LOGIC);
+
     if (bitRead(flags, NEEDS_WRITE_FLAG)) {
         bitWrite(flags, NEEDS_WRITE_FLAG, false);
-        writeOk = ioaWireWriteWithRetry(wireImpl, address, toWrite, bytesToTransfer);
+
+        uint8_t dataToWrite[2];
+        dataToWrite[0] = invertedLogic ? ~toWrite[0] : toWrite[0];
+        dataToWrite[1] = invertedLogic ? ~toWrite[1] : toWrite[1];
+
+        writeOk = ioaWireWriteWithRetry(wireImpl, address, dataToWrite, bytesToTransfer);
     }
 
     if(bitRead(flags, PINS_CONFIGURED_READ_FLAG)) {
         writeOk = writeOk && ioaWireRead(wireImpl, address, lastRead, bytesToTransfer);
+
+        if (invertedLogic) {
+            lastRead[0] = ~lastRead[0];
+            lastRead[1] = ~lastRead[1];
+        }
     }
     return writeOk;
 }
@@ -70,12 +89,12 @@ void PCF8574IoAbstraction::attachInterrupt(pinid_t /*pin*/, RawIntHandler intHan
 	internalDigitalIo()->attachInterrupt(interruptPin, intHandler, FALLING);
 }
 
-BasicIoAbstraction* ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl) {
-	return new PCF8574IoAbstraction(addr, interruptPin, wireImpl);
+BasicIoAbstraction* ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImpl, bool invertedLogic) {
+	return new PCF8574IoAbstraction(addr, interruptPin, wireImpl, invertedLogic);
 }
 
-BasicIoAbstraction* ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImpl) {
-    return new PCF8574IoAbstraction(addr, interruptPin, wireImpl, true);
+BasicIoAbstraction* ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImpl, bool invertedLogic) {
+    return new PCF8574IoAbstraction(addr, interruptPin, wireImpl, true, invertedLogic);
 }
 
 MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) {
