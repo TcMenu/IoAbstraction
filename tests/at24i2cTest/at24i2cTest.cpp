@@ -42,7 +42,7 @@ void setup() {
 
     serdebugF2("8 Bit finished OK, loops = ", loopsPerformed);
 
-    for(int i=0; i<eepromSize; i+=2) {
+    for(int i=0; i<(eepromSize - 2); i+=2) {
         eeprom.write16(i, i);
         if(eeprom.read16(i) != i) fail("READ err (expected value) at ", i);
         if(eeprom.hasErrorOccurred()) fail("ERR during 16 bit", i);
