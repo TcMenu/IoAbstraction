@@ -27,7 +27,7 @@ const pinid_t encoderBPin = 9;
 const int maximumEncoderValue = 128;
 
 // an LED that flashes as the encoder changes
-const int ledOutputPin = 11;
+const int ledOutputPin = 12;
 
 auto boardIo = internalDigitalIo();
 

@@ -16,17 +16,36 @@
 #include "EepromAbstraction.h"
 #include <TaskManager.h>
 
+/**
+ * Defines all the variants of the chip that we can pass to the I2cAt24Eeprom constructor. From this we can determine
+ * both the size and page size of a given EEPROM.
+ */
+enum At24EepromType {
+    PAGESIZE_AT24C01,
+    PAGESIZE_AT24C02,
+    PAGESIZE_AT24C04,
+    PAGESIZE_AT24C08,
+    PAGESIZE_AT24C16,
+    PAGESIZE_AT24C32,
+    PAGESIZE_AT24C64,
+    PAGESIZE_AT24C128,
+    PAGESIZE_AT24C256,
+    PAGESIZE_AT24C512
+};
 
-/** the page size for 32kbit (4KB) roms */
-#define PAGESIZE_AT24C32   32
-/** the page size for 64kbit (8KB) roms */
-#define PAGESIZE_AT24C64   32
-/** the page size for 128kbit (16KB) roms */
-#define PAGESIZE_AT24C128  64
-/** the page size for 256kbit (32KB) roms */
-#define PAGESIZE_AT24C256  64
-/** the page size for 512bit (64KB) roms */
-#define PAGESIZE_AT24C512 128
+/**
+ * Given an eeprom type enum value this returns the actual size of the rom in bytes
+ * @param size the eeprom type
+ * @return the size of the rom
+ */
+size_t at24ActualSizeFromRomSize(At24EepromType size);
+
+/**
+ * Given the eeprom type enum value this returns the page size to use for the device.
+ * @param size the eeprom type
+ * @return the page size
+ */
+uint8_t at24PageFromRomSize(At24EepromType size);
 
 /**
  * An implementation of eeprom that works with the very well known At24CXXX chips over i2c. Before
@@ -52,14 +71,15 @@
 class I2cAt24Eeprom : public EepromAbstraction {
 	WireType wireImpl;
 	uint8_t  eepromAddr;
-	uint8_t  pageSize;
 	bool     errorOccurred;
+	uint8_t  pageSize;
+    size_t   eepromSize;
 public:
 	/**
 	 * Create an I2C EEPROM object giving it's address and the page size of the device.
 	 * Page sizes are defined in this header file.
 	 */
-    I2cAt24Eeprom(uint8_t address, uint8_t pageSize, WireType wireImpl = defaultWireTypePtr);
+    I2cAt24Eeprom(uint8_t address, At24EepromType ty, WireType wireImpl = defaultWireTypePtr);
 	~I2cAt24Eeprom() override = default;
 
 	/** 

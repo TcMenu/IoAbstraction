@@ -9,10 +9,45 @@
 
 #define READY_TRIES_COUNT 100
 
-I2cAt24Eeprom::I2cAt24Eeprom(uint8_t address, uint8_t pageSize, WireType wireImpl) {
+uint8_t at24PageFromRomSize(At24EepromType size) {
+    switch (size) {
+        case PAGESIZE_AT24C01:
+        case PAGESIZE_AT24C02: return 8;
+        case PAGESIZE_AT24C04:
+        case PAGESIZE_AT24C08:
+        case PAGESIZE_AT24C16: return 16;
+        case PAGESIZE_AT24C32:
+        case PAGESIZE_AT24C64: return 32;
+        case PAGESIZE_AT24C512: return 128;
+        case PAGESIZE_AT24C128:
+        case PAGESIZE_AT24C256:
+        default: return 64;
+
+    }
+}
+
+size_t at24ActualSizeFromRomSize(At24EepromType size) {
+    switch (size) {
+        case PAGESIZE_AT24C01: return 128;
+        case PAGESIZE_AT24C02: return 256;
+        case PAGESIZE_AT24C04: return 512;
+        case PAGESIZE_AT24C08: return 1024;
+        case PAGESIZE_AT24C16: return 2048;
+        case PAGESIZE_AT24C32: return 4096;
+        case PAGESIZE_AT24C64: return 8192;
+        case PAGESIZE_AT24C128: return 16384;
+        case PAGESIZE_AT24C256: return 32768;
+        case PAGESIZE_AT24C512: return 65536;
+        default: return 64;
+
+    }
+}
+
+I2cAt24Eeprom::I2cAt24Eeprom(uint8_t address, At24EepromType ty, WireType wireImpl) {
 	this->wireImpl = wireImpl;
 	this->eepromAddr = address;
-	this->pageSize = pageSize;
+	this->pageSize = at24PageFromRomSize(ty);
+    this->eepromSize = at24ActualSizeFromRomSize(ty);
     this->errorOccurred = false;
 }
 
@@ -79,6 +114,9 @@ uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
     uint8_t data = 0;
     errorOccurred = errorOccurred || !ioaWireRead(wireImpl, eepromAddr, &data, 1);
 
+    // for debugging purposes
+    //serdebugF4("readby ", data, errorOccurred, position);
+
     return data;
 }
 
@@ -89,18 +127,33 @@ void I2cAt24Eeprom::writeByte(EepromPosition position, uint8_t val) {
 }
 
 void I2cAt24Eeprom::writeAddressWire(EepromPosition memAddr, const uint8_t *data, int len) {
-    if(len > 32)
+    if(len > 32 || (memAddr + len) > eepromSize)
     {
+        // either we've tried to write more that is possible, or we've exceeded the eeprom bounds
+        // we won't proceed and return an error.
         errorOccurred = true;
         return;
     }
     uint8_t ch[34];
-    ch[0] = memAddr >> 8U;
-    ch[1] = memAddr & 0xffU;
-    if(data != nullptr && len > 0) {
-        memcpy(ch + 2, data, len);
+    auto addrLen = 2;
+    auto actualAddr = eepromAddr;
+    if(pageSize > 16) {
+        ch[0] = memAddr >> 8U;
+        ch[1] = memAddr & 0xffU;
+    } else {
+        ch[0] = memAddr & 0xffU;
+        addrLen = 1;
+        actualAddr |= (memAddr >> 8U);
     }
-    errorOccurred = errorOccurred || ioaWireWriteWithRetry(wireImpl, eepromAddr, ch, len + 2, READY_TRIES_COUNT) == false;
+    if(data != nullptr && len > 0) {
+        memcpy(ch + addrLen, data, len);
+    }
+
+    // for debugging purposes.
+    //serdebugF4("Wire write - ", actualAddr, addrLen, pageSize);
+    //serdebugHexDump("Data was - ", ch, len + addrLen);
+
+    errorOccurred = errorOccurred || !ioaWireWriteWithRetry(wireImpl, actualAddr, ch, len + addrLen, READY_TRIES_COUNT);
 }
 
 void I2cAt24Eeprom::readIntoMemArray(uint8_t* memDest, EepromPosition romSrc, uint8_t len) {
