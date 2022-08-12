@@ -176,13 +176,18 @@ A ground up implementation of the i2c eeprom protocol that should be compatible 
 To create an instance we pass the address of the chip (usually between 0x50 and 0x57), and also the page size, below are the page sizes 
 for the most common devices. Consult the datasheet if unsure.
 
-| ROM       | PageSize |
-|-----------|----------|
-| AT24C32   |       32 |
-| AT24C64   |       32 |
-| AT24C128  |       64 |
-| AT24C256  |       64 |
-| AT24C512  |      128 |
+| ROM               | PageSize | Memory Bytes |
+|-------------------|----------|--------------|
+| PAGESIZE_AT24C01  | 8        | 128B         | 
+| PAGESIZE_AT24C02  | 8        | 256B         | 
+| PAGESIZE_AT24C04  | 16       | 512B         | 
+| PAGESIZE_AT24C08  | 16       | 1kB          | 
+| PAGESIZE_AT24C16  | 16       | 2kB          | 
+| PAGESIZE_AT24C32  | 32       | 4kB          | 
+| PAGESIZE_AT24C64  | 32       | 8KB          |
+| PAGESIZE_AT24C128 | 64       | 16KB         |        
+| PAGESIZE_AT24C256 | 64       | 32KB         |       
+| PAGESIZE_AT24C512 | 128      | 64KB         |  
 
 
 	I2cAt24Eeprom anEeprom(addressOfRom, pageSize);
