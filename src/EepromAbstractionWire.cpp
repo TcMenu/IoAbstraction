@@ -28,16 +28,16 @@ uint8_t at24PageFromRomSize(At24EepromType size) {
 
 size_t at24ActualSizeFromRomSize(At24EepromType size) {
     switch (size) {
-        case PAGESIZE_AT24C01: return 128;
-        case PAGESIZE_AT24C02: return 256;
-        case PAGESIZE_AT24C04: return 512;
-        case PAGESIZE_AT24C08: return 1024;
-        case PAGESIZE_AT24C16: return 2048;
-        case PAGESIZE_AT24C32: return 4096;
-        case PAGESIZE_AT24C64: return 8192;
-        case PAGESIZE_AT24C128: return 16384;
-        case PAGESIZE_AT24C256: return 32768;
-        case PAGESIZE_AT24C512: return 65536;
+        case PAGESIZE_AT24C01: return 127;
+        case PAGESIZE_AT24C02: return 255;
+        case PAGESIZE_AT24C04: return 511;
+        case PAGESIZE_AT24C08: return 1023;
+        case PAGESIZE_AT24C16: return 2047;
+        case PAGESIZE_AT24C32: return 4095;
+        case PAGESIZE_AT24C64: return 8191;
+        case PAGESIZE_AT24C128: return 16383;
+        case PAGESIZE_AT24C256: return 32767;
+        case PAGESIZE_AT24C512: return 65535;
         default: return 64;
 
     }

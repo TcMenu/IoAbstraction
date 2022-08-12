@@ -7,7 +7,7 @@
  */
 
 const uint8_t i2cAddr = 0x50;
-const At24EepromType eepromType = PAGESIZE_AT24C16;
+const At24EepromType eepromType = PAGESIZE_AT24C128;
 
 const char smallerTestString[] = "Test string that exceeds page size";
 const char longerTestString[] = "This is a test string that exceeds page size on larger EEPROMs with big pages";
