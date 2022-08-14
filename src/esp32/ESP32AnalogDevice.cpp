@@ -8,7 +8,13 @@
 #include "ESP32AnalogDevice.h"
 #include "IoLogging.h"
 #include <SimpleCollections.h>
+#ifndef CONFIG_IDF_TARGET_ESP32S3
 #include <driver/dac.h>
+#define ESP_HAS_DAC
+#else
+#undef ESP_HAS_DAC
+#endif
+
 #include <AnalogDeviceAbstraction.h>
 
 EspAnalogInputMode::EspAnalogInputMode(pinid_t pin) : onAdc1(false), adcChannelNum(0xff), pin(pin), attenuation(ADC_ATTEN_DB_11) {}
@@ -57,10 +63,11 @@ void EspAnalogInputMode::pinSetup() {
 
 uint16_t EspAnalogInputMode::getCurrentReading() {
     // if the ADC is on the dac channel it must be turned off first.
+#ifdef ESP_HAS_DAC
     if(pin == DAC1 || pin == DAC2) {
         dac_output_disable(pin == DAC1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2);
     }
-
+#endif
     if(onAdc1) {
         adc1_config_channel_atten(static_cast<adc1_channel_t>(adcChannelNum), static_cast<adc_atten_t>(attenuation));
         return adc1_get_raw(static_cast<adc1_channel_t>(adcChannelNum));
@@ -91,17 +98,20 @@ void EspAnalogOutputMode::pinSetup() {
         ledcAttachPin(pin, pwmChannel);
     }
     else {
+#ifdef ESP_HAS_DAC
         dac_output_enable(pin == ESP32_DAC1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2);
+#endif
     }
 }
 
 void EspAnalogOutputMode::write(unsigned int newVal) const {
+#ifdef ESP_HAS_DAC
     if(isDac()) {
         dac_output_voltage(pin == ESP32_DAC1 ? DAC_CHANNEL_1 : DAC_CHANNEL_2, newVal);
+        return;
     }
-    else {
-        ledcWrite(pwmChannel, newVal);
-    }
+#endif
+    ledcWrite(pwmChannel, newVal);
 }
 
 ESP32AnalogDevice* ESP32AnalogDevice::theInstance = nullptr;

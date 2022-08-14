@@ -14,14 +14,14 @@
 #include <TaskManagerIO.h>
 
 // The pin onto which we connected the rotary encoders switch
-const pinid_t spinwheelClickPin = 11;
+const pinid_t spinwheelClickPin = 0;
 
 // The pin onto which we connected the repeat button switch
-const pinid_t repeatButtonPin = 10;
+const pinid_t repeatButtonPin = 1;
 
 // The two pins where we connected the A and B pins of the encoder, the A pin must support interrupts.
-const pinid_t encoderAPin = 8;
-const pinid_t encoderBPin = 9;
+const pinid_t encoderAPin = 16;
+const pinid_t encoderBPin = 17;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
@@ -73,7 +73,7 @@ void setup() {
 
     // now we add the switches, we don't want the spin-wheel button to repeat, so leave off the last parameter
     // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.
-    switches.addSwitch(spinwheelClickPin, onSpinwheelClicked, NO_REPEAT, true);
+    switches.addSwitch(spinwheelClickPin, onSpinwheelClicked, NO_REPEAT);
     switches.addSwitch(repeatButtonPin, onRepeatButtonClicked, 25);
 
     // now we set up the rotary encoder, first we give the A pin and the B pin.
