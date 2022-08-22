@@ -37,7 +37,7 @@ void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
     config.pull_down_en = (mode == INPUT_PULLDOWN) ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE;
     config.intr_type = GPIO_INTR_DISABLE;
     if(ESP_OK != gpio_config(&config)) {
-        serdebugF3("ESP digital config error on ", pin, mode);
+        serlogF3(SER_ERROR, "ESP digital config error on ", pin, mode);
     }
 }
 
@@ -59,10 +59,10 @@ void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHan
         const auto defaultFlags = 0;
         if(ESP_OK == gpio_install_isr_service(defaultFlags)) {
             esp32InterruptDriverLoaded = true;
-            serdebugF("Interrupt driver loaded");
+            serlogF(SER_IOA_INFO, "Interrupt driver loaded");
         }
         else {
-            serdebugF("Interrupt driver did not load");
+            serlogF(SER_ERROR, "Interrupt driver did not load");
         }
     }
     auto gpioRef = static_cast<gpio_num_t>(pin);
@@ -70,8 +70,8 @@ void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHan
     bool ok = gpio_set_intr_type(gpioRef, espIntMode) == ESP_OK;
     ok = ok && gpio_isr_handler_add(gpioRef, rawCbHandler, (void*)interruptHandler) == ESP_OK;
 
-    serdebugF4("Interrupt add for pin ", pin, mode, ok);
-    serdebugF2("reg ", (long)interruptHandler);
+    serlogF4(SER_ERROR, "Interrupt add for pin ", pin, mode, ok);
+    serlogF2(SER_ERROR, "reg ", (long)interruptHandler);
 
 }
 

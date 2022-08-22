@@ -246,23 +246,23 @@ public:
     uint8_t readPort(pinid_t pin) override { return delegate->readPort(pin);}
 
     bool runLoop() override { 
-        serdebugF("Port write ");
+        serlogF(SER_DEBUG, "Port write ");
         uint32_t val = writeVals;
         for(int i=0;i<ports;i++) {
             printHexZeroPad(val);
             val = val >> 8;
         }
         bool ret = delegate->runLoop();
-        serdebugF("read ");
+        serlogF(SER_DEBUG, "read ");
         for(int i=0;i<ports;i++) {
             printHexZeroPad(delegate->readPort(i * 8));
         }
-        serdebugF("EOL");
+        serlogF(SER_DEBUG, "EOL");
         return ret;
     }
 
     void printHexZeroPad(uint8_t val) {
-        serdebug3(hexchar(val / 16), hexchar(val % 16), ' ');
+        serlog3(SER_DEBUG, hexchar(val / 16), hexchar(val % 16), ' ');
     }
 
     char hexchar(uint8_t ch) {

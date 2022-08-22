@@ -140,19 +140,19 @@ uint32_t AvrTwiManager::timeOfNextCheck() {
 }
 
 void AvrTwiManager::sendAddress(uint8_t addr) {
-    serdebugF("sendaddr");
+    serlogF(SER_IOA_DEBUG, "sendaddr");
 
     // send a start event
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN);
     if(!waitWithTimeout()) return;
 
-    serdebugF("started");
+    serlogF(SER_IOA_INFO, "started");
 
     // check if we started, if not we have a hardware level problem
     uint8_t statusReg = (TWSR & TWSR_STATUS_MASK);
     if(statusReg != TWSR_VAL_START && statusReg != TWSR_VAL_REPEATED_START) {
         twiStatus = I2C_START_NACK;
-        serdebugF("TWI not acked");
+        serlogF(SER_IOA_DEBUG, "TWI not acked");
         return;
     }
 
@@ -160,7 +160,7 @@ void AvrTwiManager::sendAddress(uint8_t addr) {
     uint8_t readBit = twiMode == TWI_MODE_READ ? 1 : 0;
     TWDR = (addr << 1) | readBit;
     TWCR = _BV(TWINT) | _BV(TWEN);
-    serdebugF("done");
+    serlogF(SER_IOA_DEBUG, "done");
 
     // and we are done!
     twiStatus = I2C_ADDRESS_SENT;
@@ -168,13 +168,13 @@ void AvrTwiManager::sendAddress(uint8_t addr) {
 
 bool AvrTwiManager::waitWithTimeout(unsigned long timeout) {
     if(twiStatus == I2C_HW_ERROR) {
-        serdebugF("I2C HW fault on entry!");
+        serlogF(SER_ERROR, "I2C HW fault on entry!");
         return false;
     }
     long then = micros();
     while(!(TWCR & _BV(TWINT))) {
         if ((micros() - then) > 10000) {
-            serdebugF4("I2C ERROR! timeout (now, then, tm). ", micros(), then, 10000);
+            serlogF4(SER_ERROR, "I2C ERROR! timeout (now, then, tm). ", micros(), then, 10000);
             twiStatus = I2C_HW_ERROR;
             return false;
         }
@@ -183,22 +183,22 @@ bool AvrTwiManager::waitWithTimeout(unsigned long timeout) {
 }
 
 void avrTwiStop(unsigned long timeout = 100000UL) {
-    serdebugF("stopping");
+    serlogF(SER_IOA_DEBUG, "stopping");
     long then = micros();
     TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWSTO);
 
     // wait for stop
     while (TWCR & (1 << TWSTO)) {
         if((micros() - then) > timeout) {
-            serdebugF("I2C stop failed");
+            serlogF4(SER_IOA_INFO, "I2C stop failed");
             break;
         }
     }
-    serdebugF("stopped");
+    serlogF(SER_IOA_DEBUG, "stopped");
 }
 
 void AvrTwiManager::prepareNextPhase() {
-    serdebugF("nxtp");
+    serlogF4(SER_IOA_DEBUG, "nxtp");
 
     auto statusBits = (TWSR & TWSR_STATUS_MASK);
     if(statusBits != TWSR_VAL_SLW_W_ACK && statusBits != TWSR_VAL_SLW_R_ACK) {
@@ -216,7 +216,7 @@ void AvrTwiManager::prepareNextPhase() {
         readByteFromWire();
     }
     else if(twiMode == TWI_MODE_WRITE || twiMode == TWI_MODE_WRITE_NO_STOP) {
-        serdebugF("Send data");
+        serlogF(SER_IOA_DEBUG, "Send data");
         twiStatus = I2C_SEND_DATA;
         sendByteOnWire();
     }
@@ -224,7 +224,7 @@ void AvrTwiManager::prepareNextPhase() {
 
 void AvrTwiManager::sendByteOnWire() {
     if(position < length) {
-        serdebugF3("Send data", position, buffer[position]);
+        serlogF(SER_IOA_DEBUG, "Send data", position, buffer[position]);
 
         TWDR = buffer[position];
         TWCR = _BV(TWINT) | _BV(TWEN);
@@ -253,11 +253,11 @@ void AvrTwiManager::readByteFromWire() {
 }
 
 bool AvrTwiManager::waitForCompletion(TwiStatus expectedStatus, unsigned long timeout) {
-    serdebugF3("wait comp", twiStatus, expectedStatus);
+    serlogF3(SER_IOA_DEBUG,  "wait comp", twiStatus, expectedStatus);
     unsigned long then = micros();
     while(twiStatus != expectedStatus && twiStatus < 0x80) {
         if((micros() - then) > timeout) {
-            serdebugF("ERROR timeout while waiting");
+            serlogF(SER_ERROR, "ERROR timeout while waiting");
             twiStatus = I2C_HW_ERROR;
             return false;
         }
@@ -267,10 +267,10 @@ bool AvrTwiManager::waitForCompletion(TwiStatus expectedStatus, unsigned long ti
     bool err = twiStatus == I2C_START_NACK || twiStatus == I2C_HW_ERROR || twiStatus == I2C_PARTIAL_READ;
 
     if(expectedStatus == READY_FOR_USE) {
-        serdebugF("rfu");
+        serlogF(SER_IOA_DEBUG, "rfu");
         twiStatus = READY_FOR_USE;
     }
-    serdebugF("end w-comp");
+    serlogF(SER_IOA_DEBUG, "end w-comp");
 
     return !err;
 }
@@ -297,11 +297,11 @@ bool AvrTwiManager::isReady(uint8_t addr) {
 
 bool AvrTwiManager::sendData(uint8_t addr, const uint8_t *data, uint8_t len, bool stop) {
     if(!data || len > TWI_BUFFER_LENGTH) return false;
-    serdebugF("send1");
+    serlogF(SER_IOA_DEBUG, "send1");
     waitForCompletion(READY_FOR_USE);
     memcpy(buffer, data, len);
     startTwi(addr, I2C_SEND_ADDRESS, twiMode = stop ? TWI_MODE_WRITE : TWI_MODE_WRITE_NO_STOP, len);
-    serdebugF("send2");
+    serlogF(SER_IOA_DEBUG, "send2");
     return waitForCompletion(I2C_OPERATION_SUCCESS);
 }
 

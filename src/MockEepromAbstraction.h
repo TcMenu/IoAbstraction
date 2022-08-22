@@ -39,7 +39,7 @@ public:
 
 	void checkBounds(EepromPosition pos, int len) {
 		if(uint16_t(pos + len) >= memSize) {
-            serdebugF2("checkbounds exceeded: ", pos+len);
+            serlogF2(SER_DEBUG, "checkbounds exceeded: ", pos+len);
 			errorFlag = true;
 		}
 	}
@@ -90,9 +90,9 @@ public:
 		memcpy(&data[romDest], memSrc, len);
 	}
 
-	void serDebugContents(int start, int len) {
+	void serPrintContents(int start, int len) {
         if(len >= 63) {
-            serdebugF("Mock rom debug - len too big");
+            serlogF(SER_DEBUG, "Mock rom debug - len too big");
             return;
         }
         char str[64];
@@ -105,7 +105,7 @@ public:
                 str[i] = '?';
         }
         str[i] = 0;
-        serdebugF4("MockRom contents start, len, data: ", start, len, str);
+        serlogF4(SER_DEBUG, "MockRom contents start, len, data: ", start, len, str);
     }
 };
 

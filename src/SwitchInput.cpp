@@ -145,12 +145,12 @@ void SwitchInput::init(IoAbstractionRef device, SwitchInterruptMode mode, bool d
 	bitWrite(swFlags, SW_FLAG_ENCODER_IS_POLLING, (mode == SWITCHES_POLL_EVERYTHING));
 
 	if(mode == SWITCHES_POLL_KEYS_ONLY) {
-		serdebugF("Switches polling for keys");
+		serlogF(SER_IOA_INFO, "Switches polling for keys");
 		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL, [] {
 			switches.runLoop();
 		});
 	} else if(mode == SWITCHES_POLL_EVERYTHING) {
-		serdebugF("Switches polling for everything");
+        serlogF(SER_IOA_INFO, "Switches polling for everything");
 		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL / 4, [] {
             static uint8_t counter = 0;
             if(++counter % 4 == 3) {
@@ -160,7 +160,7 @@ void SwitchInput::init(IoAbstractionRef device, SwitchInterruptMode mode, bool d
 		});
 	}
 
-	serdebugF4("Switches initialized (pull-up, int, encPoll)", bitRead(swFlags, SW_FLAG_PULLUP_LOGIC), bitRead(swFlags, SW_FLAG_INTERRUPT_DRIVEN),
+	serlogF4(SER_IOA_INFO, "Switches initialized (pull-up, int, encPoll)", bitRead(swFlags, SW_FLAG_PULLUP_LOGIC), bitRead(swFlags, SW_FLAG_INTERRUPT_DRIVEN),
 			   bitRead(swFlags, SW_FLAG_ENCODER_IS_POLLING));
 }
 

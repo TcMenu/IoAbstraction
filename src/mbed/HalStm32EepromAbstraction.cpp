@@ -15,11 +15,11 @@ void HalStm32EepromAbstraction::enableBackupRam()
 
     errorOccurred = HAL_PWREx_EnableBkUpReg() != HAL_OK;   // enable the backup regulator
 
-    serdebugF2("STM32 Backup RAM enabled status: ", errorOccurred);
+    serlogF2(SER_IOA_INFO, "STM32 Backup RAM enabled status: ", errorOccurred);
 }
 
 void HalStm32EepromAbstraction::initialise(int baseOffs) {
-    serdebugF3("Initialise STM32 backup RAM based ROM (offs, size): ", baseOffs, EEPROM_SIZE);
+    serlogF3(SER_IOA_DEBUG, "Initialise STM32 backup RAM based ROM (offs, size): ", baseOffs, EEPROM_SIZE);
 
     romBase = baseOffs;
     enableBackupRam();
@@ -36,7 +36,7 @@ void HalStm32EepromAbstraction::halWriteToCache() {
 
     __HAL_RCC_BKPSRAM_CLK_DISABLE(); // turn off backup ram clock
 
-    serdebugF("Completed write to cache of present data: ");
+    serlogF(SER_IOA_DEBUG, "Completed write to cache of present data: ");
 }
 
 void HalStm32EepromAbstraction::halReadFromCache() {
@@ -49,7 +49,7 @@ void HalStm32EepromAbstraction::halReadFromCache() {
 
     __HAL_RCC_BKPSRAM_CLK_DISABLE();
 
-    serdebugF("Completed read into cache of backup data: ");
+    serlogF(SER_IOA_DEBUG, "Completed read into cache of backup data: ");
 }
 
 uint8_t HalStm32EepromAbstraction::read8(EepromPosition position) {

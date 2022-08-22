@@ -57,7 +57,7 @@ void EspAnalogInputMode::pinSetup() {
         gpio_config(&config);
     }
     else {
-        serdebugF2("Did not find adc setting for ", pin);
+        serlogF(SER_WARNING, "Did not find adc setting for ", pin);
     }
 }
 
@@ -147,7 +147,7 @@ void ESP32AnalogDevice::setCurrentFloat(pinid_t pin, float value) {
     auto compVal = (int)(value * 255.0F);
     if(compVal > 255) compVal = 255;
     setCurrentValue(pin, compVal);
-    //serdebugF4("Flt set ", value, maxValue, compVal);
+    serlogF4(SER_IOA_DEBUG, "Flt set ", value, maxValue, compVal);
 }
 
 AnalogDevice* internalAnalogIo() {

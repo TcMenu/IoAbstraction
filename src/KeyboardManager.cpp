@@ -70,7 +70,7 @@ inline bool isDebouncing(KeyMode keyMode) {
 
 void MatrixKeyboardManager::exec() {
     if(ioRef == nullptr) {
-        serdebugF("ioRef null");
+        serlogF(SER_ERROR, "ioRef null");
         return;
     }
 
@@ -87,7 +87,7 @@ void MatrixKeyboardManager::exec() {
         for(int r=0; r<layout->numRows(); r++) {
             if(!ioDeviceDigitalRead(ioRef, layout->getRowPin(r))) {
                 pressThisTime = layout->keyFor(r, c);
-                serdebugF4("Pressed: ", r, c, (int)pressThisTime);
+                serlogF4(SER_IOA_DEBUG, "Pressed: ", r, c, (int)pressThisTime);
             }
         }
     }

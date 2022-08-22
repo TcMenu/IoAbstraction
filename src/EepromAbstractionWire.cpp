@@ -115,7 +115,7 @@ uint8_t I2cAt24Eeprom::readByte(EepromPosition position) {
     errorOccurred = errorOccurred || !ioaWireRead(wireImpl, eepromAddr, &data, 1);
 
     // for debugging purposes
-    //serdebugF4("readby ", data, errorOccurred, position);
+    serlogF4(SER_IOA_DEBUG, "readby ", data, errorOccurred, position);
 
     return data;
 }
@@ -150,8 +150,8 @@ void I2cAt24Eeprom::writeAddressWire(EepromPosition memAddr, const uint8_t *data
     }
 
     // for debugging purposes.
-    //serdebugF4("Wire write - ", actualAddr, addrLen, pageSize);
-    //serdebugHexDump("Data was - ", ch, len + addrLen);
+    serlogF4(SER_IOA_DEBUG, "Wire write - ", actualAddr, addrLen, pageSize);
+    serlogHexDump(SER_IOA_DEBUG, "Data was - ", ch, len + addrLen);
 
     errorOccurred = errorOccurred || !ioaWireWriteWithRetry(wireImpl, actualAddr, ch, len + addrLen, READY_TRIES_COUNT);
 }

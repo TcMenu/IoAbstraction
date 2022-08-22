@@ -133,8 +133,8 @@ void MCP23017IoAbstraction::toggleBitInRegister(uint8_t regAddr, uint8_t theBit,
 	bitWrite(reg, theBit, value);
 
 	// for debugging to see the commands being sent, uncomment below
-	//serdebugF4("toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
-	//serdebugFHex("Value: ", reg);
+	serlogF4(SER_IOA_DEBUG, "toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
+	serlogFHex(SER_IOA_DEBUG, "Value: ", reg);
 	// end debugging code
 
 	writeToDevice(regAddr, reg);

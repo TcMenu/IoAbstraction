@@ -39,7 +39,7 @@ void ArduinoAnalogDevice::setCurrentFloat(pinid_t pin, float value) {
     auto compVal = (int)(value * float(maxValue));
     if(compVal  > maxValue) compVal = maxValue;
     setCurrentValue(pin, compVal);
-    //serdebugF4("Flt set ", value, maxValue, compVal);
+    serlogF4(SER_IOA_DEBUG, "Flt set ", value, maxValue, compVal);
 }
 
 float ArduinoAnalogDevice::getCurrentFloat(pinid_t pin) {

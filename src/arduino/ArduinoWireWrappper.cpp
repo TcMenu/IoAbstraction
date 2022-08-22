@@ -50,7 +50,7 @@ bool ioaWireWriteWithRetry(WireType pI2c, int address, const uint8_t* buffer, si
     }
 
     if(!i2cReady) {
-        serdebugF("I2C was not ready after retries, failing");
+        serlogF(SER_ERROR, "I2C was not ready after retries, failing");
         return false;
     }
 
