@@ -37,10 +37,12 @@ enum SerLoggingLevel {
     SER_TCMENU_INFO = 0x0008,
     SER_NETWORK_INFO = 0x0010,
     SER_IOA_INFO = 0x0020,
-    SER_USER_1 = 0x0100,
-    SER_USER_2 = 0x0200,
-    SER_USER_3 = 0x0400,
-    SER_USER_4 = 0x0800,
+    SER_USER_1 = 0x0040,
+    SER_USER_2 = 0x0080,
+    SER_USER_3 = 0x0100,
+    SER_USER_4 = 0x0200,
+    SER_USER_5 = 0x0400,
+    SER_USER_6 = 0x0800,
     SER_TCMENU_DEBUG = 0x1000,
     SER_NETWORK_DEBUG = 0x2000,
     SER_IOA_DEBUG = 0x4000,
@@ -117,10 +119,10 @@ inline void serEnableLevel(SerLoggingLevel level, bool active) {
 #define serlogF4(lvl, x1, x2, x3, x4) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x1), lvl); LoggingPort.print(x2); LoggingPort.print(' '); LoggingPort.print(x3); LoggingPort.print(' '); LoggingPort.print(x4);LoggingPort.println(); }
 #define serlogFHex(lvl, x1, x2) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x1), lvl); LoggingPort.print(x2, HEX);LoggingPort.println(); }
 #define serlogFHex2(lvl, x1, x2, x3) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x1), lvl); LoggingPort.print(x2, HEX); LoggingPort.print(','); LoggingPort.print(x3, HEX);LoggingPort.println(); }
-#define serlog(lvl, x) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x), lvl);LoggingPort.println(); }
-#define serlog2(lvl, x1, x2) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x1), lvl); LoggingPort.print(x2);LoggingPort.println(); }
-#define serlog3(lvl, x1, x2, x3) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x1), lvl); LoggingPort.print(x2); LoggingPort.print(' '); LoggingPort.print(x3);LoggingPort.println(); }
-#define serlogHex(lvl, x1, x2) if(serLevelEnabled(lvl)) { logTimeAndLevel(F(x1), lvl); LoggingPort.print(x2, HEX);LoggingPort.println(); }
+#define serlog(lvl, x) if(serLevelEnabled(lvl)) { logTimeAndLevel(x, lvl);LoggingPort.println(); }
+#define serlog2(lvl, x1, x2) if(serLevelEnabled(lvl)) { logTimeAndLevel(x1, lvl); LoggingPort.print(x2);LoggingPort.println(); }
+#define serlog3(lvl, x1, x2, x3) if(serLevelEnabled(lvl)) { logTimeAndLevel(x1, lvl); LoggingPort.print(x2); LoggingPort.print(' '); LoggingPort.print(x3);LoggingPort.println(); }
+#define serlogHex(lvl, x1, x2) if(serLevelEnabled(lvl)) { logTimeAndLevel(x1, lvl); LoggingPort.print(x2, HEX);LoggingPort.println(); }
 
 void serlogHexDump(SerLoggingLevel level, const char *title, const void* data, size_t strlen);
 inline void serdebugHexDump(const char *title, const void* data, size_t len) { serlogHexDump(SER_DEBUG, title, data, len);}

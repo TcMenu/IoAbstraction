@@ -19,9 +19,14 @@ void serlogHexDump(SerLoggingLevel level, const char *title, const void* data, s
     LoggingPort.println();
 
     const auto str = (const uint8_t *) data;
+    static const  char hexChar[] = { "0123456789ABCDEF" };
     for (size_t ii = 0; ii < strlen; ii++) {
-        LoggingPort.print((int) str[ii], HEX);
-        LoggingPort.print(((ii % 8) == 7) ? '\n' : ' ');
+        char sz[4];
+        sz[0] = hexChar[str[ii] >> 4];
+        sz[1] = hexChar[str[ii] & 0x0f];
+        sz[2] = ((ii % 8) == 7) ? '\n' : ' ';
+        sz[3] = 0;
+        LoggingPort.print(sz);
     };
     LoggingPort.println();
 }
@@ -41,6 +46,8 @@ const char* prettyLevel(SerLoggingLevel level) {
         case SER_USER_2: return "U02";
         case SER_USER_3: return "U03";
         case SER_USER_4: return "U04";
+        case SER_USER_5: return "U05";
+        case SER_USER_6: return "U06";
         default: return "???";
     }
 }
