@@ -24,8 +24,6 @@
 
 // END user adjustable section.
 
-#ifdef IO_LOGGING_DEBUG
-
 /**
  * This enumeration contains all the available logging levels, each logging level is a bit in the structure, and
  * we assume there can be up to 15 levels. With 4 user levels available.
@@ -48,6 +46,8 @@ enum SerLoggingLevel {
     SER_IOA_DEBUG = 0x4000,
     SER_LOG_EVERYTHING = 0xffff
 };
+
+#ifdef IO_LOGGING_DEBUG
 
 /** This uint16_t stores the enabled logging levels, don't use directly */
 extern unsigned int enabledLevels;
@@ -151,7 +151,7 @@ inline void serdebugHexDump(const char *title, const void* data, size_t len) { s
 #define serdebug3(x, y, z) 
 #define serdebugHex(x, y) 
 #define serdebugHexDump(x, str, strlen)
-
+#define serlogHexDump(l, x, str, len)
 #define serlogF(lvl, x)
 #define serlogF2(lvl, x1, x2)
 #define serlogF3(lvl, x1, x2, x3)
