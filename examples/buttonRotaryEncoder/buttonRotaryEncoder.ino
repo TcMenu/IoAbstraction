@@ -17,17 +17,23 @@
 const pinid_t spinwheelClickPin = 0;
 
 // The pin onto which we connected the repeat button switch
-const pinid_t repeatButtonPin = 1;
+const pinid_t repeatButtonPin = PC9;
 
 // The two pins where we connected the A and B pins of the encoder, the A pin must support interrupts.
-const pinid_t encoderAPin = 16;
-const pinid_t encoderBPin = 17;
+const pinid_t encoderAPin = PC8;
+const pinid_t encoderBPin = PC10;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
 
 // an LED that flashes as the encoder changes
-const int ledOutputPin = 12;
+const int ledOutputPin = LED_BLUE;
+
+// You can change the step rate of the encoder, it defaults to 1, but can be changed during a precision change
+const int stepSize = 2;
+
+// You can set the encoder to wrap around at min/max values, or just to stop there.
+const bool wrapAround = true;
 
 auto boardIo = internalDigitalIo();
 
@@ -69,7 +75,7 @@ void setup() {
     // our next task is to initialise swtiches, do this BEFORE doing anything else with switches.
     // We choose to initialise in poll everything (requires no interrupts), but there are other modes too:
     // (SWITCHES_NO_POLLING - interrupt only) or (SWITCHES_POLL_KEYS_ONLY - encoders on interrupt)
-    switches.init(boardIo, SWITCHES_POLL_EVERYTHING, true);
+    switches.init(boardIo, SWITCHES_POLL_KEYS_ONLY, true);
 
     // now we add the switches, we don't want the spin-wheel button to repeat, so leave off the last parameter
     // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.
@@ -80,7 +86,7 @@ void setup() {
     // we give the encoder a max value of 128, always minimum of 0.
     auto hwEncoder = new HardwareRotaryEncoder(encoderAPin, encoderBPin, onEncoderChange);
     switches.setEncoder(0, hwEncoder);
-    hwEncoder->changePrecision(maximumEncoderValue, 100);
+    hwEncoder->changePrecision(maximumEncoderValue, 100, wrapAround, stepSize);
 }
 
 void loop() {

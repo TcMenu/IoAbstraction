@@ -225,15 +225,15 @@ void SwitchInput::pushSwitch(pinid_t pin, bool held) {
     keys.getByKey(pin)->trigger(held);
 }
 
-void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover) {
+void SwitchInput::changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover, int step) {
 	if (slot < MAX_ROTARY_ENCODERS && encoder[slot] != nullptr) {
-		encoder[slot]->changePrecision(precision, currentValue, rollover);
+		encoder[slot]->changePrecision(precision, (int)currentValue, rollover, step);
 	}
 }
 
-void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* encoder) {
+void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* enc) {
 	if (slot < MAX_ROTARY_ENCODERS) {
-		this->encoder[slot] = encoder;
+		this->encoder[slot] = enc;
 	}
 }
 
@@ -276,15 +276,17 @@ RotaryEncoder::RotaryEncoder(EncoderListener* listener) : notify{} {
 	this->notify.encoderListener = listener;
 	this->currentReading = 0;
 	this->maximumValue = 0;
+    this->stepSize = 1;
     this->flags = 0U;
     bitWrite(flags, LAST_SYNC_STATUS, 1);
     bitWrite(flags, OO_LISTENER_CALLBACK, 1);
     this->intent = CHANGE_VALUE;
 }
 
-void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax) {
+void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax, int step) {
 	this->maximumValue = maxValue;
 	this->currentReading = currentValue;
+    this->stepSize = step;
 	bitWrite(flags, WRAP_AROUND_MODE, rolloverOnMax);
 	if(maxValue == 0U && currentValue == 0) intent = DIRECTION_ONLY;
 	runCallback((int)currentReading);
@@ -387,22 +389,21 @@ void onSwitchesInterrupt(__attribute__((unused)) pinid_t pin) {
 }
 
 int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
-	if(change > 250000 || maximumValue < ONE_TURN_OF_ENCODER) return 1;
+	if(change > 250000 || maximumValue < ONE_TURN_OF_ENCODER) return stepSize;
 
     if(accelerationMode == HWACCEL_NONE) {
-        return 1;
+        return stepSize;
     }
     else if(accelerationMode == HWACCEL_REGULAR) {
-        if(change > 120000) return 2;
-        else if (change > 70000) return 4;
-        else if (change > 30000) return 6;
-        else return 10;
+        if(change > 120000) return stepSize + stepSize;
+        else if (change > 70000) return stepSize << 2;
+        else if (change > 30000) return stepSize << 3;
+        else return stepSize << 4;
     }
     else { // slower, very slight acceleration..
-        
-        if(change > 100000) return 2;
-        else if (change > 30000) return 3;
-        else return 4;
+        if(change > 100000) return stepSize + stepSize;
+        else if (change > 30000) return stepSize + stepSize + stepSize;
+        else return stepSize << 2;
     }
 
 }
@@ -452,10 +453,10 @@ EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, Encod
 
 void EncoderUpDownButtons::onPressed(pinid_t pin, bool held) {
     if(pin == upPin) {
-        int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -1 : 1;
+        int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -stepSize : stepSize;
         increment(dir);
     } else if(pin == downPin) {
-        int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? 1 : -1;
+        int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? stepSize : -stepSize;
         increment(dir);
     }
 }

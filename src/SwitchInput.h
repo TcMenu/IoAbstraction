@@ -184,6 +184,7 @@ protected:
     enum EncoderFlagBits { LAST_SYNC_STATUS=0, WRAP_AROUND_MODE, OO_LISTENER_CALLBACK };
 	uint16_t maximumValue;
 	uint16_t currentReading;
+    uint8_t stepSize;
     union {
         EncoderCallbackFn callback;
         EncoderListener* encoderListener;
@@ -202,7 +203,7 @@ public:
 	 * @param maxValue the largest value allowed or zero for direction only mode
 	 * @param currentValue the current value (zero for direction mode)
 	 */
-	void changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax = false);
+	void changePrecision(uint16_t maxValue, int currentValue, bool rolloverOnMax = false, int step = 1);
 
 	/**
 	 * Change the callback that will be used to notify of changes in the encoder value, this must never be null.
@@ -480,8 +481,9 @@ public:
 	 * maximum value that can be represented and also the current value of the encoder.
 	 * @param precision the maximum value to be set
 	 * @param currentValue the current value to be set.
+	 * @param step the size of each step of the encoder, default is 1
 	 */
-	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue) { changeEncoderPrecision(0, precision, currentValue); }
+	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue, int step=1) { changeEncoderPrecision(0, precision, currentValue, step); }
 
 	/**
 	 * Use this version of changeEncoderPrecision if you are working with more than one rotary encoder.
@@ -490,8 +492,10 @@ public:
 	 * @param slot the index of the desired encoder, zero based
 	 * @param precision the maximum value to be set
 	 * @param currentValue the current value to be set.
+	 * @param rollover if the encoder should wrap around at min/max values or stop
+ 	 * @param step the size of each step of the encoder, default is 1
 	 */
-	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover = false);
+	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover = false, int step = 1);
 
 	/**
 	 * Simulates a switch press by calling the callback directly without changing the internal state
