@@ -129,12 +129,12 @@ const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 0.0488F, 0.1904F, 0.3710F
 
 
 inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = nullptr) {
-    device = new ArduinoAnalogDevice();
+    device = internalAnalogIo();
     return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin, device);
 }
 
 inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0, AnalogDevice* device = nullptr) {
-    device = new ArduinoAnalogDevice();
+    device = internalAnalogIo();
     return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin, device);
 }
 
