@@ -288,7 +288,7 @@ void RotaryEncoder::changePrecision(uint16_t maxValue, int currentValue, bool ro
 	this->currentReading = currentValue;
     this->stepSize = step;
 	bitWrite(flags, WRAP_AROUND_MODE, rolloverOnMax);
-	if(maxValue == 0U && currentValue == 0) intent = DIRECTION_ONLY;
+	intent = (maxValue == 0U && currentValue == 0) ? DIRECTION_ONLY : CHANGE_VALUE;
 	runCallback((int)currentReading);
 }
 
@@ -314,7 +314,7 @@ void RotaryEncoder::setUserIntention(EncoderUserIntention intention) {
 #define safeAbs(x) ((x) < 0 ? -(x) : (x))
 
 void RotaryEncoder::increment(int8_t incVal) {
-    if(maximumValue == 0) {
+    if(maximumValue == 0 && intent == DIRECTION_ONLY) {
 		// first check if we are in direction only mode (max = 0)
 		 runCallback(incVal);
          return;
