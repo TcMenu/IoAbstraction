@@ -607,6 +607,6 @@ void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallback
  * @param pinDown the down button
  * @param callback the function that will receive the new state on change.
  */
-void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback);
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, int speed = 20);
 
 #endif

@@ -467,10 +467,10 @@ void EncoderUpDownButtons::onReleased(pinid_t pin, bool held) {
 
 /******** ENCODER SETUP METHODS ***********/
 
-void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback) {
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, int speed) {
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
-	auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
+	auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback, speed);
 	switches.setEncoder(enc);
 }
 
