@@ -6,6 +6,11 @@
 #ifndef TCLIBRARYDEV_PLATFORMDETERMINATION_H
 #define TCLIBRARYDEV_PLATFORMDETERMINATION_H
 
+// when not on mbed, we need to load Arduino.h to get the right defines for some boards.
+#ifndef __MBED__
+#include <Arduino.h>
+#endif
+
 // the purpose of this file is to determine the actual main environment, which has got a bit more tricky now
 // that some Arduino devices are actually mbed based, but not standard enough to use mbed as usual.
 // As more Arduino mbed devices become available, I imagine this list will grow, and we may revisit if
@@ -16,7 +21,14 @@
 
 // list of devices is pulled from https://github.com/arduino/ArduinoCore-mbed/blob/master/full.variables
 // set TMIOA_FORCE_ARDUINO_MBED to force IoAbstraction to use Arduino-mbed mode.
-#if defined(ARDUINO_NANO_RP2040_CONNECT) || \
+#if defined(ARDUINO_PICO_REVISION)
+// on the Earl Philhower pico implementation
+#include <Arduino.h>
+# define IOA_USE_ARDUINO
+# define IOA_ANALOGIN_RES 12
+# define IOA_ANALOGOUT_RES 10
+typedef uint8_t pinid_t;
+#elif defined(ARDUINO_NANO_RP2040_CONNECT) || \
     defined(ARDUINO_ARDUINO_NANO33BLE) || \
     defined(ARDUINO_RASPBERRY_PI_PICO) || \
     defined(ARDUINO_PORTENTA_H7_M7) || \
