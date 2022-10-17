@@ -25,7 +25,7 @@ void ioaWireSetSpeed(WireType wireType, long frequency) {
 }
 
 bool ioaWireRead(WireType pI2c, int addr, uint8_t* buffer, size_t len) {
-    if(pI2c->requestFrom(addr, len)) {
+    if(pI2c->requestFrom(uint8_t(addr), len)) {
         uint8_t idx = 0;
         while(pI2c->available() && idx < len) {
             buffer[idx] = pI2c->read();

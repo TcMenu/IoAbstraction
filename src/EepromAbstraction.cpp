@@ -6,6 +6,8 @@
 
 #ifdef __AVR__
 
+#include <avr/eeprom.h>
+
 uint8_t AvrEeprom::read8(EepromPosition position) {
 	return eeprom_read_byte((uint8_t*)position);
 }
