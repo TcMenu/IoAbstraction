@@ -336,8 +336,18 @@ void RotaryEncoder::increment(int8_t incVal) {
     runCallback((int)currentReading);
 }
 
-HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) : RotaryEncoder(callback) {
-	this->pinA = pinA;
+HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode,
+                                             EncoderType encoderType) : RotaryEncoder(callback) {
+    initialise(pinA, pinB, accelerationMode, encoderType);
+}
+
+HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode,
+                                             EncoderType encoderType) : RotaryEncoder(listener) {
+    initialise(pinA, pinB, accelerationMode, encoderType);
+}
+
+void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType encoderType) {
+    this->pinA = pinA;
 	this->pinB = pinB;
 	this->lastChange = micros();
     this->accelerationMode = accelerationMode;
@@ -359,7 +369,7 @@ HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, Encoder
 }
 
 void checkRunLoopAndRepeat() {
-	// turn off interrupts until deboucing / repeat logic is complete.
+	// turn off interrupts until debouncing / repeat logic is complete.
 	switches.setInterruptDebouncing(true);
 
 	// instead of running constantly, we only run when there's a need to, eg something
@@ -451,6 +461,12 @@ EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, Encod
 	switches.addSwitchListener(pinDown, this, speed);
 }
 
+EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, uint8_t speed)
+        : RotaryEncoder(listener), upPin(pinUp), downPin(pinDown) {
+    switches.addSwitchListener(pinUp, this, speed);
+    switches.addSwitchListener(pinDown, this, speed);
+}
+
 void EncoderUpDownButtons::onPressed(pinid_t pin, bool held) {
     if(pin == upPin) {
         int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -stepSize : stepSize;
@@ -474,6 +490,13 @@ void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn 
 	switches.setEncoder(enc);
 }
 
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, int speed) {
+    if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
+
+    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, listener, speed);
+    switches.setEncoder(enc);
+}
+
 void registerInterrupt(pinid_t pin) {
 	taskManager.setInterruptCallback(onSwitchesInterrupt);
 	taskManager.addInterrupt(switches.getIoAbstraction(), pin, CHANGE);
@@ -483,4 +506,10 @@ void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallback
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
+}
+
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode, EncoderType encoderType) {
+	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
+
+	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, listener, accelerationMode, encoderType));
 }

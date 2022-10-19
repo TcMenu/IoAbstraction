@@ -94,9 +94,22 @@ public:
 // Each time the encoder value changes, this function runs, as we registered it as a callback
 //
 void onEncoderChange(int newValue) {
-    Serial.print("Encoder change ");
+    Serial.print("Encoder change 2");
     Serial.println(newValue);
 }
+
+class MyEncoderChangeListener : public EncoderListener {
+private:
+    int oldValue = 0;
+public:
+    void encoderHasChanged(int newValue) override {
+        Serial.print("Encoder 1 change ");
+        Serial.print(newValue);
+        Serial.print(" old value was ");
+        Serial.println(oldValue);
+        oldValue = newValue;
+    }
+} encoderChangeListener;
 
 void setup() {
     Serial.println("Starting interrupt switch PCF8574 example now");
@@ -121,17 +134,14 @@ void setup() {
 
     // now we set up the rotary encoder, first we give the A pin and the B pin.
     // we give the encoder a max value of 128, always minimum of 0.
-    setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, onEncoderChange);
+    setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, &encoderChangeListener);
     switches.changeEncoderPrecision(0, maximumEncoderValue, 100, true);
 
     // Start 2nd encoder
     Serial.println("Setting up second encoder now");
 
     // here we add a second encoder, you can comment out the below lines if you only want to use one encoder
-    secondEncoder = new HardwareRotaryEncoder(encoder2APin, encoder2BPin, [](int direction) {
-        Serial.print("Encoder direction: ");
-        Serial.println(direction);
-    });
+    secondEncoder = new HardwareRotaryEncoder(encoder2APin, encoder2BPin, onEncoderChange);
     secondEncoder->changePrecision(0, 0); // this means record direction changes only
     switches.setEncoder(1, secondEncoder); // put it into the 2nd available encoder slot.
 

@@ -47,6 +47,19 @@ public:
     }
 
     /**
+     * Constructor that initialises the class for use, prefer to use the set up method setupAnalogJoystickEncoder
+     * in simple cases.
+     * @param analogDevice the pointer to the analog AnalogDevice for example: `&analog`
+     * @param analogPin the pin on which the joystick analog pin is connected to
+     * @param listener the OO listener class implementation extending from EncoderListener.
+     */
+    JoystickSwitchInput(AnalogDevice *analogDevice, pinid_t analogPin, EncoderListener* listener) : RotaryEncoder(listener) {
+        this->analogPin = analogPin;
+        this->analogDevice = analogDevice;
+        analogDevice->initPin(analogPin, DIR_IN);
+    }
+
+    /**
      * Use this for situations where the tolerance of the joystick slightly off.
      * IE the mid point is not exactly half or the tolerance is not sufficiently
      * large to ignore deviations in the voltage level.

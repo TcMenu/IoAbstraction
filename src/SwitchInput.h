@@ -293,7 +293,8 @@ enum EncoderType : uint8_t {
 
 /**
  * An implementation of RotaryEncoder that supports the most common types of rotary encoder, needed no additional hardware
- * in most cases. The A input must be an interrupt pin.
+ * in most cases. The A input must be an interrupt pin. For single encoders registered with switches see the helper method
+ * below.
  * @see setupRotaryEncoderWithInterrupt
  */  
 class HardwareRotaryEncoder : public RotaryEncoder {
@@ -307,12 +308,40 @@ private:
 	EncoderType encoderType;
 	
 public:
+    /**
+     * Create an instance of a hardware rotary encoder specifying the A and B pin, the acceleration parameters and encoder type.
+     * It is your responsibility to register this encoder with switches using setEncoder(n, encoderPtr) if you use the constructor.
+     * @param pinA the A pin of the encoder
+     * @param pinB the B pin of the encoder
+     * @param callback the function callback to be called when triggered
+     * @param accelerationMode the amount of acceleration to use
+     */
 	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType = FULL_CYCLE);
+
+    /**
+     * Create an instance of a hardware rotary encoder specifiying the A and B pin, the acceleration parameters and encoder type.
+     * It is your responsibility to register this encoder with switches using setEncoder(n, encoderPtr) if you use the constructor.
+     * This constructor takes an OO listener instead of a callback function, the listener implements EncoderListener.
+     * @param pinA the A pin of the encoder
+     * @param pinB the B pin of the encoder
+     * @param listener the OO listener extending from EncoderListener
+     * @param accelerationMode the amount of acceleration to use
+     */
+	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType = FULL_CYCLE);
 	void encoderChanged() override;
+    /**
+     * Allows for changes in the acceleration mode at runtime
+     * @param mode the new acceleration mode
+     */
     void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
-	void setEncoderType(EncoderType encoderType) { encoderType =  encoderType; }
+    /**
+     * Allows for changes in encoder type at runtime
+     * @param encoderType change in encoder type
+     */
+    void setEncoderType(EncoderType encoderType) { encoderType =  encoderType; }
 private:
-	int amountFromChange(unsigned long change);
+    void initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType);
+    int amountFromChange(unsigned long change);
 };
 
 /**
@@ -324,7 +353,25 @@ private:
     const pinid_t upPin, downPin;
 
 public:
+    /**
+     * Create an up down encoder based on two buttons, for up and down. This is a helper that wraps calls to switches
+     * and handles the up and down events. This version takes a function callback for change notification.
+     * @param pinUp the pin to use for up
+     * @param pinDown the pin to use for down
+     * @param callback the function callback when the encoder changes
+     * @param speed the speed of repeat functions on the keys
+     */
 	EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed = 20);
+
+    /**
+     * Create an up down encoder based on two buttons, for up and down. This is a helper that wraps calls to switches
+     * and handles the up and down events. This version takes an OO listener for change notification.
+     * @param pinUp the pin to use for up
+     * @param pinDown the pin to use for down
+     * @param callback the function callback when the encoder changes
+     * @param speed the speed of repeat functions on the keys
+     */
+	EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, uint8_t speed = 20);
 
     void onPressed(pinid_t pin, bool held) override;
     void onReleased(pinid_t pin, bool held) override;
@@ -591,8 +638,29 @@ extern SwitchInput switches;
  * @param pinA the first pin of the encoder, this pin must handle interrupts.
  * @param pinB the third pin of the encoder, the middle pin goes to ground.
  * @param callback the function that will receive the new state of the encoder on changes.
+ * @param accelerationMode the mode of acceleration to use
+ * @param encoderType the type of encoder being used
  */
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
+
+/**
+ * Initialise a hardware rotary encoder on the pins passed in, when the value changes the OO listener
+ * will be invoked. This library will set pinA and pinB to INPUT_PULLUP, and debounces internally. In most
+ * cases no additional components are needed. This function automatically adds the encoder to the global
+ * switches instance.
+ *
+ * Essentially this does:
+ *
+ * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
+ *	    switches.setEncoder(0, enc);
+ *
+ * @param pinA the first pin of the encoder, this pin must handle interrupts.
+ * @param pinB the third pin of the encoder, the middle pin goes to ground.
+ * @param listener the function that will receive the new state of the encoder on changes.
+ * @param accelerationMode the mode of acceleration to use
+ * @param encoderType the type of encoder being used
+ */
+void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
 
 /**
  * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
@@ -608,5 +676,22 @@ void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallback
  * @param callback the function that will receive the new state on change.
  */
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, int speed = 20);
+
+/**
+ * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
+ * This function automatically adds the encoder to the global switches instance. This version takes an OO
+ * listener implementing EncoderListener.
+ *
+ * Essentially this does:
+ *
+ * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, listener);
+ *	    switches.setEncoder(0, enc);
+ *
+ * @param pinUp the up button
+ * @param pinDown the down button
+ * @param listener the OO listener that will receive the new state on change.
+ */
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, int speed = 20);
+
 
 #endif
