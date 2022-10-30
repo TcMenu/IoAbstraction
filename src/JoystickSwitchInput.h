@@ -32,6 +32,8 @@ private:
     float tolerance = 0.03F;
     float midPoint = 0.5F;
     float accelerationFactor = 1000.0F;
+    float initialDelay = 750.0F;
+    float delayAcceleration = 3.0F;
 public:
     /** 
      * Constructor that initialises the class for use, prefer to use the set up method setupAnalogJoystickEncoder
@@ -57,6 +59,17 @@ public:
         this->analogPin = analogPin;
         this->analogDevice = analogDevice;
         analogDevice->initPin(analogPin, DIR_IN);
+    }
+
+    /**
+     * Provide alternative parameters for the initial repeat delay and the amount by which it divides downward toward
+     * the maximum speed for the amount the joystick is moved.
+     * @param initialDelayPeriod
+     * @param decreaseDivisor
+     */
+    void setAccelerationParameters(float initialDelayPeriod, float decreaseDivisor) {
+        this->initialDelay = initialDelayPeriod;
+        this->delayAcceleration = decreaseDivisor;
     }
 
     /**
@@ -97,14 +110,16 @@ public:
             increment(dir);
         }
         else {
-            accelerationFactor = 750.0F;
+            accelerationFactor = initialDelay;
             taskManager.scheduleOnce(250, this);
             return;
         }
 
         auto delay = nextInterval(abs(readVal * MAX_JOYSTICK_ACCEL)) + accelerationFactor;
         taskManager.scheduleOnce(delay, this);
-        accelerationFactor /= 3.0;
+        if(accelerationFactor > 1.0F) {
+            accelerationFactor /= delayAcceleration;
+        }
     }
 };
 

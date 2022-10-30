@@ -98,7 +98,7 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 			}
 		}
 		else if (getState() == BUTTON_HELD && repeatInterval != NO_REPEAT && notify.callback != nullptr) {
-			counter = counter + (acceleration >> 2) + 1;
+			counter = counter + (acceleration >> SWITCHES_ACCELERATION_DIVISOR) + 1;
 			if (counter > repeatInterval) {
 				acceleration = min(255, acceleration + 1);
 				trigger(true);

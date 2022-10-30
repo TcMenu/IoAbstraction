@@ -6,6 +6,15 @@
 #ifndef TCLIBRARYDEV_PLATFORMDETERMINATION_H
 #define TCLIBRARYDEV_PLATFORMDETERMINATION_H
 
+// You can add your own local definitions header file here, this enables you to adjust build flags in environments
+// where there is no easy way to do so with compiler options. Just create an include file "io_local_definitions.h"
+// at the top level of your project source tree.
+#if defined __has_include
+#  if __has_include ("zio_local_definitions.h")
+#    include "zio_local_definitions.h"
+#  endif
+#endif // has include "io_local_definitions"
+
 // when not on mbed, we need to load Arduino.h to get the right defines for some boards.
 #ifndef __MBED__
 #include <Arduino.h>

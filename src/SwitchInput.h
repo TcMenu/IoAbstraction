@@ -19,9 +19,18 @@
 #include <TaskManager.h>
 #include <SimpleCollections.h>
 
+// START user adjustable section
+
+// The threshold for an item becoming held down or for it to repeat, this is about half a second by default
 #ifndef HOLD_THRESHOLD
 #define HOLD_THRESHOLD 20
-#endif
+#endif //HOLD_THRESHOLD
+
+// The rate a which switches will speed up under acceleration, 0 = extremely fast (untested!), 1 = fast, 2 = regular, 3 = slower
+#ifndef SWITCHES_ACCELERATION_DIVISOR
+#define SWITCHES_ACCELERATION_DIVISOR 2
+#endif //SWITCHES_ACCELERATION_DIVISOR
+
 /*
  * If you want more buttons, the library will reallocate as needed, however this is not efficient and in production
  * probably better to set this value to about the number of switches needed.  Each button adds about 10 bytes of RAM,
@@ -31,7 +40,6 @@
 #define MAX_KEYS DEFAULT_LIST_SIZE
 #endif // MAX_KEYS defined
 
-// START user adjustable section
 
 /**
  * If you want to adjust the maximum number of rotary encoders from the default of 4 just either

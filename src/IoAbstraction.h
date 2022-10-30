@@ -19,8 +19,13 @@
 
 #define SHIFT_REGISTER_OUTPUT_CUTOVER 32
 
-#ifndef IOA_USE_MBED
+#ifdef IOA_USE_MBED
+#include <mbed.h>
+enum ShiftBitOrder { MSBFIRST, LSBFIRST };
+uint8_t shiftIn(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder);
+#else
 #include <Arduino.h>
+#endif
 
 /**
  * Notice that the output range has been moved from 24 to 32 onwards , this is to allow support for
@@ -178,11 +183,6 @@ IoAbstractionRef outputOnlyFromShiftRegister(uint8_t writeClockPin, uint8_t writ
  * @return a shift register abstraction as an IoAbstraction ref.
  */
 IoAbstractionRef inputFrom74HC165ShiftRegister(pinid_t readClkPin, pinid_t dataPin, pinid_t latchPin, pinid_t numOfDevices = 1);
-
-#else
-#include <mbed.h>
-
-#endif // not IOA_USE_MBED
 
 // this defines the number of IOExpanders can be put into a multi IO expander.
 #ifndef MAX_ALLOWABLE_DELEGATES

@@ -8,8 +8,50 @@
 
 #define LATCH_TIME 5
 
-#ifndef IOA_USE_MBED
+#ifdef IOA_USE_MBED
+#include <mbed.h>
+#define digitalWriteS(x, y) ioDeviceDigitalWriteS(internalDigitalIo(), x, y)
+#define digitalReadS(x) ioDeviceDigitalReadS(internalDigitalIo(), x)
+#define pinModeS(x, y) ioDevicePinMode(internalDigitalIo(), x, y)
+
+uint8_t shiftIn(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder) {
+    uint8_t value = 0;
+    uint8_t i;
+
+    for(i = 0; i < 8; ++i) {
+        digitalWriteS(clockPin, HIGH);
+        if(bitOrder == LSBFIRST) {
+            value |= digitalReadS(dataPin) << i;
+        } else {
+            value |= digitalReadS(dataPin) << (7 - i);
+        }
+        digitalWriteS(clockPin, HIGH);
+        digitalWriteS(clockPin, LOW);
+    }
+    return value;
+}
+
+void shiftOut(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder, uint8_t val) {
+    uint8_t i;
+
+    for(i = 0; i < 8; i++) {
+        if(bitOrder == LSBFIRST) {
+            digitalWriteS(dataPin, !!(val & (1 << i)));
+        } else {
+            digitalWriteS(dataPin, !!(val & (1 << (7 - i))));
+        }
+
+        digitalWriteS(clockPin, HIGH);
+        digitalWriteS(clockPin, LOW);
+    }
+}
+#else
 #include <Arduino.h>
+#define digitalWriteS(x, y) digitalWrite(x, y)
+#define digitalReadS(x) digitalRead(x)
+#define pinModeS(x, y) pinMode(x, y)
+#endif
+
 
 ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin, pinid_t writeClockPin, pinid_t writeDataPin,
                                                        pinid_t writeLatchPin, uint8_t noReadDevices, uint8_t noWriteDevices) {
@@ -27,17 +69,17 @@ ShiftRegisterIoAbstraction::ShiftRegisterIoAbstraction(pinid_t readClockPin, pin
 	this->numOfDevicesWrite = noWriteDevices; 
 
 	if (writeDataPin != 0xff) {
-		pinMode(writeLatchPin, OUTPUT);
-		pinMode(writeDataPin, OUTPUT);
-		pinMode(writeClockPin, OUTPUT);
-		digitalWrite(writeLatchPin, LOW);
+		pinModeS(writeLatchPin, OUTPUT);
+		pinModeS(writeDataPin, OUTPUT);
+		pinModeS(writeClockPin, OUTPUT);
+		digitalWriteS(writeLatchPin, LOW);
 	}
 
 	if (readLatchPin != 0xff) {
-		pinMode(readLatchPin, OUTPUT);
-		pinMode(readDataPin, INPUT);
-		pinMode(readClockPin, OUTPUT);
-		digitalWrite(readLatchPin, HIGH);
+		pinModeS(readLatchPin, OUTPUT);
+		pinModeS(readDataPin, INPUT);
+		pinModeS(readClockPin, OUTPUT);
+		digitalWriteS(readLatchPin, HIGH);
 	}
 }
 
@@ -98,9 +140,9 @@ uint8_t ShiftRegisterIoAbstraction::readValue(pinid_t pin) {
 bool ShiftRegisterIoAbstraction::runLoop() {
 	uint8_t i;
 	if (readDataPin != 0xff) {
-		digitalWrite(readLatchPin, LOW);
-		delayMicroseconds(LATCH_TIME);
-		digitalWrite(readLatchPin, HIGH);
+		digitalWriteS(readLatchPin, LOW);
+		taskManager.yieldForMicros(LATCH_TIME);
+		digitalWriteS(readLatchPin, HIGH);
 
 		lastRead = 0;
 		for(i = 0; i < numOfDevicesRead; ++i) {
@@ -110,8 +152,8 @@ bool ShiftRegisterIoAbstraction::runLoop() {
 	}
 	
 	if (writeDataPin != 0xff && needsWrite) {
-		digitalWrite(writeLatchPin, LOW);
-		delayMicroseconds(LATCH_TIME);
+		digitalWriteS(writeLatchPin, LOW);
+		taskManager.yieldForMicros(LATCH_TIME);
 		
 		uint32_t shiftLocal = toWrite;
 		for(i = 0; i < numOfDevicesWrite; ++i) {
@@ -120,7 +162,7 @@ bool ShiftRegisterIoAbstraction::runLoop() {
 			shiftLocal = shiftLocal >> 8;
 		}
 		needsWrite = false;
-		digitalWrite(writeLatchPin, HIGH);
+		digitalWriteS(writeLatchPin, HIGH);
 	}
 	return true;
 }
@@ -154,10 +196,10 @@ ShiftRegisterIoAbstraction165In::ShiftRegisterIoAbstraction165In(pinid_t readClo
     this->lastRead = 0;
     this->numOfDevicesRead = numRead;
 
-    pinMode(readLatchPin, OUTPUT);
-    pinMode(readDataPin, INPUT);
-    pinMode(readClockPin, OUTPUT);
-    digitalWrite(readLatchPin, HIGH);
+    pinModeS(readLatchPin, OUTPUT);
+    pinModeS(readDataPin, INPUT);
+    pinModeS(readClockPin, OUTPUT);
+    digitalWriteS(readLatchPin, HIGH);
 }
 
 
@@ -182,9 +224,9 @@ uint8_t ShiftRegisterIoAbstraction165In::readValue(pinid_t pin) {
 
 bool ShiftRegisterIoAbstraction165In::runLoop() {
     uint8_t i;
-    digitalWrite(readLatchPin, LOW);
-    delayMicroseconds(LATCH_TIME);
-    digitalWrite(readLatchPin, HIGH);
+    digitalWriteS(readLatchPin, LOW);
+    taskManager.yieldForMicros(LATCH_TIME);
+    digitalWriteS(readLatchPin, HIGH);
 
     lastRead = 0;
     for(i = 0; i < numOfDevicesRead; ++i) {
@@ -199,9 +241,9 @@ uint8_t ShiftRegisterIoAbstraction165In::shiftInFor165() const {
     uint8_t value = 0;
 
     for (int8_t i = 7; i >= 0; --i) {
-        digitalWrite(readClockPin, LOW);
-        value |= (digitalRead(readDataPin) << i);
-        digitalWrite(readClockPin, HIGH);
+        digitalWriteS(readClockPin, LOW);
+        value |= (digitalReadS(readDataPin) << i);
+        digitalWriteS(readClockPin, HIGH);
     }
     return value;
 }
@@ -209,10 +251,6 @@ uint8_t ShiftRegisterIoAbstraction165In::shiftInFor165() const {
 IoAbstractionRef inputFrom74HC165ShiftRegister(pinid_t readClkPin, pinid_t dataPin, pinid_t latchPin, pinid_t numOfDevices) {
     return new ShiftRegisterIoAbstraction165In(readClkPin, dataPin, latchPin, numOfDevices);
 }
-
-#else // using mbed - IOA_USE_MBED
-#include <mbed.h>
-#endif
 
 MultiIoAbstraction::MultiIoAbstraction(pinid_t arduinoPinsNeeded) {
 	limits[0] = arduinoPinsNeeded;
