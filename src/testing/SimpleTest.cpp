@@ -2,6 +2,7 @@
 #include "../IoAbstraction.h"
 #include "SimpleTest.h"
 #include "../IoLogging.h"
+#include "TextUtilities.h"
 
 namespace SimpleTest {
 
@@ -112,6 +113,17 @@ namespace STestInternal {
         }
     }
 
+    void assertFloatInternal(const char* file, int line, float x, float y, float allowable) {
+        auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
+        if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
+
+        if(tcFltAbs(x - y) > allowable) {
+            current->setFailed(file, line, "flt!=");
+            serlogF4(SER_DEBUG, "Assertion failure at ", file, ", line", line );
+            serlogF4(SER_DEBUG, "Detail: ", x, "==", y);
+        }
+    }
+
     void internalEquality(const char* file, int line, bool eq, uint32_t x, uint32_t y, const char* how) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
@@ -119,7 +131,7 @@ namespace STestInternal {
         if(!eq) {
             current->setFailed(file, line, how);
             serlogF4(SER_DEBUG, "Assertion failure at ", file, ", line", line);
-            serlogF4(SER_DEBUG, "Details: ", x, how, y);
+            serlogF4(SER_DEBUG, "Details: ", y, how, x);
         }
     }
 
@@ -137,6 +149,7 @@ namespace STestInternal {
     void failInternal(const char* file, int line, const char* reason) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
+        current->setFailed(file, line, "fail()");
         serlogF4(SER_DEBUG, "Assertion failure at ", file, line, "fail() was called");
     }
 }

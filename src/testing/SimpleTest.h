@@ -112,6 +112,8 @@ namespace STestInternal {
 
     void assertBoolInternal(const char *file, int line, bool valid, const char *reason);
 
+    void assertFloatInternal(const char *file, int line, float x, float y, float allowable);
+
     inline void assertEqualityInternal(const char *file, int line, short x, short y) {
         internalEquality(file, line, x == y, x, y, "==");
     }
@@ -120,17 +122,17 @@ namespace STestInternal {
     }
 
     inline void assertEqualityInternal(const char *file, int line, int x, int y) {
-        internalEquality(file, line, x != y, x, y, "==");
+        internalEquality(file, line, x == y, x, y, "==");
     }
     inline void assertEqualityInternal(const char *file, int line, unsigned int x, unsigned int y) {
-        internalEquality(file, line, x != y, x, y, "==");
+        internalEquality(file, line, x == y, x, y, "==");
     }
 
     inline void assertEqualityInternal(const char *file, int line, long x, long y) {
-        internalEquality(file, line, x != y, x, y, "==");
+        internalEquality(file, line, x == y, x, y, "==");
     }
     inline void assertEqualityInternal(const char *file, int line, unsigned long x, unsigned long y) {
-        internalEquality(file, line, x != y, x, y, "==");
+        internalEquality(file, line, x == y, x, y, "==");
     }
 
     inline void assertNonEqualityInternal(const char *file, int line, short x, short y) {
@@ -156,41 +158,41 @@ namespace STestInternal {
 
 
     inline void assertLessInternal(const char *file, int line, short x, short y) {
-        internalEquality(file, line, x < y, x, y, "<");
+        internalEquality(file, line, y < x, x, y, "<");
     }
     inline void assertLessInternal(const char *file, int line, unsigned short x, unsigned short y) {
-        internalEquality(file, line, x < y, x, y, "<");
+        internalEquality(file, line, y < x, x, y, "<");
     }
     inline void assertLessInternal(const char *file, int line, int x, int y) {
-        internalEquality(file, line, x < y, x, y, "<");
+        internalEquality(file, line, y < x, x, y, "<");
     }
     inline void assertLessInternal(const char *file, int line, unsigned int x, unsigned int y) {
-        internalEquality(file, line, x < y, x, y, "<");
+        internalEquality(file, line, y < x, x, y, "<");
     }
     inline void assertLessInternal(const char *file, int line, long x, long y) {
-        internalEquality(file, line, x < y, x, y, "<");
+        internalEquality(file, line, y < x, x, y, "<");
     }
     inline void assertLessInternal(const char *file, int line, unsigned long x, unsigned long y) {
-        internalEquality(file, line, x < y, x, y, "<");
+        internalEquality(file, line, y < x, x, y, "<");
     }
 
     inline void assertMoreInternal(const char *file, int line, short x, short y) {
-        internalEquality(file, line, x < y, x, y, ">");
+        internalEquality(file, line, y > x, x, y, ">");
     }
     inline void assertMoreInternal(const char *file, int line, unsigned short x, unsigned short y) {
-        internalEquality(file, line, x < y, x, y, ">");
+        internalEquality(file, line, y > x, x, y, ">");
     }
     inline void assertMoreInternal(const char *file, int line, int x, int y) {
-        internalEquality(file, line, x < y, x, y, ">");
+        internalEquality(file, line, y > x, x, y, ">");
     }
     inline void assertMoreInternal(const char *file, int line, unsigned int x, unsigned int y) {
-        internalEquality(file, line, x < y, x, y, ">");
+        internalEquality(file, line, y > x, x, y, ">");
     }
     inline void assertMoreInternal(const char *file, int line, long x, long y) {
-        internalEquality(file, line, x < y, x, y, ">");
+        internalEquality(file, line, y > x, x, y, ">");
     }
     inline void assertMoreInternal(const char *file, int line, unsigned long x, unsigned long y) {
-        internalEquality(file, line, x < y, x, y, ">");
+        internalEquality(file, line, y > x, x, y, ">");
     }
 
 }
@@ -202,6 +204,7 @@ namespace STestInternal {
 #define assertLessThan(x, y) STestInternal::assertLessInternal(__FILE__, __LINE__, x, y)
 #define assertMoreThan(x, y) STestInternal::assertMoreInternal(__FILE__, __LINE__, x, y)
 #define assertStringEquals(x, y) STestInternal::assertStringInternal(__FILE__, __LINE__, x, y)
+#define assertFloatNear(x, y, allowable) STestInternal::assertFloatInternal(__FILE__, __LINE__, x, y, allowable)
 #define fail(x) STestInternal::failInternal(__FILE__, __LINE__, x)
 
 #define testi(name, ignored) \

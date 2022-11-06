@@ -45,11 +45,19 @@ test(testThatAssertMoreFails) {
 }
 
 test(testThatAssertEqualFails) {
-    assertMoreThan(10, 4);
+    assertEquals(10, 4);
 }
 
 test(testThatAssertNotEqualFails) {
     assertNotEquals(10, 10);
+}
+
+test(testThatFloatWithinRangeOk) {
+    assertFloatNear(100.002, 100.001, 0.01);
+}
+
+test(testThatFloatOutsideRangeFails) {
+    assertFloatNear(100.002, 10.001, 0.01);
 }
 
 test(thatFailWorks) {
@@ -62,4 +70,13 @@ testi(thatIgnoreWorks, true) {
 
 test(stringEqualityWorks) {
     assertStringEquals("hello", "hello");
+}
+
+test(hitsOnlyFirstAssertion) {
+    fail("1");
+    fail("2");
+    assertTrue(false);
+    assertEquals(10, 4);
+    assertFloatNear(10.4, 4.2, 0.01);
+    assertStringEquals("123", "432");
 }
