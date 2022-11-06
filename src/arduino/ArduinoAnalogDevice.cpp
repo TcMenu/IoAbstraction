@@ -10,11 +10,15 @@
 
 #include "ArduinoAnalogDevice.h"
 
-ArduinoAnalogDevice* ArduinoAnalogDevice::theInstance = nullptr;
+ArduinoAnalogDevice analogDeviceInstance;
 AnalogDevice* internalAnalogIo() {
-    if(ArduinoAnalogDevice::theInstance == nullptr) ArduinoAnalogDevice::theInstance = new ArduinoAnalogDevice();
-    return ArduinoAnalogDevice::theInstance;
+    return &analogDeviceInstance;
 }
+
+ArduinoAnalogDevice& internalAnalogDevice() {
+    return analogDeviceInstance;
+}
+
 
 ArduinoAnalogDevice::ArduinoAnalogDevice(uint8_t readBitResolution, uint8_t writeBitResolution) {
 #if IOA_ANALOGIN_RES > 10

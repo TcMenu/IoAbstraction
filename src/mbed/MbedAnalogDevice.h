@@ -78,8 +78,6 @@ class MBedAnalogDevice : public AnalogDevice {
 private:
     BtreeList<pinid_t, AnalogPinReference> devices;
 public:
-    static MBedAnalogDevice* theInstance;
-
     int getMaximumRange(AnalogDirection direction, pinid_t pin) override { return 0xffff; }
 
     int getBitDepth(AnalogDirection direction, pinid_t pin) override { return 16; }
@@ -96,5 +94,7 @@ public:
 
     AnalogPinReference* getAnalogGPIO(pinid_t pin) { return devices.getByKey(pin); }
 };
+
+MBedAnalogDevice& internalAnalogDevice();
 
 #endif //IOA_MBEDANALOGDEVICE_H and using mbed

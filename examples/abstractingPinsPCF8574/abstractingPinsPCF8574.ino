@@ -8,6 +8,8 @@
 //
 // There is another sketch that shows the library working with serial shift registers too.
 // See: http://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/i2c8574-example-ioAbstraction-library/
+//
+// For mbed compatibility, copy the INO file into a CPP and define COMPILE_FOR_MBED.
 
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
@@ -29,9 +31,9 @@ I2C i2c(PF_0, PF_1);
 #include <Wire.h>
 #endif
 
-// Here we create a simple expander to access a PCF8574
-IoAbstractionRef ioExpander;
-IoAbstractionRef ioBoard;
+// Here we create a simple expander to access a PCF8574, address is 0x27, interrupt pin not defined, using regular Wire.
+PCF8574IoAbstraction ioExpander(0x27, IO_PIN_NOT_DEFINED, &Wire);
+BasicIoAbstraction ioBoard = internalDigitalDevice();
 
 // remember the last state of the IO expander switch so we can log any changes later
 uint8_t lastSwitchIoExp = 0;
@@ -47,12 +49,9 @@ void setup() {
     ioaWireBegin();
 #endif
 
-	ioExpander = ioFrom8574(0x27);
-	ioBoard = internalDigitalIo();
-
 	// here we set the direction of pins on the IO expander
-	ioDevicePinMode(ioExpander, INPUT_PIN, INPUT);
-	ioDevicePinMode(ioBoard, OUTPUT_PIN, OUTPUT);
+	ioExpander.pinMode(INPUT_PIN, INPUT);
+	ioBoard.pinMode(OUTPUT_PIN, OUTPUT);
 }
 
 void loop() {
@@ -60,13 +59,13 @@ void loop() {
 	// we must always call the read loop, this allows the library to send the i2c command to the device, avoiding a call 
 	// with every adjustment. If you're only doing one read / write, use ioDeviceDigitalReadS or ioDeviceDigitalWriteS instead
 	// as they sync automatically, but less efficiently for many calls at once.
-	ioDeviceSync(ioExpander);
+	ioExpander.sync();
 
 	// here we read from the IO expander and write to serial.
-	uint8_t newSwitchIoExp = ioDeviceDigitalRead(ioExpander, INPUT_PIN);
+	uint8_t newSwitchIoExp = ioExpander.digitalRead(INPUT_PIN);
 	if (newSwitchIoExp != lastSwitchIoExp) {
 		serdebugF2("Switch 0 pressed on IO expander: ", newSwitchIoExp);
-		ioDeviceDigitalWrite(ioBoard, OUTPUT_PIN, newSwitchIoExp);
+        ioBoard.digitalWrite(OUTPUT_PIN, newSwitchIoExp);
 	}
 	lastSwitchIoExp = newSwitchIoExp;
 }

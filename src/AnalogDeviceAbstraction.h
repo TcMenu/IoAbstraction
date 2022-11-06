@@ -93,10 +93,12 @@ public:
 
 /**
  * Create an instance of the analog IO abstraction for the current hardware and cache it
- * so further calls return the same one, use this instead of creating one.
+ * so further calls return the same one, use this instead of creating one. In new code prefer to use
+ * internalAnalogDevice() instead which returns a reference to the correct type directly.
  * @return the analog device as a pointer.
  */
 AnalogDevice* internalAnalogIo();
 
+#define asAnalogRef(x) (&(x))
 
 #endif //_ANALOG_DEVICE_ABSTRACTION_H_

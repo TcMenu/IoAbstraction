@@ -38,11 +38,12 @@ uint8_t BasicIoAbstraction::readPort(pinid_t port) {
 }
 
 
-IoAbstractionRef arduinoAbstraction = NULL;
+BasicIoAbstraction arduinoAbstraction;
 IoAbstractionRef ioUsingArduino() {
-    if (arduinoAbstraction == NULL) {
-        arduinoAbstraction = new BasicIoAbstraction();
-    }
+    return &arduinoAbstraction;
+}
+
+BasicIoAbstraction& internalDigitalDevice() {
     return arduinoAbstraction;
 }
 

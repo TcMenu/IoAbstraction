@@ -50,9 +50,29 @@ protected:
     float analogThreshold;
     float lastReading;
 public:
+    /**
+     * Constructs the abstract analog event class. Providing the analog pin to read from and the mode for triggering.
+     * This constructor allows for use of a reference instead of pointer for analog device
+     * @param device the analog device as a reference
+     * @param inputPin the pin to read from
+     * @param threshold the value at which to trigger the event.
+     * @param mode_ one of the values in enum AnalogEventMode
+     * @param pollInterval_ the interval on which taskManager should check if the event needs to trigger
+     */
+    AnalogInEvent(AnalogDevice& device, pinid_t inputPin, float threshold, AnalogEventMode mode_,
+                  uint32_t pollInterval_) : BaseEvent() {
+        analogThreshold = threshold;
+        analogPin = inputPin;
+        lastReading = 0;
+        pollInterval = pollInterval_;
+        analogDevice = &device;
+        latched = false;
+        mode = mode_;
+    }
 
     /**
      * Constructs the abstract analog event class. Providing the analog pin to read from and the mode for triggering.
+     * This constructor takes a pointer to the analog device.
      * @param device the analog device
      * @param inputPin the pin to read from
      * @param threshold the value at which to trigger the event.

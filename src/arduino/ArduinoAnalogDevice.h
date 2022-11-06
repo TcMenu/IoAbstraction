@@ -56,4 +56,6 @@ public:
     void setCurrentValue(pinid_t pin, unsigned int newVal) override { analogWrite(pin, newVal); }
 };
 
+ArduinoAnalogDevice& internalAnalogDevice();
+
 #endif

@@ -8,10 +8,13 @@
 
 #if defined(IOA_USE_MBED)
 
-MBedAnalogDevice* MBedAnalogDevice::theInstance = nullptr;
+MBedAnalogDevice mbedAnalogDevice;
 AnalogDevice* internalAnalogIo() {
-    if(MBedAnalogDevice::theInstance == nullptr) MBedAnalogDevice::theInstance = new MBedAnalogDevice();
-    return MBedAnalogDevice::theInstance;
+    return &mbedAnalogDevice;
+}
+
+AnalogDevice& internalAnalogDevice() {
+    return mbedAnalogDevice;
 }
 
 void MBedAnalogDevice::initPin(pinid_t pin, AnalogDirection direction) {

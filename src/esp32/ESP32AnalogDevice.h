@@ -68,8 +68,6 @@ private:
     BtreeList<pinid_t,EspAnalogOutputMode> gpioToPwmKey;
     BtreeList<pinid_t,EspAnalogInputMode> gpioToInputKey;
 public:
-    static ESP32AnalogDevice* theInstance;
-
     /**
 	 * Initialise the ESP32 device with a given read and write bit resolution, on AVR and
 	 * On ESP32 it is 12 bit input, 8 output.
@@ -120,5 +118,7 @@ public:
 
 // for older code, mimic the name as ArduinoAnalogDevice so that code still compiles
 typedef ESP32AnalogDevice ArduinoAnalogDevice;
+
+ESP32AnalogDevice& internalAnalogDevice();
 
 #endif //IOA_ESP32ANALOGDEVICE_H

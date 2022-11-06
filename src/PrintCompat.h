@@ -6,6 +6,8 @@
 #define IOA_PRINT_COMPAT_H
 
 #include <cstdlib>
+#include <TextUtilities.h>
+#include <inttypes.h>
 
 /**
  * @file PrintCompat.h
@@ -113,7 +115,6 @@ public:
      */
     void print(unsigned int val, int radix = DEC) {
         char sz[33];
-        // TODO, bring over tcUtil into IoAbstraction for better support
         itoa(int(val), sz, radix);
         write(sz);
     }
@@ -156,7 +157,6 @@ public:
      */
     void print(unsigned long val, int radix = DEC) {
         char sz[33];
-        // TODO, bring over tcUtil into IoAbstraction for better support
         itoa(int(val), sz, radix);
         write(sz);
     }
@@ -178,18 +178,9 @@ public:
      */
     void print(double dbl, int dp = 3) {
 
-        // TODO replace with tcUtil dpToDivisor method when tcUtil is put into IoAbstraction.
-        double div = (dp < 2) ? 10 : (dp == 2) ? 100 : (dp == 3) ? 1000 : (dp==4) ? 10000 : (dp==5) ? 100000 : 1000000;
-
-        char sz[20];
-        if(dbl < 0) write('-');
-        int whole = int(dbl);
-        int fraction = int((dbl - double(whole)) * div);
-        itoa((int)abs(dbl), sz, 10);
-        write(sz);
-        write('.');
-        itoa((int)abs(fraction), sz, 10);
-        write(sz);
+        char sz[32];
+        sz[0]=0;
+        fastftoa(sz, (float)dbl, dp, sizeof sz);
     }
 
     /**

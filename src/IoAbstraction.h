@@ -27,6 +27,16 @@ uint8_t shiftIn(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder);
 #include <Arduino.h>
 #endif
 
+struct ShiftRegConfig {
+    pinid_t clock;
+    pinid_t data;
+    pinid_t latch;
+    uint8_t numDevices;
+
+    ShiftRegConfig(pinid_t clock, pinid_t data, pinid_t latch, uint8_t numDevices) : clock(clock), data(data), latch(latch), numDevices(numDevices) {}
+    ShiftRegConfig() : clock(IO_PIN_NOT_DEFINED), data(IO_PIN_NOT_DEFINED), latch(IO_PIN_NOT_DEFINED), numDevices(0) {}
+};
+
 /**
  * Notice that the output range has been moved from 24 to 32 onwards , this is to allow support for
  * up to 4 devices chained together, this is a breaking change from the 1.0.x versions.
@@ -50,6 +60,7 @@ private:
 	pinid_t writeDataPin;
 	pinid_t writeLatchPin;
 	pinid_t writeClockPin;
+    bool needsInit;
 public:
 	/** 
 	 * Normally use the shift register helper functions to create an instance.
@@ -59,7 +70,10 @@ public:
 	 */
 	ShiftRegisterIoAbstraction(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin,
 	                           pinid_t writeClockPin, pinid_t writeDataPin, pinid_t writeLatchPin, uint8_t numRead, uint8_t numWrite);
+    ShiftRegisterIoAbstraction(const ShiftRegConfig& readConfig, const ShiftRegConfig& writeConfig);
 	~ShiftRegisterIoAbstraction() override { }
+    void initDevice();
+
 	void pinDirection(pinid_t pin, uint8_t mode) override;
 	void writeValue(pinid_t pin, uint8_t value) override;
 	uint8_t readValue(pinid_t pin) override;
@@ -87,6 +101,7 @@ private:
     pinid_t readDataPin;
     pinid_t readLatchPin;
     pinid_t readClockPin;
+    bool needsInit;
 
 public:
     /**
@@ -96,7 +111,9 @@ public:
      * @see outputOnlyFromShiftRegister
      */
     ShiftRegisterIoAbstraction165In(pinid_t readClockPin, pinid_t readDataPin, pinid_t readLatchPin, pinid_t numRead);
+    ShiftRegisterIoAbstraction165In(ShiftRegConfig config);
     ~ShiftRegisterIoAbstraction165In() override = default;
+    void initDevice();
 
     /** Input only abstraction, does nothing because only input is supported */
     void pinDirection(pinid_t pin, uint8_t mode) override { }
@@ -211,6 +228,7 @@ public:
 	explicit MultiIoAbstraction(pinid_t arduinoPinsNeeded = 100);
 	~MultiIoAbstraction() override;
 	void addIoExpander(IoAbstractionRef expander, pinid_t numOfPinsNeeded);
+	void addIoDevice(BasicIoAbstraction& expander, pinid_t pinsNeeded) { addIoExpander(&expander, pinsNeeded);}
 
 	/** 
 	 * delegates the pin direction call to whichever abstraction owns the pin, and that
@@ -265,7 +283,6 @@ public:
 private:
 	uint8_t doExpanderOp(pinid_t pin, uint8_t aVal, ExpanderOpFn fn);
 };
-
 
 /**
  * A reference specifically to a MultiIoAbstraction that can be passed to any of the ioDevice calls, but can also have more

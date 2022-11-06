@@ -59,14 +59,40 @@ private:
     AnalogDevice* device;
 
 public:
+    /**
+     * Create a dfRobot device that can handle switches using the dfRobot analog input configuration. Takes a range
+     * of values for the joystick and button voltage ranges. There are two standard ranges defined that work well for
+     * these shields on avr boards, other arrangements may vary, these are dfRobotAvrRanges and dfRobotV1AvrRanges.
+     * @param ranges the voltage ranges as per description.
+     * @param pin the analog pin on which the buttons are attached.
+     */
+    DfRobotInputAbstraction(const DfRobotAnalogRanges& ranges, pinid_t pin = A0) {
+        analogRanges = &ranges;
+        analogPin = pin;
+        device = internalAnalogIo();
+        initAbstraction();
+    }
+
+    void initAbstraction() {
+        device->initPin(analogPin, DIR_IN);
+        lastReading = device->getCurrentValue(analogPin);
+        readCache = mapAnalogToPin(lastReading);
+    }
+
+    /**
+     * Create a dfRobot device that can handle switches using the dfRobot analog input configuration. Takes a range
+     * of values for the joystick and button voltage ranges. There are two standard ranges defined that work well for
+     * these shields on avr boards, other arrangements may vary, these are dfRobotAvrRanges and dfRobotV1AvrRanges.
+     * This is for compatibility and advanced cases, prefer the two arg constructor when possible.
+     * @param ranges the voltage ranges as per description.
+     * @param pin the analog pin on which the buttons are attached.
+     * @param device pointer to an analog device.
+     */
     DfRobotInputAbstraction(const DfRobotAnalogRanges* ranges, pinid_t pin, AnalogDevice* device) {
         analogRanges = ranges;
         analogPin = pin;
         this->device = device;
-
-        device->initPin(analogPin, DIR_IN);
-        lastReading = device->getCurrentValue(analogPin);
-        readCache = mapAnalogToPin(lastReading);
+        initAbstraction();
     }
 
     uint8_t readValue(pinid_t pin) override {
@@ -128,11 +154,25 @@ const PROGMEM DfRobotAnalogRanges dfRobotAvrRanges { 0.0488F, 0.2441F, 0.4394F, 
 const PROGMEM DfRobotAnalogRanges dfRobotV1AvrRanges { 0.0488F, 0.1904F, 0.3710F, 0.5419F, 0.7714F};
 
 
+/**
+ * @deprecated Prefer to use the constructor direct in new code
+ * @param pin the analog pin
+ * @param device the analog device, defaulted
+ * @return the dfRobot device
+ * @see DfRobotInputAbstraction
+ */
 inline IoAbstractionRef inputFromDfRobotShield(uint8_t pin = A0, AnalogDevice* device = nullptr) {
     device = internalAnalogIo();
     return new DfRobotInputAbstraction(&dfRobotAvrRanges, pin, device);
 }
 
+/**
+ * @deprecated Prefer to use the constructor direct in new code
+ * @param pin the analog pin
+ * @param device the analog device, defaulted
+ * @return the dfRobot device
+ * @see DfRobotInputAbstraction
+ */
 inline IoAbstractionRef inputFromDfRobotShieldV1(uint8_t pin = A0, AnalogDevice* device = nullptr) {
     device = internalAnalogIo();
     return new DfRobotInputAbstraction(&dfRobotV1AvrRanges, pin, device);

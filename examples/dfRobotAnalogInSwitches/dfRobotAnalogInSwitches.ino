@@ -16,7 +16,8 @@
 #include <TaskManagerIO.h>
 
 // As per the above wiki this uses the default settings for analog ranges.
-IoAbstractionRef dfRobotKeys = inputFromDfRobotShield();
+DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges);
+//DfRobotInputAbstraction dfRobotKeys(dfRobotV1AvrRanges, );
 
 // for V1.0 of the shield uncomment the below definition and comment out the above defintion
 // this has the other settings for analog ranges.

@@ -85,30 +85,27 @@ public:
 	bool runLoop() override;
 };
 
-//
-// MCP23017 support.
-//
+class Standard16BitDevice : public BasicIoAbstraction {
+protected:
+    uint16_t lastRead;
+    uint16_t toWrite;
+    uint8_t  flags;
+    virtual void initDevice()=0;
+public:
+    Standard16BitDevice();
+    ~Standard16BitDevice() = default;
 
-// definitions of register addresses.
-
-#define IODIR_ADDR       0x00
-#define IPOL_ADDR        0x02
-#define GPINTENA_ADDR    0x04
-#define DEFVAL_ADDR      0x06
-#define INTCON_ADDR      0x08
-#define IOCON_ADDR       0x0a
-#define GPPU_ADDR        0x0c
-#define INTF_ADDR        0x0e
-#define INTCAP_ADDR      0x10
-#define GPIO_ADDR        0x12
-#define OUTLAT_ADDR      0x14
-
-// definitions for the IO control register
-
-#define IOCON_HAEN_BIT  3
-#define IOCON_SEQOP_BIT  5
-#define IOCON_MIRROR_BIT  6
-#define IOCON_BANK_BIT  7
+    void writeValue(pinid_t pin, uint8_t value) override;
+    uint8_t readValue(pinid_t pin) override;
+    void writePort(pinid_t pin, uint8_t port) override;
+    uint8_t readPort(pinid_t pin) override;
+    void clearChangeFlags();
+    void setReadPort(int port);
+    bool isReadPortSet(int port) const;
+    bool isWritePortSet(int port) const;
+    bool isInitNeeded() const;
+    void markInitialised();
+};
 
 /**
  * The interrupt mode in which the 23x17 device is going to operate. See the device datasheet for more information.
@@ -118,27 +115,18 @@ enum Mcp23xInterruptMode {
 	NOT_ENABLED = 0, ACTIVE_HIGH_OPEN = 0b110, ACTIVE_LOW_OPEN = 0b100, ACTIVE_HIGH = 0b010, ACTIVE_LOW = 0b000 
 };
 
-#define CHANGE_PORTA_BIT 0
-#define CHANGE_PORTB_BIT 1
-#define READER_PORTA_BIT 2
-#define READER_PORTB_BIT 3
-
 /**
  * This abstaction supports most of the available features on the 23x17 range of IOExpanders. It supports most
  * of the GPIO functions and nearly all of the interrupt modes, and is therefore very close to Arduino pins in
  * terms of functionality.
  */
-class MCP23017IoAbstraction : public BasicIoAbstraction {
+class MCP23017IoAbstraction : public Standard16BitDevice {
 private:
 	WireType wireImpl;
 	uint8_t  address;
 	pinid_t  intPinA;
 	pinid_t  intPinB;
 	uint8_t  intMode;
-	uint8_t  portFlags;
-	bool     needsInit;
-	uint16_t lastRead;
-	uint16_t toWrite;
 public:
 	/**
 	 * Normally, it's easier to use the helper functions to create an instance of this class rather than create yourself.
@@ -146,7 +134,7 @@ public:
 	 * @see iofrom23017IntPerPort
 	 */
 	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  pinid_t intPinA, pinid_t intPinB, WireType wireImpl);
-	virtual ~MCP23017IoAbstraction() {;}
+	~MCP23017IoAbstraction() override = default;
 
 	/**
 	 * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT_PULLUP, INPUT and OUTPUT.
@@ -154,9 +142,6 @@ public:
 	 * @param mode the mode such as INPUT, INPUT_PULLUP, OUTPUT
 	 */
 	void pinDirection(pinid_t pin, uint8_t mode) override;
-
-	void writeValue(pinid_t pin, uint8_t value) override;
-	uint8_t readValue(pinid_t pin) override;
 
 	/**
 	 * Attaches an interrupt to the device and links it to the arduino pin. On the MCP23017 nearly all interrupt modes
@@ -169,18 +154,6 @@ public:
 	 */
 	bool runLoop() override;
 	
-	/**
-	 * Writes a complete 8 bit port value, that is updated to the device each sync
-	 * Any pin between 0-7 refers to portA, otherwise portB.
-	 */
-	void writePort(pinid_t pin, uint8_t port) override;
-
-	/**
-	 * Reads the complete 8 bit byte from the last cached state, that is updated each sync.
-	 * Any pin between 0-7 refers to portA, otherwise portB.
-	 */ 
-	uint8_t readPort(pinid_t pin) override;
-
     /**
      * This MCP23017 only function inverts the meaning of a given input pin. The pins for this
      * are 0..15 and true will invert the meaning, whereas false will leave as is. regardless if
@@ -194,12 +167,58 @@ public:
     void setInvertInputPin(pinid_t pin, bool shouldInvert);
 
 private:
-	void toggleBitInRegister(uint8_t regAddr, uint8_t theBit, bool value);
-	void initDevice();
-	bool writeToDevice(uint8_t reg, uint16_t command);
-	uint16_t readFromDevice(uint8_t reg);
-	bool writeToDevice8(uint8_t reg, uint8_t command);
-	uint8_t readFromDevice8(uint8_t reg);
+	void initDevice() override;
+};
+
+class AW9523IoAbstraction : public Standard16BitDevice {
+private:
+    WireType wireImpl;
+    uint8_t i2cAddress;
+    pinid_t interruptPin;
+public:
+    AW9523IoAbstraction(uint8_t addr, pinid_t intPin, WireType wireImpl);
+    ~AW9523IoAbstraction() override = default;
+
+    /**
+ * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT_PULLUP, INPUT and OUTPUT.
+ * @param pin the pin to set direction for on this device
+ * @param mode the mode such as INPUT, INPUT_PULLUP, OUTPUT
+ */
+    void pinDirection(pinid_t pin, uint8_t mode) override;
+
+    /**
+     * Attaches an interrupt to the device and links it to the arduino pin. On the MCP23017 nearly all interrupt modes
+     * are supported, including CHANGE, RISING, FALLING and are selective both per port and by pin.
+     */
+    void attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) override;
+
+    /**
+     * updates settings on the board after changes
+     */
+    bool runLoop() override;
+
+    /**
+     * Enable or disable the LED controller mode of the pin, the power parameter is a value between 0 and 255 that
+     * represents the dimming level for that pin.
+     * @param pin the pin to control
+     * @param pwr the current to provide, based on the global control setting, default 0..37mA.
+     */
+    void setPinLedCurrent(pinid_t pin, uint8_t pwr);
+
+    /**
+     * You can change the global control register using this function, setting P0 either as push pull or open drain,
+     * you can also change the max-current range setting for the chip. This is as per datasheet.
+     * @param pushPullP0 true - enable push pull, false - open drain
+     * @param maxCurrentMode - 0=full current, 1=0.75 current, 2=0.5 current, 3=0.25 current.
+     */
+    void writeGlobalControl(bool pushPullP0, uint8_t maxCurrentMode = 0x0);
+
+    /**
+     * Perform a software reset of the device.
+     */
+    void softwareReset();
+private:
+    void initDevice();
 };
 
 // to remain compatible with old code

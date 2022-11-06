@@ -15,7 +15,8 @@
 #include <TaskManagerIO.h>
 
 // As per the above wiki this uses the default settings for analog ranges.
-IoAbstractionRef dfRobotKeys = inputFromDfRobotShield();
+DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges);
+//DfRobotInputAbstraction dfRobotKeys(dfRobotV1AvrRanges, );
 
 // Liquid crystal has an empty constructor for DfRobot.
 LiquidCrystal lcd;
@@ -81,7 +82,7 @@ void setup() {
     lcd.print("Rotary encoder:");
 
     // set up switches to use the DfRobot input facilities
-    switches.init(dfRobotKeys, SWITCHES_POLL_EVERYTHING, false);
+    switches.init(asIoRef(dfRobotKeys), SWITCHES_POLL_EVERYTHING, false);
 
     // we setup a rotary encoder on the up and down buttons
     setupUpDownButtonEncoder(DF_KEY_UP, DF_KEY_DOWN, [](int reading) {
