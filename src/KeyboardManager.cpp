@@ -37,25 +37,24 @@ void MatrixKeyboardManager::initialise(IoAbstractionRef ref, KeyboardLayout* lay
     this->interruptMode = interruptMode_;
 
     for(int i=0; i<layout->numColumns(); i++) {
-        ioDevicePinMode(ioRef, layout->getColPin(i), OUTPUT);
-        ioDeviceDigitalWrite(ioRef, layout->getColPin(i), LOW);
+        ioRef->pinMode(layout->getColPin(i), OUTPUT);
+        ioRef->digitalWrite(layout->getColPin(i), LOW);
     }
     for(int i=0; i<layout->numRows(); i++) {
-        ioDevicePinMode(ioRef, layout->getRowPin(i), INPUT_PULLUP);
+        ioRef->pinMode(layout->getRowPin(i), INPUT_PULLUP);
         if(interruptMode && INSTANCE) {
             ioRef->attachInterrupt(layout->getRowPin(i), rawKeyboardInterrupt, CHANGE);
         }
     }
 
-    ioDeviceSync(ioRef);
-
+    ioRef->sync();
     currentKey = 0;
     taskManager.registerEvent(this);
 }
 
 void MatrixKeyboardManager::setToOutput(int col) {
     for(int i=0; i<layout->numColumns(); i++) {
-        ioDeviceDigitalWrite(ioRef, layout->getColPin(i), col != i);
+        ioRef->digitalWrite(layout->getColPin(i), col != i);
     }
 }
 
@@ -80,12 +79,12 @@ void MatrixKeyboardManager::exec() {
     // then we read back the right state
     for(int c=0;c<layout->numColumns();c++) {
         setToOutput(c);
-        ioDeviceSync(ioRef); // first we set the right column low.
+        ioRef->sync(); // first we set the right column low.
         taskManager.yieldForMicros(500); // let things settle while other tasks run.
-        ioDeviceSync(ioRef); // then we read the latest row states back
+        ioRef->sync(); // then we read the latest row states back
 
         for(int r=0; r<layout->numRows(); r++) {
-            if(!ioDeviceDigitalRead(ioRef, layout->getRowPin(r))) {
+            if(!ioRef->digitalRead(layout->getRowPin(r))) {
                 pressThisTime = layout->keyFor(r, c);
                 serlogF4(SER_IOA_DEBUG, "Pressed: ", r, c, (int)pressThisTime);
             }
@@ -137,9 +136,9 @@ void MatrixKeyboardManager::enableAllOutputsForInterrupt() {
         // this effectively means that each column pin is low and will pull down the input line. We don't need to
         // know what is pressed, just that something was pressed.
         for(int i=0; i < layout->numColumns(); i++) {
-            ioDeviceDigitalWrite(ioRef, layout->getColPin(i), 0);
+            ioRef->digitalWrite(layout->getColPin(i), 0);
         }
-        ioDeviceSync(ioRef);
+        ioRef->sync();
     }
 }
 

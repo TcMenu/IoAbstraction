@@ -225,11 +225,11 @@ namespace iotouch {
             auto* device = internalDigitalIo();
             // first we calculate everything in the X dimension.
             analogDevice->initPin(ypPinAdc, DIR_IN);
-            ioDevicePinMode(device, xnPinAdc, OUTPUT);
-            ioDevicePinMode(device, ynPin, INPUT);
-            ioDevicePinMode(device, xpPin, OUTPUT);
-            ioDeviceDigitalWrite(device, xpPin, HIGH);
-            ioDeviceDigitalWriteS(device, xnPinAdc, LOW);
+            device->pinMode(xnPinAdc, OUTPUT);
+            device->pinMode(ynPin, INPUT);
+            device->pinMode(xpPin, OUTPUT);
+            device->digitalWrite(xpPin, HIGH);
+            device->digitalWriteS(xnPinAdc, LOW);
 
             taskManager.yieldForMicros(20);
             float firstSample = analogDevice->getCurrentFloat(ypPinAdc);
@@ -242,11 +242,11 @@ namespace iotouch {
 
             // now we calculate everything in the Y dimension.
             analogDevice->initPin(xnPinAdc, DIR_IN);
-            ioDevicePinMode(device, xpPin, INPUT);
-            ioDevicePinMode(device, ypPinAdc, OUTPUT);
-            ioDevicePinMode(device, ynPin, OUTPUT);
-            ioDeviceDigitalWrite(device, ypPinAdc, HIGH);
-            ioDeviceDigitalWriteS(device, ynPin, LOW);
+            device->pinMode(xpPin, INPUT);
+            device->pinMode(ypPinAdc, OUTPUT);
+            device->pinMode(ynPin, OUTPUT);
+            device->digitalWrite(ypPinAdc, HIGH);
+            device->digitalWriteS(ynPin, LOW);
 
             taskManager.yieldForMicros(20);
             firstSample = analogDevice->getCurrentFloat(xnPinAdc);
@@ -258,10 +258,10 @@ namespace iotouch {
             float y = calibrator.calibrateY((firstSample + secondSample) / 2.0F, (rotation == LANDSCAPE || rotation == PORTRAIT));
 
             // and finally the Z dimension
-            ioDevicePinMode(device, xpPin, OUTPUT);
+            device->pinMode(xpPin, OUTPUT);
             analogDevice->initPin(ypPinAdc, DIR_IN);
-            ioDeviceDigitalWrite(device, xpPin, LOW);
-            ioDeviceDigitalWriteS(device, ynPin, HIGH);
+            device->digitalWrite(xpPin, LOW);
+            device->digitalWriteS(ynPin, HIGH);
 
             taskManager.yieldForMicros(20);
 

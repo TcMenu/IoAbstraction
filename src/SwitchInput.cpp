@@ -177,7 +177,7 @@ bool SwitchInput::addSwitchListener(pinid_t pin, SwitchListener* listener, uint8
 bool SwitchInput::internalAddSwitch(pinid_t pin, bool invertLogic) {
 	if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
 
-	ioDevicePinMode(ioDevice, pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
+	ioDevice->pinMode(pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
 
     if (isInterruptDriven()) {
 		registerInterrupt(pin);
@@ -240,12 +240,12 @@ void SwitchInput::setEncoder(uint8_t slot, RotaryEncoder* enc) {
 bool SwitchInput::runLoop() {
 	bool needAnotherGo = false;
 
-	lastSyncStatus = ioDeviceSync(ioDevice);
+	lastSyncStatus = ioDevice->sync();
 
 	for (bsize_t i = 0; i < keys.count(); ++i) {
 		// get the pins current state
 		auto key = keys.itemAtIndex(i);
-		uint8_t pinState = ioDeviceDigitalRead(ioDevice, key->getPin());
+		uint8_t pinState = ioDevice->digitalRead(key->getPin());
 		if(isPullupLogic(key->isLogicInverted())) {
 			pinState = !pinState;
 		}
@@ -354,14 +354,14 @@ void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAcceleratio
 	this->encoderType = encoderType;
 
 	// set the pin directions to input with pull ups enabled
-	ioDevicePinMode(switches.getIoAbstraction(), pinA, INPUT_PULLUP);
-	ioDevicePinMode(switches.getIoAbstraction(), pinB, INPUT_PULLUP);
+	switches.getIoAbstraction()->pinMode(pinA, INPUT_PULLUP);
+	switches.getIoAbstraction()->pinMode(pinB, INPUT_PULLUP);
 
 	// read back the initial values.
-    bool lastSyncOK = ioDeviceSync(switches.getIoAbstraction());
+    bool lastSyncOK = switches.getIoAbstraction()->sync();
 	bitWrite(flags, LAST_SYNC_STATUS, lastSyncOK);
-	this->aLast = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
-	this->cleanFromB = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
+	this->aLast = switches.getIoAbstraction()->digitalRead(pinA);
+	this->cleanFromB = switches.getIoAbstraction()->digitalRead(pinB);
 
 	if(!switches.isEncoderPollingEnabled()) {
 		registerInterrupt(pinA);
@@ -419,11 +419,11 @@ int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
-	bool lastSyncStatus = ioDeviceSync(switches.getIoAbstraction());
+	bool lastSyncStatus = switches.getIoAbstraction()->sync();
     bitWrite(flags, LAST_SYNC_STATUS, lastSyncStatus);
 
-	uint8_t a = ioDeviceDigitalRead(switches.getIoAbstraction(), pinA);
-	uint8_t b = ioDeviceDigitalRead(switches.getIoAbstraction(), pinB);
+	uint8_t a = switches.getIoAbstraction()->digitalRead(pinA);
+	uint8_t b = switches.getIoAbstraction()->digitalRead(pinB);
 
 	if(encoderType == QUARTER_CYCLE){
 		if((a != aLast) || (b != cleanFromB)) {
