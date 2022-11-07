@@ -7,6 +7,7 @@
  */
 
 #include "IoLogging.h"
+#include "TaskPlatformDeps.h"
 
 #ifdef IO_LOGGING_DEBUG
 
@@ -50,6 +51,30 @@ const char* prettyLevel(SerLoggingLevel level) {
         case SER_USER_6: return "U06";
         default: return "???";
     }
+}
+
+const char* niceErrorCode(tm_internal::TmErrorCode code) {
+    switch(code) {
+        case tm_internal::TM_INFO_REALLOC:
+            return "mem";
+        case tm_internal::TM_INFO_TASK_ALLOC:
+            return "alloc";
+        case tm_internal::TM_INFO_TASK_FREE:
+            return "free";
+        case tm_internal::TM_WARN_HIGH_SPINCOUNT:
+            return "spin";
+        case tm_internal::TM_ERROR_FULL:
+            return "full";
+        default:
+        case tm_internal::TM_ERROR_LOCK_FAILURE:
+            return "err";
+    }
+}
+
+void startTaskManagerLogDelegate() {
+    tm_internal::setLoggingDelegate([](tm_internal::TmErrorCode errorCode, int task) {
+        serlogF3(SER_IOA_DEBUG, "TMLog ", niceErrorCode(errorCode), task);
+    });
 }
 
 #endif

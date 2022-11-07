@@ -10,14 +10,10 @@
 #if defined(IOA_USE_ARDUINO) && defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
 
 
-BasicIoAbstraction arduinoAbstraction;
-
-BasicIoAbstraction& internalDigitalDevice() {
-    return arduinoAbstraction;
-}
+BasicIoAbstraction internalIoAbstraction;
 
 IoAbstractionRef ioUsingArduino() {
-    return &arduinoAbstraction;
+    return &internalIoAbstraction;
 }
 
 volatile bool esp32InterruptDriverLoaded = false;

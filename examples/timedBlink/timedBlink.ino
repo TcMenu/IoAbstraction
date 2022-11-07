@@ -20,21 +20,26 @@ const int ledPin = LED_BUILTIN;
 int ledOn = LOW;
 
 // create an IO abstraction, so later we could put the led on a shift register or i2c.
-IoAbstractionRef ioDevice = ioUsingArduino();
 
 void setup() {
+    Serial.begin(115200);
+    Serial.println("1");
 	// set the pin we are to use as output using the io abstraction
-	ioDevicePinMode(ioDevice, ledPin, OUTPUT);
+	internalDigitalDevice().pinMode(ledPin, OUTPUT);
 
 	// and create the task that toggles the led every second.
 	taskManager.scheduleFixedRate(1000, toggle);
+    Serial.println("3");
+
 }
 
 // this is the call back method that gets called once a second
 // from the schedule above.
 void toggle() {
-	// now we write to the device, the 'S' version of the method automatically syncs.
-	ioDeviceDigitalWriteS(ioDevice, ledPin, ledOn);
+    Serial.println("4");
+
+    // now we write to the device, the 'S' version of the method automatically syncs.
+	internalDigitalDevice().digitalWriteS(ledPin, ledOn);
 
 	ledOn = !ledOn; // toggle the LED state.
 }

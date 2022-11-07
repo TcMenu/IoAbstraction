@@ -7,15 +7,15 @@
 #if defined(IOA_USE_ARDUINO) && !(defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS))
 
 void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
-    pinMode(pin, mode);
+    ::pinMode(pin, mode);
 }
 
 void BasicIoAbstraction::writeValue(pinid_t pin, uint8_t value) {
-    digitalWrite(pin, value);
+    ::digitalWrite(pin, value);
 }
 
 uint8_t BasicIoAbstraction::readValue(pinid_t pin) {
-    return digitalRead(pin);
+    return ::digitalRead(pin);
 }
 
 void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) {
@@ -38,13 +38,9 @@ uint8_t BasicIoAbstraction::readPort(pinid_t port) {
 }
 
 
-BasicIoAbstraction arduinoAbstraction;
+BasicIoAbstraction internalIoAbstraction;
 IoAbstractionRef ioUsingArduino() {
-    return &arduinoAbstraction;
-}
-
-BasicIoAbstraction& internalDigitalDevice() {
-    return arduinoAbstraction;
+    return &internalIoAbstraction;
 }
 
 #endif

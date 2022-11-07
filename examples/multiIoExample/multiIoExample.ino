@@ -28,57 +28,58 @@
 #define EXPANDER1 100
 
 // create a multi Io that allocates the first 100 pins to arduino pins
-MultiIoAbstractionRef multiIo = multiIoExpander(EXPANDER1);
+MultiIoAbstraction multiIo(EXPANDER1);
+PCF8574IoAbstraction ioExpander(0x20, IO_PIN_NOT_DEFINED);
 
 //
 // when the switch is pressed then this function will be called.
 //
 void onSwitchPressed(uint8_t key, bool held) {
-	// here we just toggle the state of the built in LED and an LED on the expander.
-	uint8_t ledState = ioDeviceDigitalReadS(multiIo, LED_BUILTIN);
+    // here we just toggle the state of the built in LED and an LED on the expander.
+    uint8_t ledState = multiIo.digitalReadS(LED_BUILTIN);
 
-	ioDeviceDigitalWrite(multiIo, LED_BUILTIN, !ledState);
-	ioDeviceDigitalWrite(multiIo, EXPANDER1 + 1, !ledState);
-	ioDeviceSync(multiIo); // force another sync
+    multiIo.digitalWrite(LED_BUILTIN, !ledState);
+    multiIo.digitalWrite(EXPANDER1 + 1, !ledState);
+    multiIo.sync(); // force another sync
 
-  Serial.print("Switch "); 
-  Serial.print(key);
-  Serial.println(held ? " Held down" : " Pressed");
+    Serial.print("Switch ");
+    Serial.print(key);
+    Serial.println(held ? " Held down" : " Pressed");
 }
 
 //
 // traditional arduino setup function
 //
 void setup() {
-  Wire.begin();
-  Serial.begin(115200);
+    Wire.begin();
+    Serial.begin(115200);
 
-  Serial.println("Multi IoExpander example");
-  
-  // we now add an 8574 chip that allocates 10 more pins, therefore it goes from 100..109
-  multiIoAddExpander(multiIo, ioFrom8574(0x20), 10);
-  // add more expanders here..
+    Serial.println("Multi IoExpander example");
 
-  Serial.println("added an expander at pin 100 to 109");
+    // we now add an 8574 chip that allocates 10 more pins, therefore it goes from 100..109
+    multiIo.addIoDevice(io8574, 10);
+    // add more expanders here..
 
-  // set up the outputs we are going to use which are basically
-  // the built in LED
-  // port 1 of the expander.
-  ioDevicePinMode(multiIo, LED_BUILTIN, OUTPUT);
-  ioDevicePinMode(multiIo, EXPANDER1 + 1, OUTPUT);
+    Serial.println("added an expander at pin 100 to 109");
 
-  Serial.println("Io is setup, adding switch");
+    // set up the outputs we are going to use which are basically
+    // the built in LED
+    // port 1 of the expander.
+    multiIo.pinMode(LED_BUILTIN, OUTPUT);
+    multiIo.pinMode(EXPANDER1 + 1, OUTPUT);
 
-  // set up the button on port 0 of the expander. we choose poll everything (including encoders here) but you could
-  // also SWITCHES_POLL_KEYS_ONLY and SWITCHES_NO_POLLING for interrupt mode.
-  switches.init(multiIo, SWITCHES_POLL_EVERYTHING, true);
+    Serial.println("Io is setup, adding switch");
 
-  switches.addSwitch(EXPANDER1 + 0, onSwitchPressed);
-  ioDevicePinMode(multiIo, EXPANDER1, INPUT);
+    // set up the button on port 0 of the expander. we choose poll everything (including encoders here) but you could
+    // also SWITCHES_POLL_KEYS_ONLY and SWITCHES_NO_POLLING for interrupt mode.
+    switches.init(asIoRef(multiIo), SWITCHES_POLL_EVERYTHING, true);
 
-  Serial.println("setup is done!");
+    switches.addSwitch(EXPANDER1 + 0, onSwitchPressed);
+    multiIo.pinMode(EXPANDER1, INPUT);
+
+    Serial.println("setup is done!");
 }
 
 void loop() {
-	taskManager.runLoop();
+    taskManager.runLoop();
 }

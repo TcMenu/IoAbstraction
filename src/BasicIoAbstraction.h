@@ -185,11 +185,13 @@ typedef BasicIoAbstraction* IoAbstractionRef;
  */
 IoAbstractionRef internalDigitalIo();
 
+extern BasicIoAbstraction internalIoAbstraction;
+
 /**
  * Gets hold of the IoAbstraction for device pins. Using this rather than directly accessing arduino functions allow
  * at a later date to move code much easier to work with I2C and other expanders. Even unit testing is easier.
  */
-BasicIoAbstraction& internalDigitalDevice();
+#define internalDigitalDevice() internalIoAbstraction
 
 /**
  * Works in the same way as regular `pinMode` but this works for any IoAbstractionRef that you wish to set the pin mode on.

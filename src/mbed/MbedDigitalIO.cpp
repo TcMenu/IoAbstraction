@@ -72,14 +72,11 @@ GpioWrapper *BasicIoAbstraction::allocatePinIfNeedBe(uint8_t pinToAlloc) {
     return gpioWrapper;
 }
 
-BasicIoAbstraction mbedAbstraction;
+BasicIoAbstraction internalIoAbstraction;
 
 IoAbstractionRef internalDigitalIo() {
-    return mbedAbstraction;
+    return &internalIoAbstraction;
 }
 
-BasicIoAbstraction& internalDigitalDevice() {
-    return arduinoAbstraction;
-}
 
 #endif // IOA_USE_MBED

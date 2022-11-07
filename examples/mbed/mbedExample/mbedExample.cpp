@@ -17,12 +17,12 @@ int myCount = 0;
 float currentOutputLevel = 0.0F;
 
 // to be able to use IoLogging within your application add the following
-BufferedSerial serPort(USBTX, USBRX);
-MBedLogger LoggingPort(serPort);
+// this create a serial port called serPort
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 
 #define DEVICE_PIN_RANGE 150
-MultiIoAbstractionRef multiIo = multiIoExpander(DEVICE_PIN_RANGE);
-MBedAnalogDevice analogDevice;
+AnalogJoystickToButtons joystickToButtons(internalAnalogIo(), A1, .5F);
+MultiIoAbstraction multiIo(DEVICE_PIN_RANGE);
 
 I2C i2c(PF_0, PF_1);
 #define START_OFFS 3000
@@ -65,11 +65,11 @@ void checkTheEeprom();
 ExecutableTask myTask(100);
 
 void scheduleSomeTasks() {
-    ioDevicePinMode(multiIo, LED3, OUTPUT);
+    multiIo.pinMode(LED3, OUTPUT);
 
     taskManager.scheduleFixedRate(1, [] {
         serdebugF2("Second counter: ", myCount);
-        ioDeviceDigitalWriteS(multiIo, LED3, (myCount % 2) == 0);
+        multiIo.digitalWriteS(LED3, (myCount % 2) == 0);
     }, TIME_SECONDS);
 
     taskManager.scheduleFixedRate(100, [] {
@@ -82,18 +82,18 @@ void scheduleSomeTasks() {
 }
 
 void runSomeAnalogTasks() {
-    analogDevice.initPin(LED1, DIR_PWM);
-    analogDevice.initPin(LED2, DIR_PWM);
+    internalAnalogDevice().initPin(LED1, DIR_PWM);
+    internalAnalogDevice().initPin(LED2, DIR_PWM);
     taskManager.scheduleFixedRate(1, [] {
         currentOutputLevel += 0.001F;
         if(currentOutputLevel > 1.0F) currentOutputLevel = 0.0F;
-        analogDevice.setCurrentFloat(LED2, 1.0F - currentOutputLevel);
-        analogDevice.setCurrentFloat(LED1, currentOutputLevel);
+        internalAnalogDevice().setCurrentFloat(LED2, 1.0F - currentOutputLevel);
+        internalAnalogDevice().setCurrentFloat(LED1, currentOutputLevel);
     });
 }
 
 int main() {
-    serPort.set_baud(115200);
+    IOLOG_START_SERIAL
 
 #ifdef HAS_EEPROM_ATTACHED
     checkTheEeprom();
@@ -103,9 +103,9 @@ int main() {
 
     scheduleSomeTasks();
 
-    multiIoAddExpander(multiIo, joystickTwoButtonExpander(&analogDevice, A1, .5F), 10);
+    multiIo.addIoDevice(joystickToButtons, 10);
 
-    switches.initialise(multiIo, false);
+    switches.initialise(asIoRef(multiIo), false);
     switches.addSwitch(USER_BUTTON, buttonPressed, 20);
     switches.onRelease(USER_BUTTON, buttonReleased);
     switches.addSwitch(D8, buttonPressed, NO_REPEAT, true);
@@ -116,7 +116,7 @@ int main() {
         serdebugF2("Right on joystick", held);
     });
 
-    setupAnalogJoystickEncoder(&analogDevice, A0, [](int value) {
+    setupAnalogJoystickEncoder(internalAnalogIo(), A0, [](int value) {
         serdebugF2("JoystickValue: ", value);
     });
     switches.getEncoder()->changePrecision(250, 125);

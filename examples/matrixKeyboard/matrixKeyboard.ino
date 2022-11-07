@@ -14,6 +14,7 @@
 #include <IoAbstractionWire.h>
 #include<TaskManagerIO.h>
 #include <KeyboardManager.h>
+#include <IoLogging.h>
 
 //
 // We need to make a keyboard layout that the manager can use. choose one of the below.
@@ -29,7 +30,7 @@ MatrixKeyboardManager keyboard;
 
 // this examples connects the pins directly to an arduino but you could use
 // IoExpanders or shift registers instead.
-IoAbstractionRef arduinoIo = ioUsingArduino();
+MCP23017IoAbstraction io23017(0x20, ACTIVE_LOW_OPEN, 10);
 
 //
 // We need a class that extends from KeyboardListener. this gets notified when
@@ -67,7 +68,7 @@ void initialiseKeyboard4X4ForInterrupt23017() {
     keyLayout.setColPin(2, 13);
     keyLayout.setColPin(3, 12);
 
-    keyboard.initialise(ioFrom23017(0x20, ACTIVE_LOW_OPEN, 10), &keyLayout, &myListener, true);
+    keyboard.initialise(asIoRef(io23017), &keyLayout, &myListener, true);
 }
 
 /**
@@ -85,16 +86,14 @@ void initialiseKeyboard3X4ForPollingDevicePins() {
 
     // create the keyboard mapped to arduino pins and with the layout chosen above.
     // it will callback our listener
-    keyboard.initialise(arduinoIo, &keyLayout, &myListener);
+    keyboard.initialise(internalDigitalIo(), &keyLayout, &myListener);
 }
 
 void setup() {
     while(!Serial);
     Serial.begin(115200);
 
-    tm_internal::setLoggingDelegate([](tm_internal::TmErrorCode errorCode, int task) {
-        serdebugF3("TMLog ", errorCode, task);
-    });
+    startTaskManagerLogDelegate();
 
     // here you can choose between two stock configurations or you could alter one of the
     // methods to meet your hardware requirements.

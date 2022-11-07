@@ -40,7 +40,7 @@ public:
 	 * @param mode16bit transfer 16 bits of data. Used in 8575 expander.
 	 * @param invertedLogic invert bits sent and received from the expander.
 	 */
-	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance, bool mode16bit = false, bool invertedLogic = false);
+	PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireInstance = nullptr, bool mode16bit = false, bool invertedLogic = false);
 	virtual ~PCF8574IoAbstraction() { }
 
 	/** Forces the device to start reading back state during syncs even if no pins are configured as read */
@@ -129,11 +129,25 @@ private:
 	uint8_t  intMode;
 public:
 	/**
-	 * Normally, it's easier to use the helper functions to create an instance of this class rather than create yourself.
+	 * Most complete constructor, allows for either single or dual interrupt mode and all capabilities
 	 * @see iofrom23017
 	 * @see iofrom23017IntPerPort
 	 */
-	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  pinid_t intPinA, pinid_t intPinB, WireType wireImpl);
+	MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode,  pinid_t intPinA, pinid_t intPinB, WireType wireImpl = nullptr);
+    /**
+     * Simplest constructor: create a MCP23017 device with no interrupt mode enabled, only the I2C address needed.
+     * @param address the I2C address
+     */
+    MCP23017IoAbstraction(uint8_t address, WireType wireImpl = nullptr);
+
+    /**
+     * Create a MCP23017 device that will use a single interrupt mode and optionally provide the wire implementation
+     * @param address
+     * @param intPinA
+     */
+    MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, pinid_t intPinA, WireType wireImpl = nullptr);
+
+
 	~MCP23017IoAbstraction() override = default;
 
 	/**

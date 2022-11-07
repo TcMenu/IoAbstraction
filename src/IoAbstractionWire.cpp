@@ -6,7 +6,7 @@
 #include <IoAbstractionWire.h>
 
 PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, WireType wireImplementation, bool mode16Bit, bool invertedLogic) : lastRead{}, toWrite{} {
-	this->wireImpl = wireImplementation;
+	this->wireImpl = (wireImplementation != nullptr) ? wireImplementation : defaultWireTypePtr;
 	this->address = addr;
 	this->interruptPin = interruptPin;
     flags = 0;
@@ -174,11 +174,28 @@ void toggleBitInRegister16(WireType wireType, uint8_t addr, uint8_t regAddr, uin
 
 MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, pinid_t intPinA, pinid_t intPinB, WireType wireImpl) :
         Standard16BitDevice() {
-	this->wireImpl = wireImpl;
-	this->address = address;
+    this->wireImpl = (wireImpl != nullptr) ? wireImpl : defaultWireTypePtr;
+    this->address = address;
 	this->intPinA = intPinA;
 	this->intPinB = intPinB;
 	this->intMode = intMode;
+}
+
+MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, Mcp23xInterruptMode intMode, pinid_t intPinA, WireType wireImpl) :
+        Standard16BitDevice() {
+    this->wireImpl = (wireImpl != nullptr) ? wireImpl : defaultWireTypePtr;
+    this->address = address;
+    this->intPinA = intPinA;
+    this->intPinB = IO_PIN_NOT_DEFINED;
+    this->intMode = intMode;
+}
+
+MCP23017IoAbstraction::MCP23017IoAbstraction(uint8_t address, WireType wireImpl) :
+        Standard16BitDevice() {
+    this->wireImpl = (wireImpl != nullptr) ? wireImpl : defaultWireTypePtr;
+    this->address = address;
+    this->intPinA = this->intPinB = IO_PIN_NOT_DEFINED;
+    this->intMode = NOT_ENABLED;
 }
 
 void MCP23017IoAbstraction::initDevice() {
