@@ -11,9 +11,7 @@ void setup() {
     startTesting();
 }
 
-void loop() {
-    taskManager.runLoop();
-}
+DEFAULT_TEST_RUNLOOP
 
 test(thatBooleanAssertPasses) {
     assertFalse(false);

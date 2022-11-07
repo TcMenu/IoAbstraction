@@ -29,7 +29,9 @@ namespace SimpleTest {
         currentlyRunning = this;
         testStatus = RUNNING;
         serlogF2(SER_DEBUG, "Starting test ", testName);
+        setup();
         performTest();
+        teardown();
         if (testStatus != FAILED) {
             testStatus = PASSED;
         }
@@ -44,7 +46,7 @@ namespace SimpleTest {
     }
 
     void UnitTestExecutor::init(const char *name, bool ignored) {
-        strncpy(testName, name, sizeof testName);
+        testName = name;
         if (ignored) {
             testStatus = IGNORED;
         } else {
@@ -69,28 +71,43 @@ namespace SimpleTest {
         }
 
         if (unknown == 0) {
-            serlogF4(SER_DEBUG, "Tests finished - total= ", total, ", ignored= ", ignored);
-            serlogF4(SER_DEBUG, "Detail: passed= ", passed, ", failed= ", failed);
-            setCompleted(true);
+            char sz[50];
+            strncpy(sz, "total=", sizeof sz);
+            fastltoa(sz, total, 5, NOT_PADDED, sizeof sz);
+            strncat(sz, ", passed=", sizeof(sz) - strlen(sz) - 1);
+            fastltoa(sz, passed, 5, NOT_PADDED, sizeof sz);
+            strncat(sz, ", failed=", sizeof(sz) - strlen(sz) - 1);
+            fastltoa(sz, failed, 5, NOT_PADDED, sizeof sz);
+            strncat(sz, ", ignored=", sizeof(sz) - strlen(sz) - 1);
+            fastltoa(sz, ignored, 5, NOT_PADDED, sizeof sz);
+            serlogF2(SER_DEBUG, "Tests finished - ", sz);
         }
-    }
 
-    void TestManager::exec() {
-        printSummary();
-    }
-
-    uint32_t TestManager::timeOfNextCheck() {
-        setTriggered(true);
-        return 100;
+        if(failed > 0) {
+            serlogF(SER_DEBUG, "T E S T S   F A I L E D")
+        }
     }
 
     void TestManager::begin() {
         serlogF(SER_DEBUG, "==== 8< ==== 8< ==== START EXECUTION ==== 8< ==== 8< ====");
         serlogF3(SER_DEBUG, "Starting test execution on ", testsRecorded.count(), "tests");
-        for(auto t : testsRecorded) {
-            taskManager.execute(t.getTest());
+        currentIndex = 0;
+        needsSummary = true;
+    }
+
+    void TestManager::runLoop() {
+        if(currentIndex < testsRecorded.count()) {
+            auto t = testsRecorded.itemAtIndex(currentIndex);
+            if (t->getTest()->getTestStatus() != IGNORED && (filterPredicate == nullptr || filterPredicate(t->getTest()))) {
+                t->getTest()->exec();
+            }
+            currentIndex = currentIndex + 1;
+        } else if(needsSummary) {
+            needsSummary = false;
+            printSummary();
+        } else {
+            delay(100);
         }
-        taskManager.registerEvent(this);
     }
 
     TestManager *TestManager::getInstance() {

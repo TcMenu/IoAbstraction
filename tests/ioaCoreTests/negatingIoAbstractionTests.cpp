@@ -1,6 +1,9 @@
-#include <AUnit.h>
+#include <TaskManagerIO.h>
+#include <testing/SimpleTest.h>
 #include "MockIoAbstraction.h"
 #include "NegatingIoAbstraction.h"
+
+using namespace SimpleTest;
 
 test(testNegatingIoAbstractionRead) {
     MockedIoAbstraction mockIo;
@@ -24,22 +27,22 @@ test(testNegatingIoAbstractionRead) {
     assertTrue(ioDeviceDigitalRead(&negatingIo, 0));
 
     // check that port reads are inverted
-    assertEqual(0x00U, (unsigned int)ioDeviceDigitalReadPort(&mockIo, 0));
-    assertEqual(0xffU, (unsigned int)ioDeviceDigitalReadPort(&negatingIo, 0));
+    assertEquals(0x00U, (unsigned int)ioDeviceDigitalReadPort(&mockIo, 0));
+    assertEquals(0xffU, (unsigned int)ioDeviceDigitalReadPort(&negatingIo, 0));
 
     mockIo.resetIo();
 
     // now test writing to the port is inverted.
     ioDeviceDigitalWrite(&negatingIo, 9, HIGH);
-    assertEqual(mockIo.getWrittenValue(0), (uint16_t)0);
+    assertEquals(mockIo.getWrittenValue(0), (uint16_t)0);
     ioDeviceDigitalWrite(&negatingIo, 9, LOW);
-    assertEqual(mockIo.getWrittenValue(0), (uint16_t)0x200U);
+    assertEquals(mockIo.getWrittenValue(0), (uint16_t)0x200U);
 
     ioDeviceDigitalWritePort(&negatingIo, 9, 0x00);
     int toCompare = mockIo.getWrittenValue(0) >> 8;
-    assertEqual(toCompare, 0xff);
+    assertEquals(toCompare, 0xff);
 
     // lastly make sure there were no IO errors.
-    assertEqual(mockIo.getErrorMode(), NO_ERROR);
+    assertEquals(mockIo.getErrorMode(), NO_ERROR);
 }
 

@@ -1,6 +1,9 @@
-#include <AUnit.h>
+#include <TaskManagerIO.h>
+#include <testing/SimpleTest.h>
 #include <IoAbstractionWire.h>
 #include <MockIoAbstraction.h>
+
+using namespace SimpleTest;
 
 test(testMockIoAbstractionRead) {
     MockedIoAbstraction ioDevice;
@@ -19,27 +22,27 @@ test(testMockIoAbstractionRead) {
     assertFalse(ioDeviceDigitalRead(&ioDevice, 1));
     ioDeviceSync(&ioDevice);
 
-    assertEqual((uint8_t)0x55, ioDeviceDigitalReadPort(&ioDevice, 1));
-    assertEqual((uint8_t)0xaa, ioDeviceDigitalReadPort(&ioDevice, 9));
+    assertEquals((uint8_t)0x55, ioDeviceDigitalReadPort(&ioDevice, 1));
+    assertEquals((uint8_t)0xaa, ioDeviceDigitalReadPort(&ioDevice, 9));
 
     ioDeviceSync(&ioDevice);
 
-    assertEqual((uint8_t)0x00, ioDeviceDigitalReadPort(&ioDevice, 1));
-    assertEqual((uint8_t)0x11, ioDeviceDigitalReadPort(&ioDevice, 9));
+    assertEquals((uint8_t)0x00, ioDeviceDigitalReadPort(&ioDevice, 1));
+    assertEquals((uint8_t)0x11, ioDeviceDigitalReadPort(&ioDevice, 9));
     
     // now test error handling.
-    assertEqual(ioDevice.getErrorMode(), NO_ERROR);
+    assertEquals(ioDevice.getErrorMode(), NO_ERROR);
 
     ioDevicePinMode(&ioDevice, 1, OUTPUT);
     ioDevicePinMode(&ioDevice, 9, OUTPUT);
     ioDeviceDigitalRead(&ioDevice, 1);
-    assertEqual(ioDevice.getErrorMode(), READ_NOT_INPUT);
+    assertEquals(ioDevice.getErrorMode(), READ_NOT_INPUT);
     ioDevice.clearError();
     ioDeviceDigitalReadPort(&ioDevice, 1);
-    assertEqual(ioDevice.getErrorMode(), READ_NOT_INPUT);
+    assertEquals(ioDevice.getErrorMode(), READ_NOT_INPUT);
     ioDevice.clearError();
     ioDeviceDigitalReadPort(&ioDevice, 9);
-    assertEqual(ioDevice.getErrorMode(), READ_NOT_INPUT);
+    assertEquals(ioDevice.getErrorMode(), READ_NOT_INPUT);
 
 }
 
@@ -53,33 +56,33 @@ test(testMockIoAbstractionWrite) {
     // test port manipulation.
     ioDeviceDigitalWritePort(&ioDevice, 0, 0xaa);
     ioDeviceDigitalWritePortS(&ioDevice, 9, 0x55);
-    assertEqual((uint16_t)0x55aa, ioDevice.getWrittenValue(1));
+    assertEquals((uint16_t)0x55aa, ioDevice.getWrittenValue(1));
     ioDeviceDigitalWritePortS(&ioDevice, 9, 0xbb);
-    assertEqual((uint16_t)0xbbaa, ioDevice.getWrittenValue(2));
+    assertEquals((uint16_t)0xbbaa, ioDevice.getWrittenValue(2));
     ioDeviceDigitalWritePortS(&ioDevice, 0, 0xdd);
-    assertEqual((uint16_t)0xbbdd, ioDevice.getWrittenValue(3));
-    assertEqual(3, ioDevice.getNumberOfRunLoops());
+    assertEquals((uint16_t)0xbbdd, ioDevice.getWrittenValue(3));
+    assertEquals(3, ioDevice.getNumberOfRunLoops());
 
     // test pin manipulation.
     for(int i = 0; i<16; i++) {
         ioDeviceDigitalWrite(&ioDevice, i, HIGH);
     }
-    assertEqual((uint16_t)0xffff, ioDevice.getWrittenValue(3));
+    assertEquals((uint16_t)0xffff, ioDevice.getWrittenValue(3));
 
     // test error handling for writes
-    assertEqual(ioDevice.getErrorMode(), NO_ERROR);
+    assertEquals(ioDevice.getErrorMode(), NO_ERROR);
     ioDevicePinMode(&ioDevice, 1, INPUT);
     ioDevicePinMode(&ioDevice, 9, INPUT);
     ioDeviceDigitalWrite(&ioDevice, 1, HIGH);
-    assertEqual(ioDevice.getErrorMode(), WRITE_NOT_OUTPUT);
+    assertEquals(ioDevice.getErrorMode(), WRITE_NOT_OUTPUT);
 
     ioDevice.clearError();
     ioDeviceDigitalWritePort(&ioDevice, 1, 0xff);
-    assertEqual(ioDevice.getErrorMode(), WRITE_NOT_OUTPUT);
+    assertEquals(ioDevice.getErrorMode(), WRITE_NOT_OUTPUT);
 
     ioDevice.clearError();
     ioDeviceDigitalWritePort(&ioDevice, 9, 0xff);
-    assertEqual(ioDevice.getErrorMode(), WRITE_NOT_OUTPUT);
+    assertEquals(ioDevice.getErrorMode(), WRITE_NOT_OUTPUT);
 }
 
 MockedIoAbstraction ioDevice1;
@@ -109,33 +112,33 @@ test(testMultiIoPassThrough) {
 
     assertTrue(ioDeviceDigitalRead(&multiIo, 100));
     assertFalse(ioDeviceDigitalRead(&multiIo, 120));
-    assertEqual((uint8_t)0x01, ioDeviceDigitalReadPort(&multiIo, 101));
-    assertEqual((uint8_t)0x10, ioDeviceDigitalReadPort(&multiIo, 121));
+    assertEquals((uint8_t)0x01, ioDeviceDigitalReadPort(&multiIo, 101));
+    assertEquals((uint8_t)0x10, ioDeviceDigitalReadPort(&multiIo, 121));
     assertFalse(ioDeviceDigitalReadS(&multiIo, 100));
     assertTrue(ioDeviceDigitalRead(&multiIo, 101));
-    assertEqual((uint8_t)0x30, ioDeviceDigitalReadPortS(&multiIo, 121));
+    assertEquals((uint8_t)0x30, ioDeviceDigitalReadPortS(&multiIo, 121));
     assertTrue(ioDeviceDigitalRead(&multiIo, 100));
     assertTrue(ioDeviceDigitalRead(&multiIo, 101));
 
-    assertEqual(2, ioDevice1.getNumberOfRunLoops());
-    assertEqual(2, ioDevice2.getNumberOfRunLoops());
+    assertEquals(2, ioDevice1.getNumberOfRunLoops());
+    assertEquals(2, ioDevice2.getNumberOfRunLoops());
 
     ioDevice1.resetIo();
     ioDevice2.resetIo();
 
     ioDeviceDigitalWritePort(&multiIo, 109, 0xaa);
     ioDeviceDigitalWritePortS(&multiIo, 129, 0x55);
-    assertEqual((uint16_t)0xaa00, ioDevice1.getWrittenValue(0));
-    assertEqual((uint16_t)0x5500, ioDevice2.getWrittenValue(0));
+    assertEquals((uint16_t)0xaa00, ioDevice1.getWrittenValue(0));
+    assertEquals((uint16_t)0x5500, ioDevice2.getWrittenValue(0));
 
     ioDeviceDigitalWritePort(&multiIo, 109, 0x99);
     ioDeviceDigitalWritePortS(&multiIo, 129, 0x88);
-    assertEqual((uint16_t)0x9900, ioDevice1.getWrittenValue(1));
-    assertEqual((uint16_t)0x8800, ioDevice2.getWrittenValue(1));
+    assertEquals((uint16_t)0x9900, ioDevice1.getWrittenValue(1));
+    assertEquals((uint16_t)0x8800, ioDevice2.getWrittenValue(1));
 
-    assertEqual(2, ioDevice1.getNumberOfRunLoops());
-    assertEqual(2, ioDevice2.getNumberOfRunLoops());
+    assertEquals(2, ioDevice1.getNumberOfRunLoops());
+    assertEquals(2, ioDevice2.getNumberOfRunLoops());
 
-    assertEqual(ioDevice1.getErrorMode(), NO_ERROR);
-    assertEqual(ioDevice2.getErrorMode(), NO_ERROR);
+    assertEquals(ioDevice1.getErrorMode(), NO_ERROR);
+    assertEquals(ioDevice2.getErrorMode(), NO_ERROR);
 }

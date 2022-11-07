@@ -1,12 +1,14 @@
-#include <AUnit.h>
+
+#include <TaskManagerIO.h>
+#include <testing/SimpleTest.h>
+
+using namespace SimpleTest;
 
 #if defined(__AVR__)
 
 #include <util/atomic.h>
 #include "IoAbstraction.h"
 #include "MockIoAbstraction.h"
-
-using namespace aunit;
 
 // We can only reset the clock to a new value on AVR, this is very useful and allows us to ensure the
 // rollover cases work properly at least for milliseconds. As millisecond and microsecond logic are very
@@ -65,8 +67,8 @@ test(testClockRollover) {
     dumpTaskTiming();
 
     // the one second task should have executed exactly once.
-    assertEqual(avrCount1, 1);
-    assertMore(avrCount2, 1000);
+    assertEquals(avrCount1, 1);
+    assertMoreThan(1000, avrCount2);
 
     // make sure millis has wrapped now.
     assertTrue(millis() < 10000UL);
@@ -79,4 +81,17 @@ test(testClockRollover) {
     // reset the millisecond timer where it was before.
     setMillis(oldMillis);
 }
+
+test(legacyCheckIoDevice) {
+    auto systemDevice = internalDigitalIo();
+    ioDevicePinMode(systemDevice, LED_BUILTIN, OUTPUT);
+    ioDevicePinMode(systemDevice, 2, INPUT);
+    ioDeviceDigitalWrite(systemDevice, LED_BUILTIN, HIGH);
+    ioDeviceSync(systemDevice);
+    ioDeviceDigitalRead(systemDevice, 2);
+    delay(250);
+    ioDeviceDigitalWriteS(systemDevice, LED_BUILTIN, LOW);
+    ioDeviceDigitalReadS(systemDevice, 2);
+}
+
 #endif // __AVR__

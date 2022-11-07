@@ -1,9 +1,12 @@
-#include <AUnit.h>
+
+#include <testing/SimpleTest.h>
 #include <Arduino.h>
 #include <MockEepromAbstraction.h>
 #include <EepromAbstractionWire.h>
 #include "IoAbstraction.h"
 #include <Wire.h>
+
+using namespace SimpleTest;
 
 char memToWrite[110] = { };
 char readBuffer[110] = { };
@@ -76,15 +79,15 @@ test(testMockEeprom) {
     eeprom.write32(3, 0xbeeff00d);
     eeprom.writeArrayToRom(10, (const uint8_t*)memToWrite, sizeof(memToWrite));
 
-    assertEqual((uint8_t)0xfe, eeprom.read8(0));
-    assertEqual((uint16_t)0xf00d, eeprom.read16(1));
-    assertEqual((uint32_t)0xbeeff00d, eeprom.read32(3));
+    assertEquals((uint8_t)0xfe, eeprom.read8(0));
+    assertEquals((uint16_t)0xf00d, eeprom.read16(1));
+    assertEquals((uint32_t)0xbeeff00d, eeprom.read32(3));
     eeprom.readIntoMemArray((uint8_t*)readBuffer, 10, sizeof(memToWrite));
-    assertStringCaseEqual(memToWrite, readBuffer);
+    assertStringEquals(memToWrite, readBuffer);
 
     // now try other values to ensure the prior test worked
     eeprom.write8(0, 0xaa);
-    assertEqual((uint8_t)0xaa, eeprom.read8(0));
+    assertEquals((uint8_t)0xaa, eeprom.read8(0));
     assertFalse(eeprom.hasErrorOccurred());
 
     // write beyond boundary
@@ -96,9 +99,8 @@ void setup() {
     Wire.begin();
     Serial.begin(115200);
     while (!Serial);
+
+    startTesting();
 }
 
-void loop() {
-    aunit::TestRunner::setTimeout(60);
-    aunit::TestRunner::run();
-}
+DEFAULT_TEST_RUNLOOP

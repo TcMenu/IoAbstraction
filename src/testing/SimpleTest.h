@@ -2,7 +2,7 @@
 #define IOA_SIMPLE_TEST_H
 
 /**
- * @file SimpleTest.h - a very simple test framework for all platforms that IoAbstraction supports using taskmanager as
+ * @file SimpleTest.h - a very simple test framework for all platforms that IoAbstraction supports using testmanager as
  * the executor queue. This is enough of a test framework for me to test my libraries, it may well be enough for you
  * as well, but it is far from complete. Unfortunately, aunit just does not work on the boards I need to test on, I've
  * excused it for a long time, but now it's more than half and will get worse as more boards move to the API. This
@@ -37,23 +37,27 @@ namespace SimpleTest {
         }
         void withReason(const char* r) {
             strncpy(reason, r, sizeof reason);
+            reason[sizeof(reason)-1] = 0;
         }
     };
 
-    class UnitTestExecutor : public Executable {
+    class UnitTestExecutor {
     private:
         static UnitTestExecutor *currentlyRunning;
         TestStatus testStatus = NOT_RUN;
         FailureInfo failureReason;
-        char testName[32] = {};
+        const char* testName;
     public:
         void init(const char* name, bool ignored = false);
 
         virtual void performTest() = 0;
 
         TestStatus getTestStatus() const { return testStatus; }
-        void exec() override;
+        void exec();
         void setFailed(const char* file, int line, const char* reason);
+
+        virtual void setup() {}
+        virtual void teardown() {}
 
         static UnitTestExecutor* getCurrentTest() {
             return currentlyRunning;
@@ -74,10 +78,19 @@ namespace SimpleTest {
         UnitTestExecutor* getTest() { return executor; }
     };
 
-    class TestManager : public BaseEvent {
+    /**
+     * Implement this predicate to be able to filter out tests based on the name or any other parameter.
+     * You are given a reference to the test and can return true = run test, false = dont run.
+     */
+    typedef bool (*TestFilterPredicate)(UnitTestExecutor* theTest);
+
+    class TestManager {
     private:
         BtreeList<uint8_t, ExecutionWithId> testsRecorded;
         static TestManager* instance;
+        int currentIndex = 0;
+        bool needsSummary = true;
+        TestFilterPredicate filterPredicate = nullptr;
 
         TestManager(): testsRecorded(32) {}
 
@@ -86,15 +99,17 @@ namespace SimpleTest {
 
         void begin();
 
+        void runLoop();
+
         void addTest(UnitTestExecutor* t) {
             testsRecorded.add(ExecutionWithId(testsRecorded.count(), t));
         }
 
-        void exec() override;
-
-        uint32_t timeOfNextCheck() override;
-
         void printSummary();
+
+        void setTestFilterPredicate(TestFilterPredicate predicate) {
+            filterPredicate = predicate;
+        }
     };
 
     inline void startTesting() {
@@ -195,17 +210,30 @@ namespace STestInternal {
         internalEquality(file, line, y > x, x, y, ">");
     }
 
+    // pointers
+
+    inline void assertEqualityInternal(const char *file, int line, const void* x, const void* y) {
+        internalEquality(file, line, x == y, (int)x, (int)y, "==");
+    }
+
+    inline void assertNonEqualityInternal(const char *file, int line, const void* x, const void* y) {
+        internalEquality(file, line, x != y, (int)x, (int)y, "!=");
+    }
+
+    inline void assertEqualityInternal(const char *file, int line, const char* x, const char* y) {
+        assertStringInternal(file, line, x, y);
+    }
 }
 
-#define assertTrue(x) STestInternal::assertBoolInternal(__FILE__, __LINE__, x, "True")
-#define assertFalse(x) STestInternal::assertBoolInternal(__FILE__, __LINE__, !(x), "False")
-#define assertEquals(x, y) STestInternal::assertEqualityInternal(__FILE__, __LINE__, x, y)
-#define assertNotEquals(x, y) STestInternal::assertNonEqualityInternal(__FILE__, __LINE__, x, y)
-#define assertLessThan(x, y) STestInternal::assertLessInternal(__FILE__, __LINE__, x, y)
-#define assertMoreThan(x, y) STestInternal::assertMoreInternal(__FILE__, __LINE__, x, y)
-#define assertStringEquals(x, y) STestInternal::assertStringInternal(__FILE__, __LINE__, x, y)
-#define assertFloatNear(x, y, allowable) STestInternal::assertFloatInternal(__FILE__, __LINE__, x, y, allowable)
-#define fail(x) STestInternal::failInternal(__FILE__, __LINE__, x)
+#define assertTrue(actual) STestInternal::assertBoolInternal(__FILE__, __LINE__, actual, "True")
+#define assertFalse(actual) STestInternal::assertBoolInternal(__FILE__, __LINE__, !(actual), "False")
+#define assertEquals(expected, actual) STestInternal::assertEqualityInternal(__FILE__, __LINE__, expected, actual)
+#define assertNotEquals(expected, actual) STestInternal::assertNonEqualityInternal(__FILE__, __LINE__, expected, actual)
+#define assertLessThan(expected, actual) STestInternal::assertLessInternal(__FILE__, __LINE__, expected, actual)
+#define assertMoreThan(expected, actual) STestInternal::assertMoreInternal(__FILE__, __LINE__, expected, actual)
+#define assertStringEquals(expected, actual) STestInternal::assertStringInternal(__FILE__, __LINE__, expected, actual)
+#define assertFloatNear(expected, actual, allowable) STestInternal::assertFloatInternal(__FILE__, __LINE__, expected, actual, allowable)
+#define fail(reason) STestInternal::failInternal(__FILE__, __LINE__, reason)
 
 #define testi(name, ignored) \
 class UnitTest_##name : public SimpleTest::UnitTestExecutor {\
@@ -218,6 +246,20 @@ UnitTest_##name :: UnitTest_##name() {\
 }\
 void UnitTest_##name::performTest()
 
+#define testFi(testClass, name, ignored) \
+class testClass ## _ ## name : public testClass {\
+public:\
+  testClass ## _ ## name();\
+  void performTest() override;\
+} testClass ## _ ## name ## _instance;\
+testClass ## _ ## name :: testClass ## _ ## name() {\
+  init(#name, ignored); \
+}\
+void testClass ## _ ## name :: performTest()
+
 #define test(name) testi(name, false)
+#define testF(clazz, name) testFi(clazz, name, false)
+
+#define DEFAULT_TEST_RUNLOOP void loop() { TestManager::getInstance()->runLoop(); }
 
 #endif //IOA_SIMPLE_TEST_H
