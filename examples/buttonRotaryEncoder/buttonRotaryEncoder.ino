@@ -14,23 +14,23 @@
 #include <TaskManagerIO.h>
 
 // The pin onto which we connected the rotary encoders switch
-const pinid_t spinwheelClickPin = 0;
+const pinid_t spinwheelClickPin = 10;
 
 // The pin onto which we connected the repeat button switch
-const pinid_t repeatButtonPin = PC9;
+const pinid_t repeatButtonPin = 4;
 
 // The two pins where we connected the A and B pins of the encoder, the A pin must support interrupts.
-const pinid_t encoderAPin = PC8;
-const pinid_t encoderBPin = PC10;
+const pinid_t encoderAPin = 5;
+const pinid_t encoderBPin = 6;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
 
 // an LED that flashes as the encoder changes
-const int ledOutputPin = LED_BLUE;
+const int ledOutputPin = LED_BUILTIN;
 
 // You can change the step rate of the encoder, it defaults to 1, but can be changed during a precision change
-const int stepSize = 2;
+const int stepSize = 1;
 
 // You can set the encoder to wrap around at min/max values, or just to stop there.
 const bool wrapAround = true;
@@ -60,7 +60,7 @@ void onEncoderChange(int newValue) {
     Serial.println(newValue);
 
     // here we turn the LED on and off as the encoder moves.
-    boardIo.digitalWriteS(ledOutputPin, newValue % 2);
+    internalDigitalDevice().digitalWriteS(ledOutputPin, newValue % 2);
 }
 
 void setup() {
