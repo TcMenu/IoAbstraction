@@ -7,11 +7,19 @@
 #if defined(IOA_USE_ARDUINO) && !(defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS))
 
 void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
+#ifdef ARDUINO_API_VERSION
+    arduino::pinMode(pin, mode);
+#else
     ::pinMode(pin, mode);
+#endif
 }
 
 void BasicIoAbstraction::writeValue(pinid_t pin, uint8_t value) {
+#ifdef ARDUINO_API_VERSION
+    arduino::digitalWrite(pin, value);
+#else
     ::digitalWrite(pin, value);
+#endif
 }
 
 uint8_t BasicIoAbstraction::readValue(pinid_t pin) {

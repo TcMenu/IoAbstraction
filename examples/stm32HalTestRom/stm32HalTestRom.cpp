@@ -11,11 +11,7 @@
 #include <IoLogging.h>
 #include <TaskManagerIO.h>
 
-#ifdef __MBED__
-// to be able to use IoLogging within your application add the following
-BufferedSerial serPort(USBTX, USBRX);
-MBedLogger LoggingPort(serPort);
-#endif
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 
 // create the EEPROM
 HalStm32EepromAbstraction eeprom;
@@ -30,11 +26,7 @@ char readBuffer[64];
 bool running = true;
 
 void setup() {
-#ifdef __MBED__
-    serPort.set_baud(115200);
-#else
-    Serial.begin(115200);
-#endif
+    IOLOG_START_SERIAL
 
     // before anything else, initialise the ROM.
     eeprom.initialise(OFFSET_ROM_AREA);

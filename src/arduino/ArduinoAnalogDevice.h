@@ -28,8 +28,6 @@ private:
     uint16_t readResolution;
     uint16_t writeResolution;
 public:
-    static ArduinoAnalogDevice* theInstance;
-
     /**
 	 * Initialise the Arduino analog device with a given read and write bit resolution, on AVR and
 	 * ESP8266 input is set to 10 bits (1024) and output to 8 bits (255). On SAMD and some other board

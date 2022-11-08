@@ -29,7 +29,7 @@
 
 // create a multi Io that allocates the first 100 pins to arduino pins
 MultiIoAbstraction multiIo(EXPANDER1);
-PCF8574IoAbstraction ioExpander(0x20, IO_PIN_NOT_DEFINED);
+PCF8574IoAbstraction io8574(0x20, IO_PIN_NOT_DEFINED);
 
 //
 // when the switch is pressed then this function will be called.

@@ -34,7 +34,6 @@ ArduinoAnalogDevice::ArduinoAnalogDevice(uint8_t readBitResolution, uint8_t writ
     this->writeBitResolution = writeBitResolution;
     this->readResolution = (1 << readBitResolution) - 1;
     this->writeResolution = (1 << writeBitResolution) - 1;
-    theInstance = this;
 }
 
 void ArduinoAnalogDevice::setCurrentFloat(pinid_t pin, float value) {

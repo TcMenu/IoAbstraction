@@ -34,7 +34,7 @@ test(testI2cArrayWrites) {
     serdebug("I2C eeprom array written.");
 
     eeprom.readIntoMemArray((uint8_t*)readBuffer, 710, sizeof(memToWrite));
-    assertStringCaseEqual(memToWrite, readBuffer);
+    assertStringEquals(memToWrite, readBuffer);
     serdebug("Read into mem done");
 }
 
@@ -44,9 +44,9 @@ test(testI2cSingleWrites) {
     assertTrue(romClear(eeprom, 700));
 
     eeprom.write8(700, 0xFF);
-    assertEqual(0xFF, eeprom.read8(700));
+    assertEquals(0xFF, eeprom.read8(700));
     eeprom.write8(700, 0xDD);
-    assertEqual(0xDD, eeprom.read8(700));
+    assertEquals(0xDD, eeprom.read8(700));
 
     eeprom.write16(701, 0xf00d);
     eeprom.write32(703, 0xbeeff00d);
@@ -54,8 +54,8 @@ test(testI2cSingleWrites) {
     yield();
     serdebug("I2C reads...");
 
-    assertEqual((uint16_t)0xf00d, eeprom.read16(701));
-    assertEqual((uint32_t)0xbeeff00d, eeprom.read32(703));
+    assertEquals((uint16_t)0xf00d, eeprom.read16(701));
+    assertEquals((uint32_t)0xbeeff00d, eeprom.read32(703));
 
     assertFalse(eeprom.hasErrorOccurred());
 }

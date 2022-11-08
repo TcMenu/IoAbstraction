@@ -35,13 +35,24 @@
 
 #include <TaskManagerIO.h>
 #include <IoAbstraction.h>
-#include "../../src/IoLogging.h"
+#include <IoLogging.h>
 
 char sz[] = {"hello world"};
 
+// this sets up logging on mbed but is ignored on Arduino, so you can leave in place for both.
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
+
 void setup() {
-    Serial.begin(115200);
+    // Use this to start logging in a platform independent way between mbed and Arduino.
+    IOLOG_START_SERIAL
+
     Serial.println("Starting ioLogging example");
+
+    // we can use this to start the logging delegate that logs task manager notifications at IOA_DEBUG level
+    startTaskManagerLogDelegate();
+
+    // enable an extra level
+    serEnableLevel(SER_IOA_DEBUG, true);
 
     // write a string entry that is applied with F(..) so in progmem on AVR
     // with an integer second value.

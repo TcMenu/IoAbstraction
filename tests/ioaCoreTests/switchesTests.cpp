@@ -26,14 +26,14 @@ void encoderCallback2(int newVal) {
     callsMade2++;
 }
 
-void onSwitchPressed(uint8_t k, bool h) {
+void onSwitchPressed(pinid_t k, bool h) {
     callsMade++;
     key = k;
     held = h;
     pressed = true;
 }
 
-void onSwitchReleased(uint8_t, bool h) {
+void onSwitchReleased(pinid_t, bool h) {
     keyReleased = true;
     held = h;
 }

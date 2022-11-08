@@ -35,7 +35,6 @@ const int stepSize = 2;
 // You can set the encoder to wrap around at min/max values, or just to stop there.
 const bool wrapAround = true;
 
-auto dfRobotIo = DfRobotInputAbstraction(pin, device);
 
 //
 // When the encoder button is clicked, this function will be run as we registered it as a callback
@@ -70,12 +69,12 @@ void setup() {
     Serial.println("Starting rotary encoder example");
 
     // We want to make the onboard LED flash, so set the pin to be output
-    boardIo.pinMode(ledOutputPin, OUTPUT);
+    internalDigitalDevice().pinMode(ledOutputPin, OUTPUT);
 
     // our next task is to initialise swtiches, do this BEFORE doing anything else with switches.
     // We choose to initialise in poll everything (requires no interrupts), but there are other modes too:
     // (SWITCHES_NO_POLLING - interrupt only) or (SWITCHES_POLL_KEYS_ONLY - encoders on interrupt)
-    switches.init(asIoRef(boardIo), SWITCHES_POLL_KEYS_ONLY, true);
+    switches.init(internalDigitalIo(), SWITCHES_POLL_KEYS_ONLY, true);
 
     // now we add the switches, we don't want the spin-wheel button to repeat, so leave off the last parameter
     // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.

@@ -25,6 +25,8 @@
 #include<IoAbstractionWire.h>
 #include <TaskManagerIO.h>
 
+PCF8574IoAbstraction io8574(0x20, 0);
+
 // The pin onto which we connected the rotary encoders switch
 const int spinWheelClickPin = 5;
 
@@ -80,7 +82,7 @@ public:
         ++counter;
         Serial.print("Repeat button pressed ");
         Serial.println(counter);
-        ioDeviceDigitalWriteS(switches.getIoAbstraction(), ledPin, counter & 0x01);
+        io8574.digitalWriteS(ledPin, counter & 0x01);
     }
 
     void onReleased(pinid_t pin, bool held) override {
@@ -122,9 +124,9 @@ void setup() {
     // First we set up the switches library, giving it the task manager and tell it where the pins are located
     // We could also of chosen IO through an i2c device that supports interrupts.
     // the second parameter is a flag to use pull up switching, (true is pull up).
-    switches.initialiseInterrupt(ioFrom8574(0x20, 0), true);
+    switches.initialiseInterrupt(asIoRef(io8574), true);
 
-    ioDevicePinMode(switches.getIoAbstraction(), ledPin, OUTPUT);
+    io8574.pinMode(ledPin, OUTPUT);
 
     // now we add the switches, we dont want the spin wheel button to repeat, so leave off the last parameter
     // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.

@@ -15,16 +15,8 @@
 #include <IoAbstractionWire.h>
 
 // uncomment the line below for compilation on mbed, comment out for Arduino
-//#define COMPILE_FOR_MBED
 
-#ifdef COMPILE_FOR_MBED
-#include <mbed.h>
-BufferedSerial serPort(USBTX, USBRX);
-MBedLogger LoggingPort(serPort);
-I2C i2c(PF_0, PF_1);
-#else
-#include <Wire.h>
-#endif
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 
 //
 // we normally try and group input and output on different ports, it is more efficient and
@@ -74,14 +66,8 @@ void onEncoderChange(int encoderValue) {
 }
 
 void setup() {
-
-#ifdef __MBED__
-    serPort.set_baud(115200);
-    ioaWireBegin(&i2c);
-#else
+    IOLOG_START_SERIAL
     Wire.begin(4, 15);
-    Serial.begin(115200);
-#endif
 
     // this is optional, in a real world system you could probably just connect the
     // reset pin of the device to Vcc, but when prototyping you'll want a reset
@@ -116,11 +102,3 @@ void loop() {
     taskManager.runLoop();
 }
 
-#ifdef COMPILE_FOR_MBED
-int main() {
-    setup();
-    while(true) {
-        loop();
-    }
-}
-#endif

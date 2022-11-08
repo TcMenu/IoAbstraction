@@ -260,10 +260,10 @@ void testClass ## _ ## name :: performTest()
 #define test(name) testi(name, false)
 #define testF(clazz, name) testFi(clazz, name, false)
 
-#ifdef __MBED__
-#define DEFAULT_TEST_RUNLOOP int main() { setup(); while(1) {TestManager::getInstance()->runLoop();} }
-#else
+#ifdef IOA_USE_ARDUINO
 #define DEFAULT_TEST_RUNLOOP void loop() { TestManager::getInstance()->runLoop(); }
-#endif //__MBED__
+#else
+#define DEFAULT_TEST_RUNLOOP int main() { setup(); while(1) {TestManager::getInstance()->runLoop();} }
+#endif //IOA_USE_ARDUINO
 
 #endif //IOA_SIMPLE_TEST_H
