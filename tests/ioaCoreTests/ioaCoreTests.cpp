@@ -1,10 +1,9 @@
 
 #include <testing/SimpleTest.h>
-#include <Arduino.h>
+#include <IoAbstraction.h>
+#include <PlatformDeterminationWire.h>
 #include <MockEepromAbstraction.h>
 #include <EepromAbstractionWire.h>
-#include "IoAbstraction.h"
-#include <Wire.h>
 
 using namespace SimpleTest;
 
@@ -95,11 +94,20 @@ test(testMockEeprom) {
     assertTrue(eeprom.hasErrorOccurred());
 }
 
-void setup() {
-    Wire.begin();
-    Serial.begin(115200);
-    while (!Serial);
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX)
 
+#ifdef IOA_USE_MBED
+I2C Wire(PF_0, PF_1);
+#endif
+
+void setup() {
+    IOLOG_START_SERIAL
+
+#ifdef IOA_USE_MBED
+    ioaWireBegin(&Wire);
+#else
+    Wire.begin();
+#endif
     startTesting();
 }
 

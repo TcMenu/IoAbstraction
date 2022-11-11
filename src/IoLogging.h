@@ -64,7 +64,7 @@ class MBedLogger : public Print {
 private:
     FileHandle& serial;
 public:
-    MBedLogger(FileHandle& serialName) : serial(serialName) {}
+    explicit MBedLogger(FileHandle& serialName) : serial(serialName) {}
 
     size_t write(uint8_t ch) override {
         serial.write(&ch, 1);

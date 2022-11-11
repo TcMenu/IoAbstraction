@@ -177,10 +177,10 @@ public:
      * @param dp the number of decimal places, default 3. Max 6.
      */
     void print(double dbl, int dp = 3) {
-
         char sz[32];
         sz[0]=0;
         fastftoa(sz, (float)dbl, dp, sizeof sz);
+        write(sz);
     }
 
     /**

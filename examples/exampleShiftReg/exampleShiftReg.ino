@@ -24,10 +24,10 @@ void setup() {
 	// 0-31 are always input and 32 onwards are always output with the shift register abstraction
 	// this allows for up to 4 input and 4 output devices to be chained together.
 	for (int i = 32; i < 40; ++i) {
-		ioDevicePinMode(shiftRegister, i, OUTPUT);
+		shiftRegister.pinMode(i, OUTPUT);
 	}
 	for (int i = 0; i < 8; ++i) {
-		ioDevicePinMode(shiftRegister, i, INPUT);
+		shiftRegister.pinMode(i, INPUT);
 	}
 }
 
@@ -36,7 +36,7 @@ uint8_t counter = 0;
 void loop() {
 	delay(1);
 	shiftRegister.sync();
-    shiftRegister.digitalWrite(32, shiftRegister.digitalRead(1));
+    shiftRegister.digitalWrite(32, 1);//shiftRegister.digitalRead(1));
     shiftRegister.digitalWrite(33, shiftRegister.digitalRead(2));
     shiftRegister.digitalWrite(34, shiftRegister.digitalRead(3));
 	counter++;

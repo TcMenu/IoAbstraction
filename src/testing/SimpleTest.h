@@ -53,6 +53,8 @@ namespace SimpleTest {
         virtual void performTest() = 0;
 
         TestStatus getTestStatus() const { return testStatus; }
+        const char* getTestName() const { return testName; }
+
         void exec();
         void setFailed(const char* file, int line, const char* reason);
 

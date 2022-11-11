@@ -3,6 +3,7 @@
 #include "SimpleTest.h"
 #include "../IoLogging.h"
 #include "TextUtilities.h"
+#include <TaskManagerIO.h>
 
 namespace SimpleTest {
 
@@ -93,6 +94,13 @@ namespace SimpleTest {
         serlogF3(SER_DEBUG, "Starting test execution on ", testsRecorded.count(), "tests");
         currentIndex = 0;
         needsSummary = true;
+
+        if(serLevelEnabled(SER_IOA_DEBUG)) {
+            serlogF(SER_IOA_DEBUG, "The following tests were added");
+            for(auto t : testsRecorded) {
+                serlogF2(SER_IOA_DEBUG, "Test: ", t.getTest()->getTestName())
+            }
+        }
     }
 
     void TestManager::runLoop() {
@@ -105,8 +113,6 @@ namespace SimpleTest {
         } else if(needsSummary) {
             needsSummary = false;
             printSummary();
-        } else {
-            delay(100);
         }
     }
 

@@ -8,7 +8,7 @@
 // Tested with ST-Link V2.1
 IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX)
 
-ShiftRegisterIoAbstraction outReg(ShiftRegConfig(PG_0, PG_1, PD_1), ShiftRegConfig());
+ShiftRegisterIoAbstraction outReg(ShiftRegConfig(), ShiftRegConfig(PG_0, PG_1, PD_1, 1));
 
 uint8_t nextVal = 0;
 

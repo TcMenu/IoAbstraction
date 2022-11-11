@@ -13,7 +13,7 @@ AnalogDevice* internalAnalogIo() {
     return &mbedAnalogDevice;
 }
 
-AnalogDevice& internalAnalogDevice() {
+MBedAnalogDevice& internalAnalogDevice() {
     return mbedAnalogDevice;
 }
 

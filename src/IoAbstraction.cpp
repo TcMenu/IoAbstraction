@@ -5,6 +5,7 @@
 
 #include "PlatformDetermination.h"
 #include "IoAbstraction.h"
+#include <TaskManagerIO.h>
 
 #define LATCH_TIME 5
 
@@ -16,7 +17,7 @@ uint8_t shiftIn(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder) {
     uint8_t i;
 
     for(i = 0; i < 8; ++i) {
-        digitalWriteS(clockPin, HIGH);
+        internalDigitalDevice().digitalWriteS(clockPin, HIGH);
         if(bitOrder == LSBFIRST) {
             value |= internalDigitalDevice().digitalReadS(dataPin) << i;
         } else {
@@ -76,17 +77,17 @@ void ShiftRegisterIoAbstraction::initDevice() {
     needsWrite = true;
 
     if (writeDataPin != 0xff) {
-        pinMode(writeLatchPin, OUTPUT);
-        pinMode(writeDataPin, OUTPUT);
-        pinMode(writeClockPin, OUTPUT);
-        digitalWrite(writeLatchPin, LOW);
+        internalDigitalDevice().pinMode(writeLatchPin, OUTPUT);
+        internalDigitalDevice().pinMode(writeDataPin, OUTPUT);
+        internalDigitalDevice().pinMode(writeClockPin, OUTPUT);
+        internalDigitalDevice().digitalWrite(writeLatchPin, LOW);
     }
 
     if (readLatchPin != 0xff) {
-        pinMode(readLatchPin, OUTPUT);
-        pinMode(readDataPin, INPUT);
-        pinMode(readClockPin, OUTPUT);
-        digitalWrite(readLatchPin, HIGH);
+        internalDigitalDevice().pinMode(readLatchPin, OUTPUT);
+        internalDigitalDevice().pinMode(readDataPin, INPUT);
+        internalDigitalDevice().pinMode(readClockPin, OUTPUT);
+        internalDigitalDevice().digitalWrite(readLatchPin, HIGH);
     }
 
     needsInit = false;
@@ -220,10 +221,10 @@ ShiftRegisterIoAbstraction165In::ShiftRegisterIoAbstraction165In(pinid_t readClo
 }
 
 void ShiftRegisterIoAbstraction165In::initDevice() {
-    pinMode(readLatchPin, OUTPUT);
-    pinMode(readDataPin, INPUT);
-    pinMode(readClockPin, OUTPUT);
-    digitalWrite(readLatchPin, HIGH);
+    internalDigitalDevice().pinMode(readLatchPin, OUTPUT);
+    internalDigitalDevice().pinMode(readDataPin, INPUT);
+    internalDigitalDevice().pinMode(readClockPin, OUTPUT);
+    internalDigitalDevice().digitalWrite(readLatchPin, HIGH);
 
     needsInit = false;
 }

@@ -4,10 +4,10 @@
 
 using namespace SimpleTest;
 
-void setup() {
-    Serial.begin(115200);
-    //while(!Serial);
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX)
 
+void setup() {
+    IOLOG_START_SERIAL
     startTesting();
 }
 
