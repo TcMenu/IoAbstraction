@@ -88,9 +88,9 @@ unsigned long millis();
 // You can change the logging serial port by defining LoggingPort to your chosen serial port.
 #ifndef LoggingPort
 #define LoggingPort Serial
-#define IOLOG_START_SERIAL LoggingPort.begin(115200);while(!Serial);
-#define IOLOG_MBED_PORT_IF_NEEDED(tx, rx)
 #endif
+#define IOLOG_START_SERIAL LoggingPort.begin(115200);
+#define IOLOG_MBED_PORT_IF_NEEDED(tx, rx)
 #endif
 
 

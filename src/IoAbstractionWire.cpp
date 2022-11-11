@@ -111,7 +111,7 @@ uint16_t wireReadReg16(WireType wireType, uint8_t addr, uint8_t reg) {
 }
 
 uint8_t wireReadReg8(WireType wireType, uint8_t addr, uint8_t reg) {
-    ioaWireWriteWithRetry(wireType, addr, &reg, 1, 0);
+    ioaWireWriteWithRetry(wireType, addr, &reg, 1, 0, false);
 
     uint8_t buffer[2];
     if(ioaWireRead(wireType, addr, buffer, 1)){
@@ -382,25 +382,36 @@ void Standard16BitDevice::markInitialised() {
 
 inline uint8_t getAw9523LedDimRegister(pinid_t pin) {
     if(pin < 8) return AW9523_LED_DIM_START + 4 + pin;
-    else if(pin < 12) return AW9523_LED_DIM_START + pin;
+    else if(pin < 12) return AW9523_LED_DIM_START + (pin - 8);
     else return AW9523_LED_DIM_START + pin;
 }
 
-AW9523IoAbstraction::AW9523IoAbstraction(uint8_t addr, pinid_t intPin, WireType wireImpl) : Standard16BitDevice(), wireImpl(wireImpl),
-        i2cAddress(addr), interruptPin(intPin) {}
+AW9523IoAbstraction::AW9523IoAbstraction(uint8_t addr, pinid_t intPin, WireType wirePtr) : Standard16BitDevice(),
+        i2cAddress(addr), interruptPin(intPin) {
+    wireImpl = (wirePtr != nullptr) ? wirePtr : defaultWireTypePtr;
+}
 
 void AW9523IoAbstraction::initDevice() {
-    // turn off all interrupts by default
-    wireWriteReg16(wireImpl, i2cAddress, AW9523_INTERRUPT_CTRL_16, 0xFFFF);
-    wireWriteReg16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, 0x0);
-    writeGlobalControl(true);
-
     markInitialised();
+
+    // reset the device
+    softwareReset();
+
+    // turn off all interrupts
+    wireWriteReg16(wireImpl, i2cAddress, AW9523_INTERRUPT_CTRL_16, 0xFFFF);
+
+    // set everything to output, low
+    wireWriteReg16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, 0x0);
+
+    // full current, push/pull port 0.
+    writeGlobalControl(true);
 }
 
 void AW9523IoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) {
+     if(isInitNeeded()) initDevice();
+
     // only if there's an interrupt pin set
-    if(interruptPin == 0xff) {
+    if(interruptPin == IO_PIN_NOT_DEFINED) {
         serlogF(SER_ERROR, "AW9523 no int pin");
         return;
     }
@@ -414,12 +425,18 @@ void AW9523IoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler,
 }
 
 void AW9523IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
+    if(isInitNeeded()) initDevice();
+
     if(mode == INPUT) {
-        toggleBitInRegister16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, pin, false);
-        toggleBitInRegister16(wireImpl, i2cAddress, AW9523_LED_MODE_16, pin, true);
-    } else if(mode == OUTPUT) {
+        setReadPort(pin < 8 ? 0 : 1);
         toggleBitInRegister16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, pin, true);
         toggleBitInRegister16(wireImpl, i2cAddress, AW9523_LED_MODE_16, pin, true);
+    } else if(mode == OUTPUT) {
+        toggleBitInRegister16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, pin, false);
+        toggleBitInRegister16(wireImpl, i2cAddress, AW9523_LED_MODE_16, pin, true);
+    } else if(mode == AW9523_LED_OUTPUT) {
+        toggleBitInRegister16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, pin, false);
+        toggleBitInRegister16(wireImpl, i2cAddress, AW9523_LED_MODE_16, pin, false);
     } else {
         serlogF3(SER_ERROR, "AW9523 mode error ", pin, mode);
         return;
@@ -427,6 +444,8 @@ void AW9523IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
 }
 
 bool AW9523IoAbstraction::runLoop() {
+    if(isInitNeeded()) initDevice();
+
     bool writeOk = true;
     bool port0 = isWritePortSet(0);
     bool port1 = isWritePortSet(1);
@@ -452,17 +471,31 @@ bool AW9523IoAbstraction::runLoop() {
 }
 
 void AW9523IoAbstraction::setPinLedCurrent(pinid_t pin, uint8_t pwr) {
-    toggleBitInRegister16(wireImpl, i2cAddress, AW9523_LED_MODE_16, pin, false);
+    if(isInitNeeded()) initDevice();
     wireWriteReg8(wireImpl, i2cAddress, getAw9523LedDimRegister(pin), pwr);
+    if(bitRead(toWrite, pin) == 0 && pwr != 0) {
+        digitalWriteS(pin, true);
+    }
 }
 
 void AW9523IoAbstraction::softwareReset() {
-    wireWriteReg8(wireImpl, i2cAddress, AW9523_SW_RESET_REG, 0xff);
+    wireWriteReg8(wireImpl, i2cAddress, AW9523_SW_RESET_REG, 0);
 }
 
-void AW9523IoAbstraction::writeGlobalControl(bool pushPullP0, uint8_t maxCurrentMode) {
-    uint8_t params = maxCurrentMode & 0x04;
-    auto openDrain = !pushPullP0;
-    bitWrite(params, 4, openDrain);
+uint8_t AW9523IoAbstraction::deviceId() {
+    return wireReadReg8(wireImpl, i2cAddress, AW9523_CHIP_IDENTIFIER);
+}
+
+void AW9523IoAbstraction::writeGlobalControl(bool pushPullP0, AW9523CurrentControl maxCurrentMode) {
+    uint8_t params = maxCurrentMode & 0x03;
+    bitWrite(params, 4, pushPullP0);
     wireWriteReg8(wireImpl, i2cAddress, AW9523_GLOBAL_CONTROL, params);
+}
+
+void AW9523AnalogAbstraction::initPin(pinid_t pin, AnalogDirection direction) {
+    if(direction == DIR_PWM || direction == DIR_OUT) {
+        theAbstraction.pinMode(pin, AW9523_LED_OUTPUT);
+    } else {
+        serlogF2(SER_ERROR, "AW9523 No AnalogIn", pin);
+    }
 }

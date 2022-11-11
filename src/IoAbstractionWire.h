@@ -12,8 +12,11 @@
 #ifndef _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 #define _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 
+#define AW9523_LED_OUTPUT 0x99
+
 #include "PlatformDeterminationWire.h"
 #include "IoAbstraction.h"
+#include "AnalogDeviceAbstraction.h"
 
 /**
  * An implementation of BasicIoAbstraction that supports the PCF8574/PCF8575 i2c IO chip. Providing all possible capabilities
@@ -184,20 +187,46 @@ private:
 	void initDevice() override;
 };
 
+/**
+ * The AW9523IoAbstraction class provides an Arduino like wrapper for the AW9523 I2C device providing access to most
+ * functions available on the device in an Arduino like way, implementing IoAbstraction so that it can be used with
+ * LCD units, switches, rotary encoders and matrix keyboards in the regular way. The LED current control facilities are
+ * also exposed using an extension.
+ */
 class AW9523IoAbstraction : public Standard16BitDevice {
 private:
     WireType wireImpl;
     uint8_t i2cAddress;
     pinid_t interruptPin;
 public:
-    AW9523IoAbstraction(uint8_t addr, pinid_t intPin, WireType wireImpl);
+    enum AW9523CurrentControl: uint8_t { FULL_CURRENT = 0, CURRENT_THREE_QUARTER = 1, CURRENT_HALF = 2, CURRENT_QUARTER = 3 };
+
+    /**
+     * create an instance of the AW9523 abstraction that communicates with the device and extends Arduino like functions
+     * for the pins on the device. This constructor takes the I2C address, and optionally an interrupt pin and wire
+     * implementation. Any interrupt pin provided will be set up on your behalf automatically.
+     *
+     * @param addr the address on the I2C bus of the device
+     * @param intPin optionally a pin on the board that the devices interrupt pin is connected to
+     * @param wirePtr optionally an alternative wire implementation, EG Wire1, or other non standard I2C device.
+     */
+    explicit AW9523IoAbstraction(uint8_t addr, pinid_t intPin = IO_PIN_NOT_DEFINED, WireType wirePtr = nullptr);
     ~AW9523IoAbstraction() override = default;
 
     /**
- * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT_PULLUP, INPUT and OUTPUT.
- * @param pin the pin to set direction for on this device
- * @param mode the mode such as INPUT, INPUT_PULLUP, OUTPUT
- */
+     * Gets the device ID from the chip from the ID register.
+     * @return the device ID
+     */
+    uint8_t deviceId();
+
+
+    /**
+     * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT, OUTPUT and
+     * AW9523_LED_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
+     * instead of digital write.
+     * @param pin the pin to set direction for on this device
+     * @param mode for this device, INPUT, OUTPUT or AW9523_LED_OUTPUT
+     */
     void pinDirection(pinid_t pin, uint8_t mode) override;
 
     /**
@@ -221,18 +250,45 @@ public:
 
     /**
      * You can change the global control register using this function, setting P0 either as push pull or open drain,
-     * you can also change the max-current range setting for the chip. This is as per datasheet.
+     * you can also change the max-current range setting for the chip. This is as per datasheet. Make sure you've called
+     * sync at least once before calling.
      * @param pushPullP0 true - enable push pull, false - open drain
-     * @param maxCurrentMode - 0=full current, 1=0.75 current, 2=0.5 current, 3=0.25 current.
+     * @param maxCurrentMode - see the AW9523CurrentControl enumeration for appropriate values
      */
-    void writeGlobalControl(bool pushPullP0, uint8_t maxCurrentMode = 0x0);
+    void writeGlobalControl(bool pushPullP0, AW9523CurrentControl maxCurrentMode = FULL_CURRENT);
 
     /**
-     * Perform a software reset of the device.
+     * Perform a software reset of the device. Make sure you've called sync at least once before calling.
      */
     void softwareReset();
 private:
-    void initDevice();
+    void initDevice() override;
+};
+
+/**
+ * A wrapper for the AW9523IoAbstraction that provides the LED control analog functions as an AnalogDevice, this allows
+ * you to use this device with anything that already works with AnalogDevice objects for output. Simple construct giving
+ * a reference to the actual abstraction.
+ */
+class AW9523AnalogAbstraction : public AnalogDevice {
+private:
+    AW9523IoAbstraction& theAbstraction;
+public:
+    explicit AW9523AnalogAbstraction(AW9523IoAbstraction &abs): theAbstraction(abs) {}
+
+    int getMaximumRange(AnalogDirection direction, pinid_t pin) override { return 255; }
+
+    int getBitDepth(AnalogDirection direction, pinid_t pin) override { return 8; }
+
+    void initPin(pinid_t pin, AnalogDirection direction) override;
+
+    unsigned int getCurrentValue(pinid_t pin) override { return -1; }
+
+    float getCurrentFloat(pinid_t pin) override { return NAN; }
+
+    void setCurrentValue(pinid_t pin, unsigned int newValue) override { theAbstraction.setPinLedCurrent(pin, newValue); }
+
+    void setCurrentFloat(pinid_t pin, float newValue) override { theAbstraction.setPinLedCurrent(pin, (uint8_t)(newValue * 255.0F)); }
 };
 
 // to remain compatible with old code
@@ -242,6 +298,7 @@ private:
  * Creates an instance of an IoAbstraction that works with a PCF8574 chip over i2c, which optionally
  * has support for interrupts should it be needed. Note that only interrupt mode CHANGE is support, 
  * and a change on any pin raises an interrupt. All inputs are by default INPUT_PULLUP by device design.
+ * In new code prefer using the constructor.
  * @param addr the i2c address of the device
  * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
  * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
@@ -254,6 +311,7 @@ IoAbstractionRef ioFrom8574(uint8_t addr, pinid_t interruptPin, WireType wireImp
  * Creates an instance of an IoAbstraction that works with a PCF8575 16 bit chip over i2c, which optionally
  * has support for interrupts should it be needed. Note that only interrupt mode CHANGE is support,
  * and a change on any pin raises an interrupt. All inputs are by default INPUT_PULLUP by device design.
+ * In new code prefer using the constructor.
  * @param addr the i2c address of the device
  * @param interruptPin (optional default = 0xff) the pin on the Arduino side that is used for interrupt handling if needed.
  * @param wireImpl (optional defaults to Wire) pointer to a TwoWire class to use if not using Wire
@@ -266,6 +324,7 @@ IoAbstractionRef ioFrom8575(uint8_t addr, pinid_t interruptPin, WireType wireImp
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
  * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
  * capabilities. See the other helper methods if you want interrupts.
+ * In new code prefer using the constructor.
  * @param addr the i2c address of the device
  * @param wireImpl (defaults to using Wire) can be overriden to any pointer to another Wire/I2C
  * @return an IoAbstactionRef for the device
@@ -276,6 +335,7 @@ IoAbstractionRef ioFrom23017(pinid_t addr, WireType wireImpl);
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest in
  * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
  * capabilities. This uses one Arduino interrupt pin for BOTH ports on the device.
+ * In new code prefer using the constructor.
  * @param addr the i2c address of the device
  * @param intMode the interrupt mode the device will operate in
  * @param interruptPin the pin on the Arduino that will be used to detect the interrupt condition.
@@ -288,6 +348,7 @@ IoAbstractionRef ioFrom23017(uint8_t addr, Mcp23xInterruptMode intMode, pinid_t 
  * Perform digital read and write functions using 23017 expanders. These expanders are the closest include
  * terms of functionality to regular Arduino pins, supporting most interrupt modes and very similar GPIO
  * capabilities. If interrupts are needed, this uses one Arduino pin for EACH port on the device.
+ * In new code prefer using the constructor.
  * @param addr the i2c address of the device
  * @param intMode the interrupt mode the device will operate in
  * @param interruptPinA the pin on the Arduino that will be used to detect the PORTA interrupt condition.
