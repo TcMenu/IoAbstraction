@@ -538,7 +538,7 @@ public:
 	 * @param currentValue the current value to be set.
 	 * @param step the size of each step of the encoder, default is 1
 	 */
-	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue, int step=1) { changeEncoderPrecision(0, precision, currentValue, step); }
+	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue, int step=1) { changeEncoderPrecision(0, precision, currentValue, false, step); }
 
 	/**
 	 * Use this version of changeEncoderPrecision if you are working with more than one rotary encoder.
