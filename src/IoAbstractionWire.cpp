@@ -427,7 +427,7 @@ void AW9523IoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler,
 void AW9523IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
     if(isInitNeeded()) initDevice();
 
-    if(mode == INPUT) {
+    if(mode == INPUT || mode == INPUT_PULLUP) {
         setReadPort(pin < 8 ? 0 : 1);
         toggleBitInRegister16(wireImpl, i2cAddress, AW9523_PORT_DIRECTION_16, pin, true);
         toggleBitInRegister16(wireImpl, i2cAddress, AW9523_LED_MODE_16, pin, true);
