@@ -116,8 +116,6 @@ void EspAnalogOutputMode::write(unsigned int newVal) const {
     ledcWrite(pwmChannel, newVal);
 }
 
-ESP32AnalogDevice* ESP32AnalogDevice::theInstance = nullptr;
-
 ESP32AnalogDevice::ESP32AnalogDevice() {
     adc1_config_width(IOA_ESP_BIT_SELECTION);
 }

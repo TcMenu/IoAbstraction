@@ -107,7 +107,7 @@ public:
     }
 };
 
-unsigned long safeMilliDiffFromNow(unsigned long then) {
+uint32_t safeMilliDiffFromNow(unsigned long then) {
     unsigned long now = millis();
     if(then > now) return 0;
     return now - then;
