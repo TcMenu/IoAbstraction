@@ -11,7 +11,7 @@ using namespace SimpleTest;
  */
 
 const uint8_t i2cAddr = 0x50;
-const At24EepromType eepromType = PAGESIZE_AT24C128;
+const At24EepromType eepromType = PAGESIZE_AT24C16;//PAGESIZE_AT24C128;
 
 const char smallerTestString[] = "Test string that exceeds page size";
 const char longerTestString[] = "This is a test string that exceeds page size on larger EEPROMs with big pages";
@@ -38,7 +38,7 @@ test(testI2CEeprom) {
     for(int i=0; i<eepromSize; i++) {
         eeprom.write8(i, 0);
         serlogF2(SER_DEBUG, "Loop ", i)
-        assertNotEquals(0, eeprom.read8(i));
+        assertEquals(0, eeprom.read8(i));
         assertFalse(eeprom.hasErrorOccurred());
         loopsPerformed++;
     }
@@ -80,6 +80,4 @@ test(testI2CEeprom) {
     serdebugF("Oversize finished OK");
 }
 
-void loop() {
-    taskManager.runLoop();
-}
+DEFAULT_TEST_RUNLOOP

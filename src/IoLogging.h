@@ -171,6 +171,11 @@ void startTaskManagerLogDelegate();
 
 #define startTaskManagerLogDelegate()
 
+#define IOLOG_START_SERIAL
+#define IOLOG_MBED_PORT_IF_NEEDED(tx, rx)
+
+#define serEnableLevel(l, a)
+#define serLevelEnabled(l) false
 #endif // IO_LOGGING_DEBUG
 
 #endif // _IO_LOGGING_H_
