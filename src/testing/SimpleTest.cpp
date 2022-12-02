@@ -40,7 +40,7 @@ namespace SimpleTest {
         currentlyRunning = nullptr;
     }
 
-    void UnitTestExecutor::setFailed(const char *file, int line, const char *reason) {
+    void UnitTestExecutor::setFailed(PGM_TYPE file, int line, const char *reason) {
         testStatus = FAILED;
         failureReason.withFileAndLine(file, line);
         failureReason.withReason(reason);
@@ -125,7 +125,7 @@ namespace SimpleTest {
 }
 
 namespace STestInternal {
-    void assertBoolInternal(const char* file, int line, bool valid, const char* reason) {
+    void assertBoolInternal(PGM_TYPE file, int line, bool valid, const char* reason) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
 
@@ -136,7 +136,7 @@ namespace STestInternal {
         }
     }
 
-    void assertFloatInternal(const char* file, int line, float x, float y, float allowable) {
+    void assertFloatInternal(PGM_TYPE file, int line, float x, float y, float allowable) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
 
@@ -147,7 +147,7 @@ namespace STestInternal {
         }
     }
 
-    void internalEquality(const char* file, int line, bool eq, uint32_t x, uint32_t y, const char* how) {
+    void internalEquality(PGM_TYPE file, int line, bool eq, uint32_t x, uint32_t y, const char* how) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
 
@@ -158,7 +158,7 @@ namespace STestInternal {
         }
     }
 
-    void assertStringInternal(const char* file, int line, const char* x, const char* y) {
+    void assertStringInternal(PGM_TYPE file, int line, const char* x, const char* y) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
 
@@ -169,7 +169,7 @@ namespace STestInternal {
         }
     }
 
-    void failInternal(const char* file, int line, const char* reason) {
+    void failInternal(PGM_TYPE file, int line, const char* reason) {
         auto current = SimpleTest::UnitTestExecutor::getCurrentTest();
         if(current == nullptr || current->getTestStatus() != SimpleTest::RUNNING) return;
         current->setFailed(file, line, "fail()");

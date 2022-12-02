@@ -16,6 +16,15 @@
 
 #define FAIL_REASON_SIZE 32
 
+#ifdef __AVR__
+#include <avr/pgmspace.h>
+#define FromPgm(x) F(x)
+#define PGM_TYPE const __FlashStringHelper*
+#else
+#define FromPgm(x) (x)
+#define PGM_TYPE const char*
+#endif
+
 namespace SimpleTest {
 
     enum TestStatus {
@@ -26,18 +35,32 @@ namespace SimpleTest {
 
     class FailureInfo {
     private:
-        const char* file = "";
+        PGM_TYPE file;
         int line = 0;
         char reason[FAIL_REASON_SIZE];
     public:
         FailureInfo() {}
-        void withFileAndLine(const char* f, int l) {
+        void withFileAndLine(PGM_TYPE f, int l) {
             file = f;
             line = l;
         }
         void withReason(const char* r) {
             strncpy(reason, r, sizeof reason);
             reason[sizeof(reason)-1] = 0;
+        }
+
+        void copyFileToBuffer(char* sz, int len) const {
+            strncpy_P(sz, (char*)file, len);
+            sz[len-1] = 0;
+        }
+
+        void copyReasonToBuffer(char* sz, int len) const {
+            strncpy(sz, reason, len);
+            sz[len-1] = 0;
+        }
+
+        int getLine() const {
+            return line;
         }
     };
 
@@ -56,7 +79,7 @@ namespace SimpleTest {
         const char* getTestName() const { return testName; }
 
         void exec();
-        void setFailed(const char* file, int line, const char* reason);
+        void setFailed(PGM_TYPE file, int line, const char* reason);
 
         virtual void setup() {}
         virtual void teardown() {}
@@ -121,121 +144,121 @@ namespace SimpleTest {
 
 namespace STestInternal {
 
-    void internalEquality(const char *file, int line, bool success, uint32_t x, uint32_t y, const char *how);
+    void internalEquality(PGM_TYPE file, int line, bool success, uint32_t x, uint32_t y, const char *how);
 
-    void assertStringInternal(const char *file, int line, const char *x, const char *y);
+    void assertStringInternal(PGM_TYPE file, int line, const char *x, const char *y);
 
-    void failInternal(const char *file, int line, const char *reason);
+    void failInternal(PGM_TYPE file, int line, const char *reason);
 
-    void assertBoolInternal(const char *file, int line, bool valid, const char *reason);
+    void assertBoolInternal(PGM_TYPE file, int line, bool valid, const char *reason);
 
-    void assertFloatInternal(const char *file, int line, float x, float y, float allowable);
+    void assertFloatInternal(PGM_TYPE file, int line, float x, float y, float allowable);
 
-    inline void assertEqualityInternal(const char *file, int line, short x, short y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, short x, short y) {
         internalEquality(file, line, x == y, x, y, "==");
     }
-    inline void assertEqualityInternal(const char *file, int line, unsigned short x, unsigned short y) {
-        internalEquality(file, line, x == y, x, y, "==");
-    }
-
-    inline void assertEqualityInternal(const char *file, int line, int x, int y) {
-        internalEquality(file, line, x == y, x, y, "==");
-    }
-    inline void assertEqualityInternal(const char *file, int line, unsigned int x, unsigned int y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, unsigned short x, unsigned short y) {
         internalEquality(file, line, x == y, x, y, "==");
     }
 
-    inline void assertEqualityInternal(const char *file, int line, long x, long y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, int x, int y) {
         internalEquality(file, line, x == y, x, y, "==");
     }
-    inline void assertEqualityInternal(const char *file, int line, unsigned long x, unsigned long y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, unsigned int x, unsigned int y) {
         internalEquality(file, line, x == y, x, y, "==");
     }
 
-    inline void assertNonEqualityInternal(const char *file, int line, short x, short y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, long x, long y) {
+        internalEquality(file, line, x == y, x, y, "==");
+    }
+    inline void assertEqualityInternal(PGM_TYPE file, int line, unsigned long x, unsigned long y) {
+        internalEquality(file, line, x == y, x, y, "==");
+    }
+
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, short x, short y) {
         internalEquality(file, line, x != y, x, y, "!=");
     }
-    inline void assertNonEqualityInternal(const char *file, int line, unsigned short x, unsigned short y) {
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, unsigned short x, unsigned short y) {
         internalEquality(file, line, x != y, x, y, "!=");
     }
 
-    inline void assertNonEqualityInternal(const char *file, int line, int x, int y) {
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, int x, int y) {
         internalEquality(file, line, x != y, x, y, "!=");
     }
-    inline void assertNonEqualityInternal(const char *file, int line, unsigned int x, unsigned int y) {
-        internalEquality(file, line, x != y, x, y, "!=");
-    }
-
-    inline void assertNonEqualityInternal(const char *file, int line, long x, long y) {
-        internalEquality(file, line, x != y, x, y, "!=");
-    }
-    inline void assertNonEqualityInternal(const char *file, int line, unsigned long x, unsigned long y) {
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, unsigned int x, unsigned int y) {
         internalEquality(file, line, x != y, x, y, "!=");
     }
 
-
-    inline void assertLessInternal(const char *file, int line, short x, short y) {
-        internalEquality(file, line, y < x, x, y, "<");
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, long x, long y) {
+        internalEquality(file, line, x != y, x, y, "!=");
     }
-    inline void assertLessInternal(const char *file, int line, unsigned short x, unsigned short y) {
-        internalEquality(file, line, y < x, x, y, "<");
-    }
-    inline void assertLessInternal(const char *file, int line, int x, int y) {
-        internalEquality(file, line, y < x, x, y, "<");
-    }
-    inline void assertLessInternal(const char *file, int line, unsigned int x, unsigned int y) {
-        internalEquality(file, line, y < x, x, y, "<");
-    }
-    inline void assertLessInternal(const char *file, int line, long x, long y) {
-        internalEquality(file, line, y < x, x, y, "<");
-    }
-    inline void assertLessInternal(const char *file, int line, unsigned long x, unsigned long y) {
-        internalEquality(file, line, y < x, x, y, "<");
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, unsigned long x, unsigned long y) {
+        internalEquality(file, line, x != y, x, y, "!=");
     }
 
-    inline void assertMoreInternal(const char *file, int line, short x, short y) {
+
+    inline void assertLessInternal(PGM_TYPE file, int line, short x, short y) {
+        internalEquality(file, line, y < x, x, y, "<");
+    }
+    inline void assertLessInternal(PGM_TYPE file, int line, unsigned short x, unsigned short y) {
+        internalEquality(file, line, y < x, x, y, "<");
+    }
+    inline void assertLessInternal(PGM_TYPE file, int line, int x, int y) {
+        internalEquality(file, line, y < x, x, y, "<");
+    }
+    inline void assertLessInternal(PGM_TYPE file, int line, unsigned int x, unsigned int y) {
+        internalEquality(file, line, y < x, x, y, "<");
+    }
+    inline void assertLessInternal(PGM_TYPE file, int line, long x, long y) {
+        internalEquality(file, line, y < x, x, y, "<");
+    }
+    inline void assertLessInternal(PGM_TYPE file, int line, unsigned long x, unsigned long y) {
+        internalEquality(file, line, y < x, x, y, "<");
+    }
+
+    inline void assertMoreInternal(PGM_TYPE file, int line, short x, short y) {
         internalEquality(file, line, y > x, x, y, ">");
     }
-    inline void assertMoreInternal(const char *file, int line, unsigned short x, unsigned short y) {
+    inline void assertMoreInternal(PGM_TYPE file, int line, unsigned short x, unsigned short y) {
         internalEquality(file, line, y > x, x, y, ">");
     }
-    inline void assertMoreInternal(const char *file, int line, int x, int y) {
+    inline void assertMoreInternal(PGM_TYPE file, int line, int x, int y) {
         internalEquality(file, line, y > x, x, y, ">");
     }
-    inline void assertMoreInternal(const char *file, int line, unsigned int x, unsigned int y) {
+    inline void assertMoreInternal(PGM_TYPE file, int line, unsigned int x, unsigned int y) {
         internalEquality(file, line, y > x, x, y, ">");
     }
-    inline void assertMoreInternal(const char *file, int line, long x, long y) {
+    inline void assertMoreInternal(PGM_TYPE file, int line, long x, long y) {
         internalEquality(file, line, y > x, x, y, ">");
     }
-    inline void assertMoreInternal(const char *file, int line, unsigned long x, unsigned long y) {
+    inline void assertMoreInternal(PGM_TYPE file, int line, unsigned long x, unsigned long y) {
         internalEquality(file, line, y > x, x, y, ">");
     }
 
     // pointers
 
-    inline void assertEqualityInternal(const char *file, int line, const void* x, const void* y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, const void* x, const void* y) {
         internalEquality(file, line, x == y, (int)x, (int)y, "==");
     }
 
-    inline void assertNonEqualityInternal(const char *file, int line, const void* x, const void* y) {
+    inline void assertNonEqualityInternal(PGM_TYPE file, int line, const void* x, const void* y) {
         internalEquality(file, line, x != y, (int)x, (int)y, "!=");
     }
 
-    inline void assertEqualityInternal(const char *file, int line, const char* x, const char* y) {
+    inline void assertEqualityInternal(PGM_TYPE file, int line, const char* x, const char* y) {
         assertStringInternal(file, line, x, y);
     }
 }
 
-#define assertTrue(actual) STestInternal::assertBoolInternal(__FILE__, __LINE__, actual, "True")
-#define assertFalse(actual) STestInternal::assertBoolInternal(__FILE__, __LINE__, !(actual), "False")
-#define assertEquals(expected, actual) STestInternal::assertEqualityInternal(__FILE__, __LINE__, expected, actual)
-#define assertNotEquals(expected, actual) STestInternal::assertNonEqualityInternal(__FILE__, __LINE__, expected, actual)
-#define assertLessThan(expected, actual) STestInternal::assertLessInternal(__FILE__, __LINE__, expected, actual)
-#define assertMoreThan(expected, actual) STestInternal::assertMoreInternal(__FILE__, __LINE__, expected, actual)
-#define assertStringEquals(expected, actual) STestInternal::assertStringInternal(__FILE__, __LINE__, expected, actual)
-#define assertFloatNear(expected, actual, allowable) STestInternal::assertFloatInternal(__FILE__, __LINE__, expected, actual, allowable)
-#define fail(reason) STestInternal::failInternal(__FILE__, __LINE__, reason)
+#define assertTrue(actual) STestInternal::assertBoolInternal(FromPgm(__FILE__), __LINE__, actual, "True")
+#define assertFalse(actual) STestInternal::assertBoolInternal(FromPgm(__FILE__), __LINE__, !(actual), "False")
+#define assertEquals(expected, actual) STestInternal::assertEqualityInternal(FromPgm(__FILE__), __LINE__, expected, actual)
+#define assertNotEquals(expected, actual) STestInternal::assertNonEqualityInternal(FromPgm(__FILE__), __LINE__, expected, actual)
+#define assertLessThan(expected, actual) STestInternal::assertLessInternal(FromPgm(__FILE__), __LINE__, expected, actual)
+#define assertMoreThan(expected, actual) STestInternal::assertMoreInternal(FromPgm(__FILE__), __LINE__, expected, actual)
+#define assertStringEquals(expected, actual) STestInternal::assertStringInternal(FromPgm(__FILE__), __LINE__, expected, actual)
+#define assertFloatNear(expected, actual, allowable) STestInternal::assertFloatInternal(FromPgm(__FILE__), __LINE__, expected, actual, allowable)
+#define fail(reason) STestInternal::failInternal(FromPgm(__FILE__), __LINE__, reason)
 
 #define testi(name, ignored) \
 class UnitTest_##name : public SimpleTest::UnitTestExecutor {\
