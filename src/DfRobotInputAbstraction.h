@@ -33,7 +33,10 @@ struct DfRobotAnalogRanges {
     float select;
 };
 
+#ifndef ALLOWABLE_RANGE
 #define ALLOWABLE_RANGE 0.01F
+#endif // ALLOWABLE_RANGE
+
 #ifdef IOA_USE_MBED
 #define pgmAsFloat(x) ((float)(*x))
 #else

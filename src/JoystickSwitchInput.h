@@ -4,7 +4,9 @@
 #include "SwitchInput.h"
 #include "AnalogDeviceAbstraction.h"
 
+#ifndef MAX_JOYSTICK_ACCEL
 #define MAX_JOYSTICK_ACCEL 10.1F
+#endif // MAX_JOYSTICK_ACCEL
 
 /**
  * @file JoystickSwitchInput.h
