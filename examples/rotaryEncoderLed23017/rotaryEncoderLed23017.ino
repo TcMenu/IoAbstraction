@@ -31,62 +31,60 @@ IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 //const int ledB = 9;
 //const int attachedInterruptPin = 2;
 
-const int encoderA = 12;
-const int encoderB = 14;
-const int encoderOK = 13;
-const int ledA = 6;
-const int ledB = 7;
-const int attachedInterruptPin = 26;
+const int encoderA = 6;
+const int encoderB = 7;
+const int encoderOK = 5;
+const int ledA = 4;
+const int ledB = 3;
+const int attachedInterruptPin = 2;
 
 
 // Arduino 23017 interrupt pin connection, and reset pin connection
 const int resetPin23017 = 32;
 
-IoAbstractionRef io23017;
+MCP23017IoAbstraction mcp23017(0x20, ACTIVE_LOW_OPEN,  attachedInterruptPin, IO_PIN_NOT_DEFINED);
 
 //
 // this function is called by switches whenever the button is pressed.
 //
 void onKeyPressed(pinid_t key, bool held) {
     serdebugF3("key pressed", key, held);
-    ioDeviceDigitalWrite(io23017, ledA, HIGH);
-    ioDeviceDigitalWriteS(io23017, ledB, HIGH);
+    mcp23017.digitalWrite(ledA, HIGH);
+    mcp23017.digitalWriteS(ledB, HIGH);
 }
 
 void onKeyReleased(pinid_t key, bool held) {
     serdebugF3("key released", key, held);
-    ioDeviceDigitalWrite(io23017, ledA, LOW);
-    ioDeviceDigitalWriteS(io23017, ledB, LOW);
+    mcp23017.digitalWrite(ledA, LOW);
+    mcp23017.digitalWriteS(ledB, LOW);
 }
 
 void onEncoderChange(int encoderValue) {
     serdebugF2("encoder = ", encoderValue);
-    ioDeviceDigitalWrite(io23017, ledA, encoderValue < 0);
-    ioDeviceDigitalWriteS(io23017, ledB, encoderValue > 0);
+    mcp23017.digitalWrite(ledA, encoderValue < 0);
+    mcp23017.digitalWriteS(ledB, encoderValue > 0);
 }
 
 void setup() {
     IOLOG_START_SERIAL
-    Wire.begin(4, 15);
+    Wire.begin();
+    //Wire.begin(4, 15);
 
     // this is optional, in a real world system you could probably just connect the
     // reset pin of the device to Vcc, but when prototyping you'll want a reset
     // on every restart.
-    auto* deviceIo = internalDigitalIo();
-    ioDevicePinMode(deviceIo, resetPin23017, OUTPUT);
-    ioDeviceDigitalWriteS(deviceIo, resetPin23017, LOW);
+    internalDigitalDevice().pinMode(resetPin23017, OUTPUT);
+    internalDigitalDevice().digitalWriteS(resetPin23017, LOW);
     taskManager.yieldForMicros(100);
-    ioDeviceDigitalWriteS(deviceIo, resetPin23017, HIGH);
-
-    io23017 = ioFrom23017(0x20, ACTIVE_LOW_OPEN, attachedInterruptPin);
+    internalDigitalDevice().digitalWriteS(resetPin23017, HIGH);
 
     serdebugF("Starting LED example on 23017 example");
 
-    ioDevicePinMode(io23017, ledA, OUTPUT);
-    ioDevicePinMode(io23017, ledB, OUTPUT);
+    mcp23017.pinMode(ledA, OUTPUT);
+    mcp23017.pinMode(ledB, OUTPUT);
 
     // here we initialise switches in interrupt mode, using pull up logic by default.
-    switches.init(io23017, SWITCHES_NO_POLLING, true);
+    switches.init(asIoRef(mcp23017), SWITCHES_NO_POLLING, true);
 
     // we now add both a press and release and handler.
     switches.addSwitch(encoderOK, onKeyPressed, 20);
@@ -94,6 +92,7 @@ void setup() {
 
     // and set up an encoder on the same device.
     setupRotaryEncoderWithInterrupt(encoderA, encoderB, onEncoderChange);
+    switches.changeEncoderPrecision(0, 0);
 }
 
 void loop() {
