@@ -260,6 +260,10 @@ You can create matrix keyboards with any arrangement of keys, but the two most c
 
 Alongside the example, there is comprehensive documentation describing the use of [matrix keyboards on Arduino](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/matrix-keyboard-keypad-manager/).  
 
+## Inbuilt Unit testing framework and mocking
+
+IoAbstraction has a very simple unit test framework built into it, it works on a very wide range of boards, more or less everything in our supported list. In addition to this there are mock versions of some components to make testing your code easier. See https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/ioabstraction-troubleshooting-unit-testing/
+
 ## ESP32 extras mode
 
 On ESP32 we are slowly adding support for direct IDF, as it's been requested by one of our clients. This will slowly appear over several releases. To enable this mode you can set the flag `IOA_USE_ESP32_EXTRAS`. Once you do this IDF functions are used for all digital IO functions. We always use IDF functions for analog input and DAC output, and are slowly moving toward direct LTDC functions for PWM instead of wrappers. 

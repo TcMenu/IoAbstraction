@@ -10,49 +10,41 @@
 #include <IoAbstraction.h>
 #include <JoystickSwitchInput.h>
 
-#define ANALOG_INPUT_PIN 25
-#define ANALOG_LEFT_RIGHT_PIN 37
+#define ANALOG_INPUT_PIN 34
+#define ANALOG_LEFT_RIGHT_PIN 33
 #define BUTTON_PIN 2
 #define MULTI_IO_ARDUINO_PIN_MAX 100
 // we need to create an analog device that the joystick encoder will use to get readings.
 // In this case on arduino analog pins.
-AnalogDevice* analogDevice;
 
 // We now want to receive button input from both Arduino pins, and two extra simulated button pins that
 // are acutally when the joystick moves left and right. So we need a multiIoAbstraction.
-MultiIoAbstractionRef multiIo = multiIoExpander(MULTI_IO_ARDUINO_PIN_MAX);
+MultiIoAbstraction multiIo(MULTI_IO_ARDUINO_PIN_MAX);
 
 void onEncoderChange(int newValue) {
-    Serial.print("New joystick value: ");
-    Serial.print(newValue);
-    Serial.print(", analog in ");
-    Serial.print(analogDevice->getCurrentValue(ANALOG_INPUT_PIN));
-    Serial.print(", switch ");
-    Serial.println(analogDevice->getCurrentValue(ANALOG_LEFT_RIGHT_PIN));
+    serdebugF4("New joystick val, in, lr: ", newValue, internalAnalogDevice().getCurrentValue(ANALOG_INPUT_PIN), internalAnalogDevice().getCurrentValue(ANALOG_LEFT_RIGHT_PIN));
 
 }
 
 void setup() {
     Serial.begin(115200);
 
-    analogDevice = internalAnalogIo();
-    
     // MKR boards require the line below to wait for the serial port, uncomment if needed
     // However, it doesn't work on some other boards and locks them up.
     //while(!Serial);
 
-    Serial.println("Starting joystick rotary encoder example");
+    serdebugF("Starting joystick rotary encoder example");
 
     // now we add an expander that handles the left and right function of the joystick as two buttons, these could
     // be useful for next and back functions for example. The mid point for calibration will be half max value in
     // our case, if your potentiometer differs, set the calibration accordingly. Joystick pins will start at 100.
-    multiIoAddExpander(multiIo, joystickTwoButtonExpander(analogDevice, ANALOG_LEFT_RIGHT_PIN, .5F), 10);
+    multiIo.addIoExpander(joystickTwoButtonExpander(internalAnalogIo(), ANALOG_LEFT_RIGHT_PIN, .5F), 10);
 
     // first initialise switches using the multi io expander and pull up switch logic.
-    switches.initialise(multiIo, true);
+    switches.initialise(asIoRef(multiIo), true);
 
     // now register the joystick
-    setupAnalogJoystickEncoder(analogDevice, ANALOG_INPUT_PIN, onEncoderChange);
+    setupAnalogJoystickEncoder(internalAnalogIo(), ANALOG_INPUT_PIN, onEncoderChange);
 
     // once you've registed the joystick above with switches, you can then alter the mid point and tolerance if needed
     // here we set the midpoint to 65% and the tolerance (or point at which we start reading) at +-5%.

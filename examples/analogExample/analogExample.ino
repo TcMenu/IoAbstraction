@@ -30,10 +30,7 @@ public:
     }
 
     void exec() override {
-        Serial.print("Trigger AnalogInEvent Threshold ");
-        Serial.print(analogThreshold);
-        Serial.print(", value ");
-        Serial.println(lastReading);
+        serdebugF3("Trigger AnalogInEvent Threshold, Last:  ", analogThreshold, lastReading);
     }
 };
 
@@ -48,41 +45,31 @@ void setup() {
     Serial.begin(115200);
 
     // set up the device pin directions upfront.
-    analog.initPin(ANALOG_IN_PIN, DIR_IN);
-    analog.initPin(PWM_OR_DAC_PIN, DIR_OUT);
+    internalAnalogDevice().initPin(ANALOG_IN_PIN, DIR_IN);
+    internalAnalogDevice().initPin(PWM_OR_DAC_PIN, DIR_OUT);
 
     // this is how to register an event with task manager
-    taskManager.registerEvent(new MyAnalogExceedsEvent(internalAnalogIo(), ANALOG_IN_PIN), true);
+    taskManager.registerEvent(new MyAnalogExceedsEvent(internalAnalogDevice(), ANALOG_IN_PIN), true);
 
     // we schedule a task to run every 500 millis that reads the value from A1 and prints it output
     // along with the largest possible value
     taskManager.scheduleFixedRate(500, [] {
-        Serial.print("Analog input value is ");
-        Serial.print(analog.getCurrentValue(ANALOG_IN_PIN));
-        Serial.print("/");
-        Serial.print(analog.getMaximumRange(DIR_IN, ANALOG_IN_PIN));
-        Serial.print(" - ");
-        Serial.print(analog.getCurrentFloat(ANALOG_IN_PIN) * 100.0F);
-        Serial.println('%');
+        serdebugF4("Analog input value is ", internalAnalogDevice().getCurrentValue(ANALOG_IN_PIN),
+                   internalAnalogDevice().getMaximumRange(DIR_IN, ANALOG_IN_PIN),
+                   internalAnalogDevice().getCurrentFloat(ANALOG_IN_PIN) * 100.0F);
 
 #ifdef ESP32
-        auto* espAnalog = reinterpret_cast<ESP32AnalogDevice*>(analog);
         // On ESP32 boards, where the analogWrite function doesn't exist we use the underlying functions
         // to access either the DAC or LEDC subsystem, if you want to get hold of the ledc channel you can.
-        EspAnalogOutputMode* outputMode = espAnalog->getEspOutputMode(PWM_OR_DAC_PIN);
+        EspAnalogOutputMode* outputMode = internalAnalogDevice().getEspOutputMode(PWM_OR_DAC_PIN);
         if(outputMode != nullptr) {
-            Serial.print("ESP32 Output type: ");
-            Serial.print(outputMode->isDac());
-            Serial.print(", ledc (pwm channel): ");
-            Serial.println(outputMode->getPwmChannel());
+            serdebugF2("ESP32 Output type: ", outputMode->isDac());
+            serdebugF2("LEDC (pwm channel): ", outputMode->getPwmChannel());
         }
 
-        EspAnalogInputMode* inputMode = espAnalog->getEspInputMode(ANALOG_IN_PIN);
+        EspAnalogInputMode* inputMode = internalAnalogDevice().getEspInputMode(ANALOG_IN_PIN);
         if(inputMode != nullptr) {
-            Serial.print("ESP32 Input on dac1: ");
-            Serial.print(inputMode->isOnDAC1());
-            Serial.print(", channel: ");
-            Serial.println(inputMode->getChannel());
+            serdebugF3("ESP32 Input (ondac1, channel): ", inputMode->isOnDAC1(), inputMode->getChannel());
         }
 #endif
     });
@@ -94,7 +81,7 @@ void setup() {
         if(ledCycleValue >= 0.98) ledCycleAdj = -0.01;
         if(ledCycleValue <= 0.02) ledCycleAdj = 0.01;
 
-        analog.setCurrentFloat(PWM_OR_DAC_PIN, ledCycleValue);
+        internalAnalogDevice().setCurrentFloat(PWM_OR_DAC_PIN, ledCycleValue);
     }, TIME_MILLIS);
 }
 
