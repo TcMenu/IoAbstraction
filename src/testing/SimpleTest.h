@@ -37,30 +37,11 @@ namespace SimpleTest {
     private:
         PGM_TYPE file;
         int line = 0;
-        char reason[FAIL_REASON_SIZE];
     public:
         FailureInfo() {}
         void withFileAndLine(PGM_TYPE f, int l) {
             file = f;
             line = l;
-        }
-        void withReason(const char* r) {
-            strncpy(reason, r, sizeof reason);
-            reason[sizeof(reason)-1] = 0;
-        }
-
-        void copyFileToBuffer(char* sz, int len) const {
-            strncpy_P(sz, (char*)file, len);
-            sz[len-1] = 0;
-        }
-
-        void copyReasonToBuffer(char* sz, int len) const {
-            strncpy(sz, reason, len);
-            sz[len-1] = 0;
-        }
-
-        int getLine() const {
-            return line;
         }
     };
 

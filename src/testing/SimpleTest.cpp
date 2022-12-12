@@ -43,7 +43,6 @@ namespace SimpleTest {
     void UnitTestExecutor::setFailed(PGM_TYPE file, int line, const char *reason) {
         testStatus = FAILED;
         failureReason.withFileAndLine(file, line);
-        failureReason.withReason(reason);
     }
 
     void UnitTestExecutor::init(const char *name, bool ignored) {
