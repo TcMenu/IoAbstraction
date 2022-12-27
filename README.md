@@ -44,23 +44,28 @@ If we want to use the i2c wire based ioFrom8574 we must include the wire header 
 
 At the global level (outside of any function) we create an i2c expander on address 0x20:
 
-	IoAbstractionRef ioExpander = ioFrom8574(0x20);
-	IoAbstractionRef ioExpander = ioFrom8575(0x20);
-
-
-Or for Arduino pins instead..
+	PCF8574IoAbstraction io8574(0x20, 0);
+	PCF8574IoAbstraction io8575(address, interruptPin, wireInstance, mode16Bit, invertedLogic);
 	
-	IoAbstractionRef ioUsingArduino();
+If you use an I2C variant, you must initialise wire before using
+
+	Wire.begin();  
+
+Or for Arduino pins instead simply call the following:
+	
+	internalDigitalDevice()
+	
+You can convert any Io-device object into an IoAbstractionRef as follows
+
+	IoAbstractionRef myRef = asIoRef(io8574);
 
 And lastly for DfRobot LCD shield input we use (requires library V1.3.2 at least):
 
-	IoAbstractionRef inputFromDfRobotShield();   // for all other versions
-	IoAbstractionRef inputFromDfRobotShieldV1(); // for version 1
+	DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges); // or dfRobotV1AvrRanges as appropriate
 
-In setup we set it's first IO pin to input and start the Wire library:
-	
-	Wire.begin();  
- 	ioDevicePinMode(ioExpander, 0, INPUT);
+To configure pin direction on any expander, you use the following, although some devices are read or write only, you should still call pinMode:
+
+ 	ioExpander.pinMode(0, INPUT);
   
 And then later we read from it, in this case as we are doing a single read, use the 'S' version of the method as it removes the need to call the sync method. The only limitation is we must synchronize the device state. This allows us to be efficient where possible, setting several pins, syncing and then reading pins.
 
@@ -68,10 +73,10 @@ And then later we read from it, in this case as we are doing a single read, use 
 
 Let's now say we wanted to write one value and read two items on the same device, in this case we don't use the 'S' version of the method, because otherwise it would sync three times.
 
-	ioDeviceDigitalWrite(ioExpander, outputPin, HIGH);
-	ioDeviceSync(ioExpander);
-	int read1 = ioDeviceDigitalRead(ioExpander, inputPin1);
-	int read2 = ioDeviceDigitalRead(ioExpander, inputPin2);
+	ioExpander.digitalWrite(outputPin, HIGH);
+	ioExpander.sync();
+	int read1 = ioExpander.digitalRead(inputPin1);
+	int read2 = ioExpander.digitalRead(inputPin2);
 
 ## SwitchInput - buttons that are debounced with event based callbacks
 
