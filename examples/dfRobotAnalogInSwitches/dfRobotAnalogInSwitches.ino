@@ -20,12 +20,9 @@
 #include <DfRobotInputAbstraction.h>
 #include <TaskManagerIO.h>
 
-// As per the above wiki this uses the default settings for analog ranges.
+// The actual code that deals with the shield, this is the input abstraction that reads the button state from the
+// analog input. The ranges are configurable and there are two defaults, both listed below.
 DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges); // or dfRobotV1AvrRanges
-
-// for V1.0 of the shield uncomment the below definition and comment out the above defintion
-// this has the other settings for analog ranges.
-//IoAbstractionRef dfRobotKeys = inputFromDfRobotShieldV1();
 
 void logKeyPressed(const char* whichKey, bool heldDown) {
     Serial.print("Key ");

@@ -51,6 +51,7 @@ public:
         // zero pad a numeric value to four letters and print it.
         char sz[10];
         ltoaClrBuff(sz, encoderReading, 4, '0', sizeof sz);
+        lcd.setCursor(0, 1);
         lcd.print(sz);
 
         // now we print the select button state into right corner.
