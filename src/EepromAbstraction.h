@@ -5,8 +5,7 @@
 
 /**
  * @file EepromAbstraction.h
- * 
- * Wraps up EEPROM support in a way that is compatible between implementations. For example presently there
+ * @brief Wraps up EEPROM support in a way that is compatible between implementations. For example presently there
  * are AVR, EEPROM, and i2c implementations that work interchangeably. Adding another variant is quite trivial.
  */
 

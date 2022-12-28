@@ -6,7 +6,7 @@
 /**
  * @file IoAbstractionWire.h
  * 
- * Contains the versions of BasicIoAbstraction that use i2c communication. Including PCF8574 and MCP23017.
+ * @brief Contains the versions of BasicIoAbstraction that use i2c communication. Including PCF8574 and MCP23017.
  */
 
 #ifndef _IOABSTRACTION_IOABSTRACTIONWIRE_H_
@@ -182,6 +182,14 @@ public:
      * @param shouldInvert true to invert the given pin, otherwise false.
      */
     void setInvertInputPin(pinid_t pin, bool shouldInvert);
+
+    /**
+     * If you've connected the reset pin to a GPIO, then provide the pin to this function and it will
+     * reset the device then leave the pin in the right state for the device to function. It will yield
+     * to task manager for 100 microseconds. It also ensures that the pin is set as output first.
+     * @param resetPin the reset GPIO pin.
+     */
+    void resetDevice(int resetPin);
 
 private:
 	void initDevice() override;

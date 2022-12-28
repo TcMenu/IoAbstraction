@@ -6,6 +6,11 @@
  * the default one that's shipped with the IDE.
  * 
  * Shows the value of a rotary encoder on the display based on the UP and DOWN buttons. Select is also handled.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 // note you can switch this to include <LiquidCrystal.h> instead, just change the construction of lcd too.
@@ -13,6 +18,7 @@
 #include <IoAbstraction.h>
 #include <DfRobotInputAbstraction.h>
 #include <TaskManagerIO.h>
+#include <TextUtilities.h>
 
 // As per the above wiki this uses the default settings for analog ranges.
 DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges);
@@ -42,15 +48,10 @@ public:
     void exec() override {
         // print the values onto the screen, something has changed
 
-        // a quick and quite ugly way to zero pad a numeric value to four letters.
-        int reading = encoderReading;
-        lcd.setCursor(0, 1);
-        int divisor = 1000;
-        while (divisor > 0) {
-            lcd.print(char((reading / divisor) + '0'));
-            reading = reading % divisor;
-            divisor = divisor / 10;
-        }
+        // zero pad a numeric value to four letters and print it.
+        char sz[10];
+        ltoaClrBuff(sz, encoderReading, 4, '0', sizeof sz);
+        lcd.print(sz);
 
         // now we print the select button state into right corner.
         const char* btnState = "     ";

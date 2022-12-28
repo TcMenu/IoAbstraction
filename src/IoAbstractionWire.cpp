@@ -281,6 +281,13 @@ void MCP23017IoAbstraction::setInvertInputPin(pinid_t pin, bool shouldInvert) {
     toggleBitInRegister16(wireImpl, address, IPOL_ADDR, pin, shouldInvert);
 }
 
+void MCP23017IoAbstraction::resetDevice(int resetPin) {
+    internalDigitalDevice().pinMode(resetPin, OUTPUT);
+    internalDigitalDevice().digitalWriteS(resetPin, LOW);
+    taskManager.yieldForMicros(100);
+    internalDigitalDevice().digitalWriteS(resetPin, HIGH);
+}
+
 IoAbstractionRef ioFrom23017(pinid_t addr, WireType wireImpl) {
 	return ioFrom23017IntPerPort(addr, NOT_ENABLED, 0xff, 0xff, wireImpl);
 }

@@ -7,8 +7,8 @@
 #include <TaskManagerIO.h>
 
 /**
- * @file ResistiveTouchScreen.h A simple resistive touch screen class that converts touch coordinates into a range between
- * floating point values 0.0 and 1.0.
+ * @file ResistiveTouchScreen.h A
+ * @brief simple resistive touch screen class that converts touch coordinates into a range between floating point values 0.0 and 1.0.
  */
 
 #ifndef TOUCH_THRESHOLD

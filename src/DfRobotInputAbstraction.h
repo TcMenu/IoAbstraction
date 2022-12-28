@@ -12,11 +12,9 @@
 /**
  * @file DfRobotInputAbstraction.h
  * 
- * This file contains an implementation of BasicIoAbstraction that works with the DfRobot shield
+ * @brief This file contains an implementation of BasicIoAbstraction that works with the DfRobot shield
  * in order to convert the analog keys into regular digital IO. This allows DfRobot to be used
  * with switches for button management.
- * 
- * See: https://www.dfrobot.com/wiki/index.php/Arduino_LCD_KeyPad_Shield_(SKU:_DFR0009)
  */
 
 #define DF_KEY_RIGHT 0

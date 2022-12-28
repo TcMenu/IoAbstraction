@@ -3,7 +3,12 @@
  * based analog joystick connected to an analog input port.
  * 
  * Shows the value of a rotary encoder over the serial port. Wiring, wire the joystick as per instructions
- * and take note of the analog input pin you've used. 
+ * and take note of the analog input pin you've used.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include<TaskManagerIO.h>

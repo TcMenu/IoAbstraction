@@ -8,6 +8,10 @@
  * This logging is only complied in when the above define is set, if it is not set then
  * the logging is completely removed.
  *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 /* The logging levels are below:
@@ -43,7 +47,8 @@ char sz[] = {"hello world"};
 IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 
 void setup() {
-    // Use this to start logging in a platform independent way between mbed and Arduino.
+    // This example logs using IoLogging, see the following guide to enable
+    // https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-logging-with-io-logging/
     IOLOG_START_SERIAL
 
     Serial.println("Starting ioLogging example");

@@ -11,6 +11,11 @@
  * starting at romStart.
  *
  * It writes a byte, int, double and string to the eeprom and reads them back.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 // you always needs this include.
@@ -21,7 +26,9 @@
 
 const unsigned int romStart = 400;
 
+// here we create both an eeprom wrapper that uses direct AVR functions
 AvrEeprom anEeprom;
+// and also a wrapper that uses the EEPROM class instead. The former is more efficient on AVR.
 ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
 
 const char strData[15] = { "Hello EEPROM"};
@@ -41,9 +48,6 @@ void setup() {
 	anEeprom.writeArrayToRom(romStart + 7, (const unsigned char*)strData, sizeof strData);
 
 	Serial.println("Eeprom example written initial values, starting on EEPROM proxy example");
-
-    // here I show another way to wrap the EEPROM class into an IO abstraction, prefer local instantiation, it's small.
-
     eepromWrapper.write8(romStart + 30, 99);
     eepromWrapper.write16(romStart + 31, 0xf00d);
     eepromWrapper.write32(romStart + 33, 0xfade0ff);

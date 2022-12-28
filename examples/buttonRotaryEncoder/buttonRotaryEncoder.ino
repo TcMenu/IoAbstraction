@@ -1,40 +1,33 @@
 /*
- This sketch gives an example of using a rotary encoder along with its inbuilt push button with
- the switch input facilities. In addition to the encoder, we also connect another switch that
- will be used to 
+ This sketch shows how to use a rotary encoder along with its inbuilt push button with switches.
+ In addition to the encoder, we also connect another switch to show how to add additional buttons.
  
- Switch input is designed to work with the task manager class which
- makes scheduling tasks trivial.
+ As with many IoAbstraction features it relies on TaskManagerIO library.
 
- Circuit / detail: https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/arduino-switches-handled-as-events/
-
+ For the circuit and more information:
+ https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/arduino-switches-handled-as-events/
+ https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
 */
 
 #include<IoAbstraction.h>
 #include <TaskManagerIO.h>
 
 // The pin onto which we connected the rotary encoders switch
-const pinid_t spinwheelClickPin = 10;
+const pinid_t spinwheelClickPin = 7;
 
 // The pin onto which we connected the repeat button switch
-const pinid_t repeatButtonPin = 4;
+const pinid_t repeatButtonPin = 9;
 
 // The two pins where we connected the A and B pins of the encoder, the A pin must support interrupts.
-const pinid_t encoderAPin = 5;
-const pinid_t encoderBPin = 6;
+const pinid_t encoderAPin = 3;
+const pinid_t encoderBPin = 4;
 
 // the maximum (0 based) value that we want the encoder to represent.
 const int maximumEncoderValue = 128;
 
 // an LED that flashes as the encoder changes
 const int ledOutputPin = LED_BUILTIN;
-
-// You can change the step rate of the encoder, it defaults to 1, but can be changed during a precision change
-const int stepSize = 1;
-
-// You can set the encoder to wrap around at min/max values, or just to stop there.
-const bool wrapAround = true;
-
 
 //
 // When the encoder button is clicked, this function will be run as we registered it as a callback
@@ -74,18 +67,28 @@ void setup() {
     // our next task is to initialise swtiches, do this BEFORE doing anything else with switches.
     // We choose to initialise in poll everything (requires no interrupts), but there are other modes too:
     // (SWITCHES_NO_POLLING - interrupt only) or (SWITCHES_POLL_KEYS_ONLY - encoders on interrupt)
-    switches.init(internalDigitalIo(), SWITCHES_POLL_KEYS_ONLY, true);
+    switches.init(asIoRef(internalDigitalDevice()), SWITCHES_POLL_EVERYTHING, true);
 
     // now we add the switches, we don't want the spin-wheel button to repeat, so leave off the last parameter
     // which is the repeat interval (millis / 20 basically) Repeat button does repeat as we can see.
     switches.addSwitch(spinwheelClickPin, onSpinwheelClicked, NO_REPEAT);
-    switches.addSwitch(repeatButtonPin, onRepeatButtonClicked, 25);
+    const int repeatIntervalInTicks = 25;
+    switches.addSwitch(repeatButtonPin, onRepeatButtonClicked, repeatIntervalInTicks);
 
-    // now we set up the rotary encoder, first we give the A pin and the B pin.
-    // we give the encoder a max value of 128, always minimum of 0.
-    auto hwEncoder = new HardwareRotaryEncoder(encoderAPin, encoderBPin, onEncoderChange);
-    switches.setEncoder(0, hwEncoder);
-    hwEncoder->changePrecision(maximumEncoderValue, 100, wrapAround, stepSize);
+    // now we set up the rotary encoder, we provide the A pin, B pin, and the function that is called when changed.
+    // once created we give the encoder to switches, it will manage it for us. "Switches" keeps encoders in an indexed
+    // array, so the first will be 0 and so on.
+    const int encoderSlot = 0;
+    auto hwEncoder = new HardwareRotaryEncoder(encoderAPin, encoderBPin, onEncoderChange, HWACCEL_NONE);
+    switches.setEncoder(encoderSlot, hwEncoder);
+
+    // here we are going to change the range of the encoder, we provide the desired value and the maximum value,
+    // optionally we can also set the step size (how far each click moves) and if the value should wrap around when
+    // hitting the minimum and maximum.
+    const int currentValue = 100;
+    const int stepSize = 1;
+    const bool wrapAroundOnMinMax = true;
+    hwEncoder->changePrecision(maximumEncoderValue, currentValue, wrapAroundOnMinMax, stepSize);
 }
 
 void loop() {

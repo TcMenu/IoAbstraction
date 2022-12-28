@@ -11,7 +11,7 @@
 
 /**
  * @file PrintCompat.h
- * Compatibility with the Arduino Print API for mbed boards, should never be included in an Arduino build
+ * @brief Compatibility with the Arduino Print API for mbed boards, should never be included in an Arduino build
  */
 
 #ifdef IOA_USE_ARDUINO

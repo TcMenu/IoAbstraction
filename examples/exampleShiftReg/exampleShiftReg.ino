@@ -1,3 +1,12 @@
+/**
+ * Example of using a shift register with IoAbstraction for pin input and output
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
+ */
+
 #include <IoAbstraction.h>
 #include <TaskManagerIO.h>
 

@@ -9,7 +9,8 @@
 #include <PlatformDetermination.h>
 
 /**
- * @file TextUtilities.h A series of text and numeric utilities useful for many purposes.
+ * @file TextUtilities.h
+ * @brief A series of text and numeric utilities useful for many purposes.
  */
 
 /**

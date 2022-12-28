@@ -12,7 +12,7 @@
 
 /**
  * @file ArduinoEEPROMAbstraction.h
- * A wrapper around the Arduino EEPROM support.
+ * @brief A wrapper around the Arduino EEPROM support.
  */
 
 /**

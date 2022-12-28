@@ -3,8 +3,7 @@
 
 /**
  * @file IoLogging.h
- *
- * Some very basic logging utilities for any IoAbstraction user that log to a chosen serial interface. Turned on
+ * @brief Some very basic logging utilities for any IoAbstraction user that log to a chosen serial interface. Turned on
  * by un-commenting the define. Should NOT be used in production.
  */
 

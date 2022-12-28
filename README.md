@@ -1,6 +1,6 @@
 # IoAbstraction for Arduino and mbed summary
 
-Dave Cherry / TheCodersCorner.com make this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
+Dave Cherry / TheCodersCorner.com made this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
 
 This library provides several useful extensions that make programming Arduino / mbed for non-trivial apps simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation. The API is almost identical between Arduino and mbed making it easier to port between the two. 
 
@@ -11,10 +11,11 @@ Along with ths quick start guide and the examples also see:
 * [IoAbstraction documentation pages](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/)
 * [IoAbstraction reference documentation](https://www.thecoderscorner.com/ref-docs/ioabstraction/html)
 
-There is a forum where questions can be asked, but the rules of engagement are: **this is my hobby, I make it available because it helps others**. Don't expect immediate answers, make sure you've recreated the problem in a simple sketch that you can send to me. Please consider making at least a one time donation using the sponsor link above before using the forum.
+You can ask questions either in the discussions section of this repo, or using the Arduino forum. We generally answer most questions, but the rules of engagement are: **this is my hobby, I make it available because it helps others**. Don't expect immediate answers, make sure you've recreated the problem in a simple sketch that you can send to me. Please consider making at least a one time donation using the sponsor link if we do help you out.
 
-* [TCC Libraries community discussion forum](https://www.thecoderscorner.com/jforum/)
-* I also monitor the Arduino forum [https://forum.arduino.cc/], Arduino related questions can be asked there too.
+* [discussions section of the IoAbstraction repo](https://github.com/davetcc/IoAbstraction/discussions)
+* [Arduino discussion forum](https://forum.arduino.cc/) where questions can be asked, please tag me using `@davetcc`.
+* [Legacy discussion forum probably to be made read only soon](https://www.thecoderscorner.com/jforum/).
 
 ## Installation for Arduino IDE
 
@@ -267,7 +268,7 @@ Alongside the example, there is comprehensive documentation describing the use o
 
 ## Inbuilt Unit testing framework and mocking
 
-IoAbstraction has a very simple unit test framework built into it, it works on a very wide range of boards, more or less everything in our supported list. In addition to this there are mock versions of some components to make testing your code easier. See https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/ioabstraction-troubleshooting-unit-testing/
+IoAbstraction has a very simple unit test framework built into it, it works on a very wide range of boards, more or less everything in our supported list. In addition to this there are mock versions of some components to make testing your code easier. See https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/simple-test-unit-test-arduino-mbed/
 
 ## ESP32 extras mode
 

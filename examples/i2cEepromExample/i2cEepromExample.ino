@@ -10,6 +10,11 @@
  * starting at romStart.
  *
  * It writes a byte, int, double and string to the eeprom and reads them back.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 // We have a direct dependency on Wire and Arduino ships it as a library for every board
@@ -53,9 +58,6 @@ void setup() {
     Serial.println(anEeprom.hasErrorOccurred() ? "Write failure" : "Write success");
 
 	Serial.println("Eeprom example written initial values");
-	
-	// we can check if there are any errors writing by calling hasErrorOccurred, for AVR there is never an error.
-	// but for i2c variants there may well be.
 }
 
 void loop() {

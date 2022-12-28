@@ -3,6 +3,11 @@
  * work with various analog devices such as DAC, ADC, PWM and POTs wherever they are
  * located. As more devices are added it will expand the possibilities of where This
  * common interface can be used.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include <IoAbstraction.h>

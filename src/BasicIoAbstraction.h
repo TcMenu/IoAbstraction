@@ -8,8 +8,7 @@
 
 /**
  * @file BasicIoAbstraction.h
- *
- * Provides the core IoAbstraction interface and Arduino implementation of that interface.
+ * @brief Provides the core IoAbstraction interface and Arduino implementation of that interface.
  */
 #include "PlatformDetermination.h"
 #include <TaskManagerIO.h>

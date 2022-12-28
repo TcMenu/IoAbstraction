@@ -1,3 +1,11 @@
+/**
+ * Shift register example for mbed 6.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
+ */
 
 #include <mbed.h>
 #include <TaskManager.h>
@@ -13,6 +21,8 @@ ShiftRegisterIoAbstraction outReg(ShiftRegConfig(), ShiftRegConfig(PG_0, PG_1, P
 uint8_t nextVal = 0;
 
 void setup() {
+    // This example logs using IoLogging, see the following guide to enable
+    // https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-logging-with-io-logging/
     IOLOG_START_SERIAL
 
     // even though shift out is always output, it is a good idea to always set pins to output as if the device changes

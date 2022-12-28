@@ -9,6 +9,11 @@
  * 
  * See: https://www.dfrobot.com/wiki/index.php/Arduino_LCD_KeyPad_Shield_(SKU:_DFR0009)
  * for more information about these shields.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include <IoAbstraction.h>
@@ -16,8 +21,7 @@
 #include <TaskManagerIO.h>
 
 // As per the above wiki this uses the default settings for analog ranges.
-DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges);
-//DfRobotInputAbstraction dfRobotKeys(dfRobotV1AvrRanges, );
+DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges); // or dfRobotV1AvrRanges
 
 // for V1.0 of the shield uncomment the below definition and comment out the above defintion
 // this has the other settings for analog ranges.
@@ -66,16 +70,19 @@ void setup() {
     // initialise the switches component with the DfRobot shield as the input method.
     switches.initialise(asIoRef(dfRobotKeys), false); // df robot is always false for 2nd parameter.
 
-    // now we add the switches, each one just logs the key press, the last parameter to addSwitch
-    // is the repeat frequency is optional, when not set it implies not repeating.
-    switches.addSwitch(DF_KEY_DOWN, [](pinid_t /*pin*/, bool held) { logKeyPressed("DOWN", held);}, 20);
-    switches.addSwitch(DF_KEY_UP, [](pinid_t /*pin*/, bool held) { logKeyPressed("UP", held);}, 20);
-    switches.addSwitch(DF_KEY_LEFT, [](pinid_t /*pin*/, bool held) { logKeyPressed("LEFT", held);}, 20);
-    switches.addSwitch(DF_KEY_RIGHT, [](pinid_t /*pin*/, bool held) { logKeyPressed("RIGHT", held);}, 20);
+    // now we add the directional switches, each one just logs the key press, the last parameter to addSwitch
+    // is the repeat frequency is optional, set to NO_REPEAT and you'll get one additional call back for held state.
+    const int repeatFrequencyTicks = 20;
+    switches.addSwitch(DF_KEY_DOWN, [](pinid_t /*pin*/, bool held) { logKeyPressed("DOWN", held);}, repeatFrequencyTicks);
+    switches.addSwitch(DF_KEY_UP, [](pinid_t /*pin*/, bool held) { logKeyPressed("UP", held);}, repeatFrequencyTicks);
+    switches.addSwitch(DF_KEY_LEFT, [](pinid_t /*pin*/, bool held) { logKeyPressed("LEFT", held);}, repeatFrequencyTicks);
+    switches.addSwitch(DF_KEY_RIGHT, [](pinid_t /*pin*/, bool held) { logKeyPressed("RIGHT", held);}, repeatFrequencyTicks);
+
+    // here we add an onRelease callback, it will fire when the key is released
     switches.onRelease(DF_KEY_RIGHT, [](pinid_t /*pin*/, bool) { Serial.println("RIGHT has been released");});
-    
+
+    // lastly, we add an OO callback for the select key, see the MyKeyListener class defined above.
     switches.addSwitchListener(DF_KEY_SELECT, &selectKeyListener);
-    
 }
 
 void loop() {

@@ -2,6 +2,11 @@
  * mbedExample.cpp
  *
  * Presents an example of how to use the various parts of IoAbstraction with the mbed framework.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include "mbed.h"
@@ -93,6 +98,8 @@ void runSomeAnalogTasks() {
 }
 
 int main() {
+    // This example logs using IoLogging, see the following guide to enable
+    // https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-logging-with-io-logging/
     IOLOG_START_SERIAL
 
 #ifdef HAS_EEPROM_ATTACHED

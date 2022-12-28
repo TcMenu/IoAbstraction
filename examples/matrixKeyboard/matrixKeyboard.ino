@@ -7,6 +7,11 @@
  * a PCF8574, MCP23017 or other IoAbstraction. For interrupt mode, you cannot use a PCF8574
  * because the interrupt on the device would be triggered by the output changes when scanning.
  * Only MCP23017 and device pins can be used in interrupt mode.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include <Wire.h>
@@ -86,7 +91,7 @@ void initialiseKeyboard3X4ForPollingDevicePins() {
 
     // create the keyboard mapped to arduino pins and with the layout chosen above.
     // it will callback our listener
-    keyboard.initialise(internalDigitalIo(), &keyLayout, &myListener);
+    keyboard.initialise(asIoRef(internalDigitalDevice()), &keyLayout, &myListener);
 }
 
 void setup() {

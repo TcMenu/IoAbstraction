@@ -15,6 +15,11 @@
              easy to identify what you do to add another encoder, and secondly, to make it easy to comment out.
              We've also added an example of how to register a listener style callback for a key-press.
 
+ Documentation and reference:
+
+ https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
+
 */
 
 // We have a direct dependency on Wire and Arduino ships it as a library for every board
@@ -137,7 +142,7 @@ void setup() {
     // now we set up the rotary encoder, first we give the A pin and the B pin.
     // we give the encoder a max value of 128, always minimum of 0.
     setupRotaryEncoderWithInterrupt(encoderAPin, encoderBPin, &encoderChangeListener);
-    switches.changeEncoderPrecision(0, maximumEncoderValue, 100, true);
+    switches.changeEncoderPrecision(0, maximumEncoderValue, 100, true, 1);
 
     // Start 2nd encoder
     Serial.println("Setting up second encoder now");

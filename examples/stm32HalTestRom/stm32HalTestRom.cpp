@@ -5,12 +5,19 @@
  *
  * Note that this only works on STM32F4 and other STM boards that support battery backed RAM via HAL functions.
  * You must define IOA_ENABLE_STM32_HAL_EXTRAS in the compiler flags in order to enable this support.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
+ *
  */
 
 #include <mbed/HalStm32EepromAbstraction.h>
 #include <IoLogging.h>
 #include <TaskManagerIO.h>
 
+// Ignored on Arduino, sets up USB serial on mbed boards.
 IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 
 // create the EEPROM
@@ -26,6 +33,8 @@ char readBuffer[64];
 bool running = true;
 
 void setup() {
+    // This example logs using IoLogging, see the following guide to enable
+    // https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-logging-with-io-logging/
     IOLOG_START_SERIAL
 
     // before anything else, initialise the ROM.

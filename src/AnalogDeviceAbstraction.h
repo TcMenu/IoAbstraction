@@ -11,7 +11,7 @@
 
 /**
  * @file AnalogDeviceAbstraction.h
- * Contains a series of helper classes for dealing with analog devices, these are compatible across a wide range of
+ * @brief Contains a series of helper classes for dealing with analog devices, these are compatible across a wide range of
  * devices.
  */
 

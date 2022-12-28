@@ -8,7 +8,7 @@
 
 /**
  * @file DeviceEvents.h
- * This file contains events that are associated with the device, such as the Analog Device.
+ * @brief This file contains events that are associated with the device, such as the Analog Device.
  */
 
 #include "TaskManagerIO.h"

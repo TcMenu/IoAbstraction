@@ -7,6 +7,11 @@ Because this example uses IoAbstraction, the LED could be on the end of an i2c e
 on a shift register. Further, if you then needed a second timed action, it would be trivial to
 add.
 
+ Documentation and reference:
+
+  https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+  https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
+
 */
 
 #include <Wire.h>

@@ -8,6 +8,11 @@
  *  * You're using the touch screen with tcMenu.
  *  * You need to handle more complex cases such as when an item is held (with repeat).
  *  * You need calibration or more complex integrations offered by extending the Touch Manager class.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include <IoLogging.h>

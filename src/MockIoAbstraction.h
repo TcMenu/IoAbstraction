@@ -8,8 +8,7 @@
 
 /**
  * @file MockIoAbstraction.h
- * 
- * This file contains implementations of IoAbstraction that are very useful for dev & testing.
+ * @brief This file contains implementations of IoAbstraction that are very useful for dev & testing.
  * Neither of the implementations in this file are designed for use in production.
  */
 

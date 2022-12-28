@@ -9,7 +9,7 @@
 
 /**
  * @file NegatingIoAbstraction.h
- * This file contains an implementation of BasicIoAbstraction that negates whatever read or write would normally be returned
+ * @brief This file contains an implementation of BasicIoAbstraction that negates whatever read or write would normally be returned
  */
 
 /**

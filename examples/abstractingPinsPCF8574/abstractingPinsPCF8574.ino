@@ -9,6 +9,11 @@
 // There is another sketch that shows the library working with serial shift registers too.
 // See: http://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/i2c8574-example-ioAbstraction-library/
 //
+// Documentation and reference:
+//
+// https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+// https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
+//
 // For mbed compatibility, copy the INO file into a CPP and define COMPILE_FOR_MBED.
 
 #include <IoAbstraction.h>
@@ -18,18 +23,17 @@
 
 // uncomment this for mbed, comment out for Arduino.
 //#define COMPILE_FOR_MBED
+#ifdef COMPILE_FOR_MBED
+#include <mbed.h>
+#else
+#include <Wire.h>
+#endif
 
 #define INPUT_PIN 0
 #define OUTPUT_PIN 12
 
-#ifdef COMPILE_FOR_MBED
-#include <mbed.h>
-BufferedSerial serPort(USBTX, USBRX);
-MBedLogger LoggingPort(serPort);
-I2C i2c(PF_0, PF_1);
-#else
-#include <Wire.h>
-#endif
+// this sets up logging on mbed but is ignored on Arduino, so you can leave in place for both.
+IOLOG_MBED_PORT_IF_NEEDED(USBTX, USBRX);
 
 // Here we create a simple expander to access a PCF8574, address is 0x27, interrupt pin not defined, using regular Wire.
 PCF8574IoAbstraction ioExpander(0x27, IO_PIN_NOT_DEFINED, &Wire);
@@ -39,15 +43,9 @@ BasicIoAbstraction ioBoard = internalDigitalDevice();
 uint8_t lastSwitchIoExp = 0;
 
 void setup() {
-#ifdef COMPILE_FOR_MBED
-    serPort.set_baud(115200);
-    ioaWireBegin(&i2c);
-#else
-    // if using the i2c IO expander we must make sure Wire is initialised.
-	// This would not normally be done in library code, but by the callee.
-	Serial.begin(115200);
-    ioaWireBegin();
-#endif
+    // This example logs using IoLogging, see the following guide to enable
+    // https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-logging-with-io-logging/
+    IOLOG_START_SERIAL
 
 	// here we set the direction of pins on the IO expander
 	ioExpander.pinMode(INPUT_PIN, INPUT);

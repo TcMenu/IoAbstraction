@@ -10,10 +10,8 @@
 
 /**
  * @file JoystickSwitchInput.h
- * Provides a rotary encoder emulation based on an analog joystick. Normally used with
+ * @brief Provides a rotary encoder emulation based on an analog joystick. Normally used with
  * switches to provide an encoder for your project.
- * 
- * @see SwitchInput
  */
 
 /**

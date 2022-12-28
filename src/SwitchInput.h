@@ -5,8 +5,7 @@
 
 /**
  * @file SwitchInput.h
- * 
- * Switch input provides the button and rotary encoder input capabilities provided by this library.
+ * @brief Switch input provides the button and rotary encoder input capabilities provided by this library.
  * There is a globally defined variable `switches` declared that you can use directly. To add a
  * rotary encoder, see the helper functions further down. There's also a rotary encoder emulation
  * based on Up and Down buttons.
@@ -40,7 +39,6 @@
 #define MAX_KEYS DEFAULT_LIST_SIZE
 #endif // MAX_KEYS defined
 
-
 /**
  * If you want to adjust the maximum number of rotary encoders from the default of 4 just either
  * change the definition below or set this define during compilation.
@@ -49,9 +47,22 @@
 #define MAX_ROTARY_ENCODERS 4
 #endif // MAX_ROTARY_ENCODERS
 
+/*
+ * This parameter defines the interval between polling on switches. It defaults to 20 millis per poll.
+ */
 #ifndef SWITCH_POLL_INTERVAL
 #define SWITCH_POLL_INTERVAL 20
 #endif // SWITCH_POLL_INTERVAL
+
+/*
+ * This parameter defines the time threshold for which the rotary encoder should reject a direction change as
+ * part of the debouncing. IE if there is a spike that would represent a "valid" direction change this would prevent
+ * that direction change if within 100 milliseconds of a turn in the other direction. A user would have to be pretty
+ * quick to change direction in 1/10th of a second, but it is configurable in case.
+ */
+#ifndef REJECT_DIRECTION_CHANGE_THRESHOLD
+#define REJECT_DIRECTION_CHANGE_THRESHOLD 100000
+#endif //REJECT_DIRECTION_CHANGE_THRESHOLD
 
 // END user adjustable section
 
@@ -189,7 +200,7 @@ public:
  */
 class RotaryEncoder {
 protected:
-    enum EncoderFlagBits { LAST_SYNC_STATUS=0, WRAP_AROUND_MODE, OO_LISTENER_CALLBACK };
+    enum EncoderFlagBits { LAST_SYNC_STATUS=0, WRAP_AROUND_MODE, OO_LISTENER_CALLBACK, LAST_ENCODER_DIRECTION_UP };
 	uint16_t maximumValue;
 	uint16_t currentReading;
     uint8_t stepSize;
@@ -350,6 +361,7 @@ public:
 private:
     void initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType);
     int amountFromChange(unsigned long change);
+    void handleChangeRaw(bool increase);
 };
 
 /**
@@ -533,14 +545,24 @@ public:
 
 	/**
 	 * This is helper function that calls the rotary encoders change precision function. It changes the
-	 * maximum value that can be represented and also the current value of the encoder.
+	 * maximum value that can be represented and also the current value of the encoder. This always affects
+	 * slot 0; which is normally the default rotary encoder.
 	 * @param precision the maximum value to be set
 	 * @param currentValue the current value to be set.
-	 * @param step the size of each step of the encoder, default is 1
 	 */
-	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue, int step=1) { changeEncoderPrecision(0, precision, currentValue, false, step); }
+	void changeEncoderPrecision(uint16_t precision, uint16_t currentValue) { changeEncoderPrecision(0, precision, currentValue, false, 1); }
 
-	/**
+    /**
+     * This is helper function that calls the rotary encoders change precision function. It changes the
+     * maximum value that can be represented and also the current value of the encoder. The encoder to change
+     * is selected by the slot paramter.
+	 * @param slot the index of the desired encoder, zero based
+     * @param precision the maximum value to be set
+     * @param currentValue the current value to be set.
+     */
+    void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue) { changeEncoderPrecision(slot, precision, currentValue, false, 1); }
+
+    /**
 	 * Use this version of changeEncoderPrecision if you are working with more than one rotary encoder.
 	 * This is helper function that calls the rotary encoders change precision function. It changes the
 	 * maximum value that can be represented and also the current value of the encoder.
@@ -550,7 +572,7 @@ public:
 	 * @param rollover if the encoder should wrap around at min/max values or stop
  	 * @param step the size of each step of the encoder, default is 1
 	 */
-	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover = false, int step = 1);
+	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover, int step);
 
 	/**
 	 * Simulates a switch press by calling the callback directly without changing the internal state

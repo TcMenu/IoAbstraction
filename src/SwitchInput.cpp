@@ -430,12 +430,9 @@ void HardwareRotaryEncoder::encoderChanged() {
 			aLast = a;
 			if((a != aLast) || (b != cleanFromB)) {
 				cleanFromB = b;
-				if((a || cleanFromB) || (a == 0 && b == 0)) {	
-					unsigned long timeNow = micros();
-					int amt = amountFromChange(timeNow - lastChange);
-					increment((int8_t)(a != b ? -amt : amt));
-					lastChange = timeNow;
-				}
+				if((a || cleanFromB) || (a == 0 && b == 0)) {
+                    handleChangeRaw(a && b);
+                }
 			}
 		}		
 	}
@@ -444,15 +441,34 @@ void HardwareRotaryEncoder::encoderChanged() {
 			aLast = a;
 			if(b != cleanFromB) {
 				cleanFromB = b;
-				if(a) {	
-					unsigned long timeNow = micros();
-					int amt = amountFromChange(timeNow - lastChange);
-					increment((int8_t)(a != b ? -amt : amt));
-					lastChange = timeNow;
+				if(a) {
+                    handleChangeRaw(b);
 				}
 			}
 		}	
 	}
+}
+
+void HardwareRotaryEncoder::handleChangeRaw(bool increase) {
+    // was the last direction up?
+    bool lastDirectionUp = bitRead(flags, LAST_ENCODER_DIRECTION_UP);
+
+    // get the amount of change and direction. Also keep a copy of the time until later for acceleration purposes
+    unsigned long timeNow = micros();
+    unsigned long deltaMillis = timeNow - lastChange;
+    int amt = amountFromChange(deltaMillis);
+
+    // update the last change time now to ensure always set
+    lastChange = timeNow;
+
+    // direction changes within the reject change threshold would not result in an encoder change, part of the debounce
+    // logic to prevent spurious updates. Within this period direction must be the both now and previously.
+    //serlogF4(SER_DEBUG, "delta ", deltaMillis, increase, lastDirectionUp);
+    if(deltaMillis < REJECT_DIRECTION_CHANGE_THRESHOLD && increase != lastDirectionUp) return;
+
+    // now we make the change and register the last change direction (as we accepted it)
+    increment((int8_t) (increase ? amt : -amt));
+    bitWrite(flags, LAST_ENCODER_DIRECTION_UP, increase);
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed)

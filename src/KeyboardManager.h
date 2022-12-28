@@ -9,7 +9,8 @@
 #include "IoAbstraction.h"
 
 /**
- * @file KeyboardManager.h contains the classes needed to deal with matrix keyboards
+ * @file KeyboardManager.h
+ * @brief contains the classes needed to deal with matrix keyboards
  */
 
 /**

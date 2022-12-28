@@ -3,6 +3,11 @@
  * This example shows how to integrate directly with a resistive touch screen without any additional devices, using
  * analog inputs. This example takes the readings and reports them to the serial port every few hunderd millis.
  * It's possible to extend the touch base class too and be event-driven, but that's not discussed here.
+ *
+ * Documentation and reference:
+ *
+ * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
 #include <Arduino.h>

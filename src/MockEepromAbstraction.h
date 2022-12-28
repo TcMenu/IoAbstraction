@@ -6,8 +6,7 @@
 
 /**
  * @ file MockEepromAbstraction.h
- * 
- * This file contains implementations of the EepromAbstraction that are useful for dev & testing.
+ * @brief This file contains implementations of the EepromAbstraction that are useful for dev & testing.
  * None of the implementations in this file are designed for production use.
  */
 

@@ -8,8 +8,7 @@
 
 /**
  * @file EepromAbstractionWire.h
- * 
- * Contains the i2c variants of the EepromAbstraction
+ * @brief Contains the i2c variants of the EepromAbstraction
  */
 
 #include "PlatformDeterminationWire.h"
