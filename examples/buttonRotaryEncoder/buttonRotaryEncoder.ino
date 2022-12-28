@@ -76,10 +76,11 @@ void setup() {
     switches.addSwitch(repeatButtonPin, onRepeatButtonClicked, repeatIntervalInTicks);
 
     // now we set up the rotary encoder, we provide the A pin, B pin, and the function that is called when changed.
+    // Lastly, we can optionally tell the encoder how to accelerate: HWACCEL_SLOWER, HWACCEL_REGULAR, HWACCEL_NONE.
     // once created we give the encoder to switches, it will manage it for us. "Switches" keeps encoders in an indexed
     // array, so the first will be 0 and so on.
     const int encoderSlot = 0;
-    auto hwEncoder = new HardwareRotaryEncoder(encoderAPin, encoderBPin, onEncoderChange, HWACCEL_NONE);
+    auto hwEncoder = new HardwareRotaryEncoder(encoderAPin, encoderBPin, onEncoderChange, HWACCEL_SLOWER);
     switches.setEncoder(encoderSlot, hwEncoder);
 
     // here we are going to change the range of the encoder, we provide the desired value and the maximum value,
