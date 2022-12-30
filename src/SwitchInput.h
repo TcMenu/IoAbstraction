@@ -572,7 +572,7 @@ public:
 	 * @param rollover if the encoder should wrap around at min/max values or stop
  	 * @param step the size of each step of the encoder, default is 1
 	 */
-	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover, int step);
+	void changeEncoderPrecision(uint8_t slot, uint16_t precision, uint16_t currentValue, bool rollover, int step=1);
 
 	/**
 	 * Simulates a switch press by calling the callback directly without changing the internal state
