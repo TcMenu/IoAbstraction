@@ -141,6 +141,10 @@ namespace iotouch {
             usedForScrolling = scrolling;
         }
 
+        void calibrateMinMaxValues(float xmin, float xmax, float ymin, float ymax) {
+            calibrator.setCalibrationValues(xmin, xmax, ymin, ymax);
+        }
+
         void setCalibration(const CalibrationHandler& other) { calibrator = other; }
 
         void enableCalibration(bool ena) {
