@@ -398,6 +398,14 @@ void onSwitchesInterrupt(__attribute__((unused)) pinid_t pin) {
 	}
 }
 
+void SwitchInput::resetAllSwitches() {
+    keys.clear();
+    ioDevice = internalDigitalIo();
+    for(int i=0;i<MAX_ROTARY_ENCODERS;i++) {
+        encoder[i] = nullptr;
+    }
+}
+
 int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
 	if(change > 250000 || maximumValue < ONE_TURN_OF_ENCODER) return stepSize;
 

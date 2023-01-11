@@ -631,7 +631,7 @@ public:
      * Removes all switch definitions and resets switches as if it were just initialised.
      * IMPORTANT: no attempt is made to deregister any resources or remove registered interrupts.
      */
-    void resetAllSwitches() { keys.clear(); }
+    void resetAllSwitches();
 
     /**
      * Remove a switch by it's pin reference. Returns true if able to remove the pin
