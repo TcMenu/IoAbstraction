@@ -15,7 +15,41 @@
 #define TOUCH_THRESHOLD 0.05F
 #endif
 
+#define TOUCH_ORIENTATION_BIT_SWAP  0
+#define TOUCH_ORIENTATION_BIT_INV_X 1
+#define TOUCH_ORIENTATION_BIT_INV_Y 2
+
 namespace iotouch {
+    /**
+     * Touch screens don't really have traditional orientation such as Landscape and Portrait. It's better expressed
+     * as if the XY planes need to be swapped, and if any of the values need to be inverted, because it really often
+     * depends on how the touch screen was applied to the screen, this gives full control over every plane, by allow
+     * each to be independently inverted, and then the result of that swapped.
+     */
+    class TouchOrientationSettings {
+    private:
+        uint16_t flags;
+    public:
+        /**
+         * Construct a touch settings object providing the orientation and invert parameters.
+         * @param swapAxisXY if the XY value should become YX
+         * @param xIsInverted if the X values need to be inverted
+         * @param yIsInverted if the Y values need to be inverted
+         */
+        TouchOrientationSettings(bool swapAxisXY, bool xIsInverted, bool yIsInverted) {
+            flags = 0;
+            bitWrite(flags, TOUCH_ORIENTATION_BIT_SWAP, swapAxisXY);
+            bitWrite(flags, TOUCH_ORIENTATION_BIT_INV_X, xIsInverted);
+            bitWrite(flags, TOUCH_ORIENTATION_BIT_INV_Y, yIsInverted);
+        }
+        TouchOrientationSettings(const TouchOrientationSettings& other) = default;
+        TouchOrientationSettings& operator= (const TouchOrientationSettings& other) = default;
+
+        bool isOrientationSwapped() const { return bitRead(flags, TOUCH_ORIENTATION_BIT_SWAP);}
+        bool isXInverted() const { return bitRead(flags, TOUCH_ORIENTATION_BIT_INV_X);}
+        bool isYInverted() const { return bitRead(flags, TOUCH_ORIENTATION_BIT_INV_Y);}
+    };
+
     /** internal acceleration modes used by the acceleration handler. */
     enum AccelerationMode: uint8_t {
         WAITING,
@@ -97,14 +131,6 @@ namespace iotouch {
      */
     class TouchInterrogator {
     public:
-        enum TouchRotation : uint8_t {
-            PORTRAIT,
-            PORTRAIT_INVERTED,
-            LANDSCAPE,
-            LANDSCAPE_INVERTED,
-            RAW
-        };
-
         /**
          * called by the touch screen manager to get the latest touch information.
          * @param ptrX a pointer to be populated with the X position between 0 and 1
@@ -113,7 +139,7 @@ namespace iotouch {
          * @param calib the calibration handler that can be used to adjust the values before returning from this method
          * @return the touch state after this call
          */
-        virtual TouchState internalProcessTouch(float* ptrX, float* ptrY, TouchRotation rotation, const CalibrationHandler& calib)=0;
+        virtual TouchState internalProcessTouch(float* ptrX, float* ptrY, const TouchOrientationSettings& settings, const CalibrationHandler& calib)=0;
     };
 
     class TouchInterrogator;
@@ -125,12 +151,12 @@ namespace iotouch {
         CalibrationHandler calibrator;
         TouchInterrogator* touchInterrogator;
         TouchState touchMode;
+        TouchOrientationSettings orientation;
         bool usedForScrolling = false;
-        TouchInterrogator::TouchRotation rotation;
     public:
-        explicit TouchScreenManager(TouchInterrogator* interrogator, TouchInterrogator::TouchRotation rot) :
+        explicit TouchScreenManager(TouchInterrogator* interrogator, const TouchOrientationSettings& orientationSettings) :
                 accelerationHandler(10, true), calibrator(),
-                touchInterrogator(interrogator), touchMode(NOT_TOUCHED), rotation(rot) {}
+                touchInterrogator(interrogator), touchMode(NOT_TOUCHED), orientation(orientationSettings) {}
 
         void start() {
             touchMode = NOT_TOUCHED;
@@ -151,9 +177,9 @@ namespace iotouch {
             calibrator.enableCalibration(ena);
         }
 
-        TouchInterrogator::TouchRotation changeRotation(TouchInterrogator::TouchRotation newRotation);
+        TouchOrientationSettings changeOrientation(const TouchOrientationSettings& newOrientation);
 
-        TouchInterrogator::TouchRotation getRotation() { return rotation; }
+        TouchOrientationSettings getRotation() { return orientation; }
 
         void exec() override;
 
@@ -188,7 +214,7 @@ namespace iotouch {
         ResistiveTouchInterrogator(pinid_t xpPin, pinid_t xnPin, pinid_t ypPin, pinid_t ynPin)
                 : xpPin(xpPin), xnPinAdc(xnPin), ypPinAdc(ypPin), ynPin(ynPin) {}
 
-        TouchState internalProcessTouch(float* ptrX, float* ptrY, TouchRotation rotation, const CalibrationHandler& calibrator) override;
+        TouchState internalProcessTouch(float* ptrX, float* ptrY, const TouchOrientationSettings& rotation, const CalibrationHandler& calibrator) override;
 
     };
 
@@ -201,7 +227,7 @@ namespace iotouch {
         float lastX, lastY, touchPressure;
         TouchState touchState;
     public:
-        ValueStoringResistiveTouchScreen(TouchInterrogator& interrogator, TouchInterrogator::TouchRotation rotation)
+        ValueStoringResistiveTouchScreen(TouchInterrogator& interrogator, const TouchOrientationSettings& rotation)
             : TouchScreenManager(&interrogator, rotation), lastX(0.0F), lastY(0.0F), touchState(NOT_TOUCHED) {
         }
 

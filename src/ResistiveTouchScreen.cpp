@@ -38,7 +38,7 @@ namespace iotouch {
     void TouchScreenManager::exec() {
         float x;
         float y;
-        auto touch = touchInterrogator->internalProcessTouch(&x, &y, rotation, calibrator);
+        auto touch = touchInterrogator->internalProcessTouch(&x, &y, orientation, calibrator);
         if (x < 0.0F) x = 0.0F;
         if (y < 0.0F) y = 0.0F;
         // now determine what state we are in, touched, not touched or held.
@@ -66,7 +66,7 @@ namespace iotouch {
 
         // only the held  state is subject to acceleration control
         if (touchMode != HELD || usedForScrolling || accelerationHandler.tick()) {
-            if (rotation == TouchInterrogator::LANDSCAPE || rotation == TouchInterrogator::LANDSCAPE_INVERTED) {
+            if (orientation.isOrientationSwapped()) {
                 sendEvent(y, x, touch, touchMode);
             } else {
                 sendEvent(x, y, touch, touchMode);
@@ -75,13 +75,13 @@ namespace iotouch {
         taskManager.scheduleOnce(20, this, TIME_MILLIS);
     }
 
-    TouchInterrogator::TouchRotation TouchScreenManager::changeRotation(TouchInterrogator::TouchRotation newRotation) {
-        auto oldRotation = rotation;
-        rotation = newRotation;
-        return oldRotation;
+    TouchOrientationSettings TouchScreenManager::changeOrientation(const TouchOrientationSettings &newOrientation) {
+        auto old = orientation;
+        orientation = newOrientation;
+        return old;
     }
 
-    TouchState ResistiveTouchInterrogator::internalProcessTouch(float *ptrX, float *ptrY, TouchRotation rotation,
+    TouchState ResistiveTouchInterrogator::internalProcessTouch(float *ptrX, float *ptrY, const TouchOrientationSettings& orientation,
                                                                 const CalibrationHandler &calibrator) {
         auto *analogDevice = internalAnalogIo();
         auto *device = internalDigitalIo();
@@ -100,8 +100,7 @@ namespace iotouch {
         if (portableFloatAbs(firstSample - secondSample) > 0.007) {
             return TOUCH_DEBOUNCE;
         }
-        float x = calibrator.calibrateX((firstSample + secondSample) / 2.0F,
-                                        (rotation == LANDSCAPE_INVERTED || rotation == PORTRAIT));
+        float x = calibrator.calibrateX((firstSample + secondSample) / 2.0F, orientation.isXInverted());
 
         // now we calculate everything in the Y dimension.
         analogDevice->initPin(xnPinAdc, DIR_IN);
@@ -118,8 +117,7 @@ namespace iotouch {
         if (portableFloatAbs(firstSample - secondSample) > 0.007) {
             return TOUCH_DEBOUNCE;
         }
-        float y = calibrator.calibrateY((firstSample + secondSample) / 2.0F,
-                                        (rotation == LANDSCAPE || rotation == PORTRAIT));
+        float y = calibrator.calibrateY((firstSample + secondSample) / 2.0F, orientation.isYInverted());
 
         // and finally the Z dimension
         device->pinMode(xpPin, OUTPUT);
