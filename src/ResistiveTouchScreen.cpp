@@ -78,6 +78,7 @@ namespace iotouch {
     TouchOrientationSettings TouchScreenManager::changeOrientation(const TouchOrientationSettings &newOrientation) {
         auto old = orientation;
         orientation = newOrientation;
+        serlogF4(SER_TCMENU_INFO, "Touch orientation (SW,XI,YI) ", orientation.isOrientationSwapped(), orientation.isXInverted(), orientation.isYInverted());
         return old;
     }
 

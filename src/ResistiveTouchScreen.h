@@ -179,7 +179,7 @@ namespace iotouch {
 
         TouchOrientationSettings changeOrientation(const TouchOrientationSettings& newOrientation);
 
-        TouchOrientationSettings getRotation() { return orientation; }
+        TouchOrientationSettings getOrientation() { return orientation; }
 
         void exec() override;
 
