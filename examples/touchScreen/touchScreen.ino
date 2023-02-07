@@ -26,9 +26,18 @@
 
 using namespace iotouch;
 
-// the touch screen itself
+/*
+ * the touch screen itself, you need to provide the pins on which the resistive screen is attached, see the help for
+ * more information, as some pins must be output capable.
+ *
+ * For the orientation, you need to provide three booleans:
+ * 1. XY are inverted if true, otherwise false
+ * 2. the raw X value is inverted
+ * 3, the raw Y value is inverted
+ */
+
 ResistiveTouchInterrogator interrogator(XPOS_PIN, XNEG_PIN, YPOS_PIN, YNEG_PIN);
-ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchInterrogator::PORTRAIT);
+ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchOrientationSettings(false, true, true));
 
 // couple of display options here, anything with a touch interface attached!
 //Adafruit_ST7735 gfx(MY_CS, MY_DC, MY_RST);

@@ -28,16 +28,16 @@
 //
 
 // For Paul Stoffregen's touch screen XPT2046 (or ThingPulse fork)
-#include <XPT2046_Touchscreen.h>
-#define TOUCH_CLASS XPT2046_Touchscreen
-#define CS_PIN 5
-XPT2046_Touchscreen touchDevice(CS_PIN, 0xFF);
+//#include <XPT2046_Touchscreen.h>
+//#define TOUCH_CLASS XPT2046_Touchscreen
+//#define CS_PIN 5
+//XPT2046_Touchscreen touchDevice(CS_PIN, 0xFF);
 //end XPT2046
 
 // For Adafruit's FT6206 touch screen library
-//#include <Adafruit_FT6206>
-//#define TOUCH_CLASS Adafruit_FT6206
-//Adafruit_FT6206 touchDevice;
+#include <Adafruit_FT6206.h>
+#define TOUCH_CLASS Adafruit_FT6206
+Adafruit_FT6206 touchDevice;
 // end FT6206
 
 
@@ -60,13 +60,13 @@ public:
     // * if there is a touch, the reading should be obtained, and converted into floating points value between 0 and 1
     // * these x and y values should be run through the calibrator and used to set the pointers to x and y passed in
     // * lastly you should return TOUCHED to indicate a touch as taken place.
-    TouchState internalProcessTouch(float *ptrX, float *ptrY, TouchRotation rotation, const CalibrationHandler& calib) {
+    TouchState internalProcessTouch(float *ptrX, float *ptrY, const TouchOrientationSettings& orientationSettings, const CalibrationHandler& calib) {
         if(theTouchDevice.touched() == 0) return NOT_TOUCHED;
 
         TS_Point pt = theTouchDevice.getPoint();
 
-        *ptrX = calib.calibrateX(float(pt.x) / KNOWN_DEVICE_TOUCH_RANGE, false);
-        *ptrY = calib.calibrateY(float(pt.y) / KNOWN_DEVICE_TOUCH_RANGE, false);
+        *ptrX = calib.calibrateX(float(pt.x) / KNOWN_DEVICE_TOUCH_RANGE, orientationSettings.isXInverted());
+        *ptrY = calib.calibrateY(float(pt.y) / KNOWN_DEVICE_TOUCH_RANGE, orientationSettings.isYInverted());
         return TOUCHED;
     }
 } interrogator(touchDevice);
@@ -76,12 +76,21 @@ public:
  * interface. In the simplest case you can use the ValueStoringResistiveTouchScreen, but you can also extend from
  * ResistiveTouchScreen, see the reference documentation for more on this.
  *
- * Notice that we pass in the above created "glue" interrogator and the desired rotation.
+ * Notice that we pass in the above created "glue" interrogator and the desired orientation, the three parameters to
+ * the orientation:
+ * 1. XY are inverted if true, otherwise false
+ * 2. the raw X value is inverted
+ * 3, the raw Y value is inverted
  */
-ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchInterrogator::PORTRAIT);
+ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchOrientationSettings(false, true, true));
 
 void setup() {
     Serial.begin(115200);
+
+    // depending on your board, adjust as needed.
+    //Wire.begin();
+    Wire.begin(5, 4);
+
     // first start the underlying touch library
     touchDevice.begin();
 
