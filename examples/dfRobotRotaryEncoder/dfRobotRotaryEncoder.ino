@@ -96,6 +96,11 @@ public:
     }
 } paintEvent;
 
+//
+// When you define a 4 joystick button encoder, only two of the buttons are used the for up and down encoder function,
+// the other two (next and back) will be provided to you through this callback with whatever pins you defined for next
+// and back when you created the up down encoder.
+//
 class MyPassThroughSwitchListener : public SwitchListener {
 public:
     void onPressed(pinid_t pin, bool held) override {
