@@ -60,13 +60,6 @@ uint8_t at24PageFromRomSize(At24EepromType size);
  * although this is implemented differently.
  */
 
-#ifdef __AVR__
-#define WIRE_BUFFER_SIZE 16
-#else
-#define WIRE_BUFFER_SIZE 32
-#endif
-
-
 class I2cAt24Eeprom : public EepromAbstraction {
 	WireType wireImpl;
 	uint8_t  eepromAddr;

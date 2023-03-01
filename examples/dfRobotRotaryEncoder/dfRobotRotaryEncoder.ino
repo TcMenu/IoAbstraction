@@ -26,7 +26,7 @@ DfRobotInputAbstraction dfRobotKeys(dfRobotAvrRanges);
 
 // Liquid crystal has an empty constructor for DfRobot.
 LiquidCrystal lcd;
-bool repaintNeeded = true;
+EncoderUserIntention intent = CHANGE_VALUE;
 
 // Here we use a task manager event to manage the screen.
 // This event is triggered when the encoder changes, never faster than 250ms.
@@ -39,6 +39,7 @@ public:
 private:
     PaintButtonState selState;
     int encoderReading;
+    pinid_t cursorKey;
 public:
     uint32_t timeOfNextCheck() override {
         // we are using a polled event, so that we restrict it's execution to about 4 times a second.
@@ -46,7 +47,16 @@ public:
     }
 
     void exec() override {
-        // print the values onto the screen, something has changed
+        //
+        // set up the display and print our title on the first line
+        //
+        lcd.begin(16, 2);
+        lcd.setCursor(0, 0);
+        lcd.print("encoder: ");
+        const char* intentStr = "Chg Val";
+        if(intent == SCROLL_THROUGH_ITEMS) intentStr = "Scroll";
+        if(intent == SCROLL_THROUGH_SIDEWAYS) intentStr = "ScSide";
+        lcd.print(intentStr);
 
         // zero pad a numeric value to four letters and print it.
         char sz[10];
@@ -58,8 +68,14 @@ public:
         const char* btnState = "     ";
         if(selState == PRESSED) btnState = "PRESS";
         else if(selState == BUTTON_HELD) btnState = "HELD ";
-        lcd.setCursor(10, 1);
+        lcd.setCursor(12, 1);
         lcd.print(btnState);
+
+        const char* cursorState = "     ";
+        if(cursorKey == DF_KEY_LEFT) cursorState = "LEFT ";
+        if(cursorKey == DF_KEY_RIGHT) cursorState = "RIGHT";
+        lcd.setCursor(6, 1);
+        lcd.print(cursorState);
     }
 
     void currentReading(int reading_) {
@@ -73,35 +89,56 @@ public:
         selState = state;
         setTriggered(true); // we don't want to run the event until the next interval so dont use markAndNotify
     }
+
+    void cursor(pinid_t pin) {
+        cursorKey = pin;
+        setTriggered(true);
+    }
 } paintEvent;
 
+class MyPassThroughSwitchListener : public SwitchListener {
+public:
+    void onPressed(pinid_t pin, bool held) override {
+        paintEvent.cursor(pin);
+    }
+
+    void onReleased(pinid_t pin, bool held) override {
+        paintEvent.cursor(-1);
+    }
+} passThroughListener;
+
+
 void setup() {
-    //
-    // set up the display and print our title on the first line
-    //
-    lcd.begin(16, 2);
-    lcd.setCursor(0, 0);
-    lcd.print("Rotary encoder:");
+    // do an initial painting
+    paintEvent.markTriggeredAndNotify();
 
     // set up switches to use the DfRobot input facilities
     switches.init(asIoRef(dfRobotKeys), SWITCHES_POLL_EVERYTHING, false);
 
-    // we setup a rotary encoder on the up and down buttons
-    setupUpDownButtonEncoder(DF_KEY_UP, DF_KEY_DOWN, [](int reading) {
+    // we setup a rotary encoder on the digital joystick buttons
+    setupUpDownButtonEncoder(DF_KEY_UP, DF_KEY_DOWN, DF_KEY_LEFT, DF_KEY_RIGHT, &passThroughListener, [](int reading) {
         paintEvent.currentReading(reading);
     });
 
-    // with a maximum value of 5000, starting at 2500.
-    switches.changeEncoderPrecision(5000, 2500);
+    // with a maximum value of 500, starting at 250.
+    switches.changeEncoderPrecision(500, 250);
 
     // now we add a switch handler for the select button
     switches.addSwitch(DF_KEY_SELECT, [](pintype_t , bool held) {
         paintEvent.selectChanged(held ? PaintEvent::BUTTON_HELD : PaintEvent::PRESSED);
     });
 
-    // and we also want to know when it's released.
+    // and we also want to know when it's released. Here we also change the intent letting us cycle through all the
+    // intentions that the up down buttons can handle.
+    // Change value, regular operation where up and down function normally.
+    // Scroll through items, inverts the directions to make moving through lists more natural.
+    // Scroll sideways, Uses left/right for encoder value, to make scrolling sideways more natural.
     switches.onRelease(DF_KEY_SELECT, [](pintype_t , bool) {
         paintEvent.selectChanged(PaintEvent::NOT_PRESSED);
+        if(intent == CHANGE_VALUE) intent = SCROLL_THROUGH_ITEMS;
+        else if(intent == SCROLL_THROUGH_ITEMS) intent = SCROLL_THROUGH_SIDEWAYS;
+        else intent = CHANGE_VALUE;
+        switches.getEncoder()->setUserIntention(intent);
     });
 
     // lastly, we set up the event that does the drawing for to a maximum of 4 times a second, when needed.

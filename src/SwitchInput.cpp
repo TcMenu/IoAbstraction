@@ -480,29 +480,60 @@ void HardwareRotaryEncoder::handleChangeRaw(bool increase) {
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed)
-        : RotaryEncoder(callback), upPin(pinUp), downPin(pinDown) {
+        : RotaryEncoder(callback), upPin(pinUp), downPin(pinDown), backPin(-1), nextPin(-1), passThroughListener(nullptr),
+          canRotate(false) {
 	switches.addSwitchListener(pinUp, this, speed);
 	switches.addSwitchListener(pinDown, this, speed);
 }
 
 EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, uint8_t speed)
-        : RotaryEncoder(listener), upPin(pinUp), downPin(pinDown) {
+        : RotaryEncoder(listener), upPin(pinUp), downPin(pinDown), backPin(-1), nextPin(-1), passThroughListener(nullptr),
+          canRotate(false){
     switches.addSwitchListener(pinUp, this, speed);
     switches.addSwitchListener(pinDown, this, speed);
 }
 
+EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, pinid_t backPin, pinid_t nextPin,
+                                           SwitchListener* passThrough, EncoderCallbackFn callback, uint8_t speed)
+        : RotaryEncoder(callback), upPin(pinUp), downPin(pinDown), backPin(backPin), nextPin(nextPin), passThroughListener(passThrough),
+          canRotate(true) {
+    switches.addSwitchListener(pinUp, this, speed);
+    switches.addSwitchListener(pinDown, this, speed);
+    switches.addSwitchListener(backPin, this, speed);
+    switches.addSwitchListener(nextPin, this, speed);
+}
+
+EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, pinid_t backPin, pinid_t nextPin,
+                                           SwitchListener* passThrough, EncoderListener* listener, uint8_t speed)
+        : RotaryEncoder(listener), upPin(pinUp), downPin(pinDown), backPin(backPin), nextPin(nextPin), passThroughListener(passThrough),
+          canRotate(true) {
+    switches.addSwitchListener(pinUp, this, speed);
+    switches.addSwitchListener(pinDown, this, speed);
+    switches.addSwitchListener(backPin, this, speed);
+    switches.addSwitchListener(nextPin, this, speed);
+}
+
 void EncoderUpDownButtons::onPressed(pinid_t pin, bool held) {
-    if(pin == upPin) {
-        int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -stepSize : stepSize;
+    bool invert = intent == SCROLL_THROUGH_ITEMS;
+    if (pin == getIncrementPin()) {
+        int8_t dir = invert ? -stepSize : stepSize;
         increment(dir);
-    } else if(pin == downPin) {
-        int8_t dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? stepSize : -stepSize;
+    } else if (pin == getDecrementPin()) {
+        int8_t dir = invert ? stepSize : -stepSize;
         increment(dir);
+    } else if(backPin != -1 && passThroughListener && pin == getBackPin()) {
+        passThroughListener->onPressed(backPin, held);
+    } else if(nextPin != -1 && passThroughListener && pin == getNextPin()) {
+        passThroughListener->onPressed(nextPin, held);
     }
 }
 
 void EncoderUpDownButtons::onReleased(pinid_t pin, bool held) {
-    // ignored..
+    if(backPin != -1 && passThroughListener && pin == getBackPin()) {
+        passThroughListener->onReleased(backPin, held);
+    } else if(nextPin != -1 && passThroughListener && pin == getNextPin()) {
+        passThroughListener->onReleased(nextPin, held);
+    }
 }
 
 /******** ENCODER SETUP METHODS ***********/
@@ -518,6 +549,19 @@ void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderListener* l
     if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
     auto* enc = new EncoderUpDownButtons(pinUp, pinDown, listener, speed);
+    switches.setEncoder(enc);
+}
+
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, pinid_t pinLeft, pinid_t pinRight, SwitchListener* passThroughListener, EncoderListener* listener, int speed) {
+    if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
+
+    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, pinLeft, pinRight, passThroughListener, listener, speed);
+    switches.setEncoder(enc);
+}
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, pinid_t pinLeft, pinid_t pinRight, SwitchListener* passThroughListener, EncoderCallbackFn cb, int speed) {
+    if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
+
+    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, pinLeft, pinRight, passThroughListener, cb, speed);
     switches.setEncoder(enc);
 }
 

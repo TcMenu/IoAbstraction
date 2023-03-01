@@ -101,12 +101,14 @@ public:
     void exec() override {
         float readVal = analogDevice->getCurrentFloat(analogPin) - midPoint;
 
+        bool scrolling = intent == SCROLL_THROUGH_ITEMS || intent == SCROLL_THROUGH_SIDEWAYS;
+
         if(readVal > tolerance) {
-            int dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? -1 : 1;
+            int dir = (scrolling) ? -1 : 1;
             increment(dir);
         }
         else if(readVal < (-tolerance)) {
-            int dir = (switches.getEncoder()->getUserIntention() == SCROLL_THROUGH_ITEMS) ? 1 : -1;
+            int dir = (scrolling) ? 1 : -1;
             increment(dir);
         }
         else {

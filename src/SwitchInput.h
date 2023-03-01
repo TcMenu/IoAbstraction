@@ -175,6 +175,8 @@ enum EncoderUserIntention: uint8_t {
     CHANGE_VALUE = 0,
     /** User wishes to scroll through a list of items */
     SCROLL_THROUGH_ITEMS,
+    /** User wishes to scrool through items sideways, such as card layout. */
+    SCROLL_THROUGH_SIDEWAYS,
     /** User is just using the encoder for direction only */
     DIRECTION_ONLY
 };
@@ -370,8 +372,9 @@ private:
  */
 class EncoderUpDownButtons : public RotaryEncoder, public SwitchListener {
 private:
-    const pinid_t upPin, downPin;
-
+    const pinid_t upPin, downPin, backPin, nextPin;
+    SwitchListener* passThroughListener;
+    const bool canRotate;
 public:
     /**
      * Create an up down encoder based on two buttons, for up and down. This is a helper that wraps calls to switches
@@ -393,9 +396,48 @@ public:
      */
 	EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, uint8_t speed = 20);
 
+    /**
+     * Create an up down encoder based on two buttons, for up and down. This is a helper that wraps calls to switches
+     * and handles the up and down events. This version takes a function callback for change notification. Next and back
+     * are passed through to the passthrough callback so you can processes these commands. Calling the rotate meaning
+     * turns the encoder so that next and back function as up and down instead of the regular function keys. However,
+     * for the passthrough callback the original next and back pin numbers are sent, so outside of the encoder, no
+     * extra logic is needed.
+     * @param pinUp the pin to use for up
+     * @param pinDown the pin to use for down
+     * @param pinBack the pin to use for back
+     * @param pinNext the pin to use for next
+     * @param passThrough the passthrough listener on which this class will convey next and back key presses
+     * @param callback the function callback when the encoder changes
+     * @param speed the speed of repeat functions on the keys
+     */
+    EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, pinid_t pinBack, pinid_t pinNext, SwitchListener* passThrough, EncoderCallbackFn callback, uint8_t speed = 20);
+
+    /**
+     * Create an up down encoder based on four buttons, for up and down. This is a helper that wraps calls to switches
+     * and handles the up and down events. This version takes an OO listener for change notification. The next and back
+     * are passed through to the passthrough callback so you can processes these commands. Calling the rotate meaning
+     * turns the encoder so that next and back function as up and down instead of the regular function keys. However,
+     * for the passthrough callback the original next and back pin numbers are sent, so outside of the encoder, no
+     * extra logic is needed.
+     * @param pinUp the pin to use for up
+     * @param pinDown the pin to use for down
+     * @param pinBack the pin to use for back
+     * @param pinNext the pin to use for next
+     * @param passThrough the passthrough listener on which this class will convey next and back key presses
+     * @param listener the OO interface implementation for when encoder changes
+     * @param speed the speed of repeat functions on the keys
+     */
+    EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, pinid_t pinBack, pinid_t pinNext, SwitchListener* passThrough, EncoderListener* listener, uint8_t speed = 20);
+
     void onPressed(pinid_t pin, bool held) override;
     void onReleased(pinid_t pin, bool held) override;
 
+protected:
+    pinid_t getIncrementPin() { return intent == SCROLL_THROUGH_SIDEWAYS && canRotate ? nextPin : upPin; }
+    pinid_t getDecrementPin() { return intent == SCROLL_THROUGH_SIDEWAYS && canRotate ? backPin : downPin; }
+    pinid_t getBackPin() { return intent == SCROLL_THROUGH_SIDEWAYS && canRotate ? upPin : backPin; }
+    pinid_t getNextPin() { return intent == SCROLL_THROUGH_SIDEWAYS && canRotate ? downPin : nextPin; }
 };
 
 #define SW_FLAG_PULLUP_LOGIC 0
@@ -723,5 +765,34 @@ void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn 
  */
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderListener* listener, int speed = 20);
 
+/**
+ * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
+ * This function automatically adds the encoder to the global switches instance. This version takes an OO
+ * listener implementing EncoderListener. This version supports the idea of rotating the cursor key operation
+ * if needed by changing the intent to be sideways.
+ *
+ * @param pinUp the up button
+ * @param pinDown the down button
+ * @param pinLeft the left button
+ * @param pinRight the right button
+ * @param passThroughListener a listener that will receive notifications for left and right presses.
+ * @param listener the OO listener that will receive the new state on change.
+ */
+void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, pinid_t pinLeft, pinid_t pinRight, SwitchListener* passThroughListener, EncoderListener* listener, int speed=20);
+
+    /**
+ * Initialise an encoder that uses up and down buttons to handle the same functions as a hardware encoder.
+ * This function automatically adds the encoder to the global switches instance. This version takes an OO
+ * listener implementing EncoderListener. This version supports the idea of rotating the cursor key operation
+ * if needed by changing the intent to be sideways.
+ *
+ * @param pinUp the up button
+ * @param pinDown the down button
+ * @param pinLeft the left button
+ * @param pinRight the right button
+ * @param passThroughListener a listener that will receive notifications for left and right presses.
+ * @param encoderCallbackFn will receive the new value on change.
+ */
+ void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, pinid_t pinLeft, pinid_t pinRight, SwitchListener* passThroughListener, EncoderCallbackFn encoderCallbackFn, int speed=20);
 
 #endif

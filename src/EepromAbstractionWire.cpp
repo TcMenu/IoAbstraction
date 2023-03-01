@@ -7,6 +7,12 @@
 #include "IoLogging.h"
 #include <EepromAbstractionWire.h>
 
+#ifdef WIRE_BUFFER_SIZE
+# define MAX_BUFFER_SIZE_TO_USE WIRE_BUFFER_SIZE
+#else
+# define MAX_BUFFER_SIZE_TO_USE 32
+#endif
+
 #define READY_TRIES_COUNT 100
 
 uint8_t at24PageFromRomSize(At24EepromType size) {
@@ -64,7 +70,7 @@ uint8_t I2cAt24Eeprom::findMaximumInPage(uint16_t destEeprom, uint8_t len) const
     uint16_t currentGo = min((uint16_t)pageSize, uint16_t(offs + len)) - offs;
 
 	// dont exceed the buffer length of the  wire library
-    auto absoluteMax = WIRE_BUFFER_SIZE - 2;
+    auto absoluteMax = MAX_BUFFER_SIZE_TO_USE - 2;
 	return min(currentGo, (uint16_t) absoluteMax);
 }
 
