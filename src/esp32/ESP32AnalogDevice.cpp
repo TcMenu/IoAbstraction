@@ -159,4 +159,13 @@ ESP32AnalogDevice& internalAnalogDevice() {
     return esp32AnalogDevice;
 }
 
+
+// borrowed for the ESP32TouchKeysAbstraction to avoid the use of another file.
+volatile int espTouchIntCount = 0;
+
+void esp32TouchKeyInterruptHandler(void* touchAbsAsVoid) {
+    TaskManager::markInterrupted(0);
+    espTouchIntCount++;
+}
+
 #endif
