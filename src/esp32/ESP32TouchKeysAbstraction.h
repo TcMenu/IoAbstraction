@@ -55,9 +55,9 @@ public:
     explicit ESP32TouchKeysAbstraction(int defThreshold, touch_high_volt_t highVoltage = TOUCH_HVOLT_2V7, touch_low_volt_t lowVoltage = TOUCH_LVOLT_0V5,
                               touch_volt_atten_t attenuation = TOUCH_HVOLT_ATTEN_1V) {
         allOk = touch_pad_init() == ESP_OK;
-        serdebugF2("touch_pad_init ", allOk);
+        serlogF2(SER_IOA_INFO, "touch_pad_init ", allOk);
         touch_pad_set_voltage(highVoltage, lowVoltage, attenuation);
-        serdebugF2("touch_pad set voltage ", allOk);
+        serlogF2(SER_IOA_DEBUG, "touch_pad set voltage ", allOk);
         interruptCodeNeeded = false;
         startedUp = false;
         pinThreshold = defThreshold;
@@ -81,7 +81,7 @@ public:
             interruptCodeNeeded = false;
             touch_pad_isr_register(esp32TouchKeyInterruptHandler, this);
             allOk = touch_pad_intr_enable() == ESP_OK;
-            serdebugF2("Enabled interrupts for touch sensor ok=", allOk);
+            serlogF2(SER_IOA_INFO, "Enabled interrupts for touch sensor ok=", allOk);
         }
     }
 
@@ -109,7 +109,7 @@ public:
      */
     void pinDirection(pinid_t pin, uint8_t mode) override {
         if(!allOk) return;
-        serdebugF2("Pin Direction ", pin);
+        serlogF2(SER_IOA_INFO, "Pin Direction ", pin);
         touch_pad_config((touch_pad_t) pin, pinThreshold);
         touch_pad_set_trigger_mode(triggerMode);
     }
