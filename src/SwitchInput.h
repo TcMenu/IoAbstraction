@@ -284,6 +284,11 @@ public:
             notify.callback(newVal);
         }
     }
+
+    /**
+     * @return the maximum value that this encoder can be set to.
+     */
+    bsize_t getMaximumValue() { return maximumValue; }
 };
 
 /**
