@@ -12,7 +12,11 @@
 #ifndef _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 #define _IOABSTRACTION_IOABSTRACTIONWIRE_H_
 
-#define AW9523_LED_OUTPUT 0x99
+//
+// An addition mode for devices that support LED controlled output, where the output is a controlled current source
+//
+#define LED_CURRENT_OUTPUT 0x99
+#define AW9523_LED_OUTPUT LED_CURRENT_OUTPUT
 
 #include "PlatformDeterminationWire.h"
 #include "IoAbstraction.h"
@@ -96,7 +100,7 @@ protected:
     virtual void initDevice()=0;
 public:
     Standard16BitDevice();
-    ~Standard16BitDevice() = default;
+    ~Standard16BitDevice() override = default;
 
     void writeValue(pinid_t pin, uint8_t value) override;
     uint8_t readValue(pinid_t pin) override;
@@ -141,7 +145,7 @@ public:
      * Simplest constructor: create a MCP23017 device with no interrupt mode enabled, only the I2C address needed.
      * @param address the I2C address
      */
-    MCP23017IoAbstraction(uint8_t address, WireType wireImpl = nullptr);
+    explicit MCP23017IoAbstraction(uint8_t address, WireType wireImpl = nullptr);
 
     /**
      * Create a MCP23017 device that will use a single interrupt mode and optionally provide the wire implementation
@@ -230,10 +234,10 @@ public:
 
     /**
      * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT, OUTPUT and
-     * AW9523_LED_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
+     * LED_CURRENT_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
      * instead of digital write.
      * @param pin the pin to set direction for on this device
-     * @param mode for this device, INPUT, OUTPUT or AW9523_LED_OUTPUT
+     * @param mode for this device, INPUT, OUTPUT or LED_CURRENT_OUTPUT
      */
     void pinDirection(pinid_t pin, uint8_t mode) override;
 
@@ -297,6 +301,143 @@ public:
     void setCurrentValue(pinid_t pin, unsigned int newValue) override { theAbstraction.setPinLedCurrent(pin, newValue); }
 
     void setCurrentFloat(pinid_t pin, float newValue) override { theAbstraction.setPinLedCurrent(pin, (uint8_t)(newValue * 255.0F)); }
+};
+
+//
+// These definitions help with accessing the various registers, and provide default values and layouts for the MPR121
+// You can use many of them with the read/write register functions if you need to directly access the chips registers.
+// Only a subset of the available operations are directly handled within IoAbstraction directly, but this gives you
+// access to the rest.
+//
+#define MPR121_FIRST_GPIO 4
+#define MPR121_TOTAL_PINS 13
+#define MPR121_PROXIMITY_PIN 12
+
+#define MPR121_TOUCH_STATUS_16 0x00
+#define MPR121_OOR_STATUS_16 0x02
+#define MPR121_ELECTRODE_DATA_2ND 0x04
+#define MPR121_BASELINE_DATA_3RD 0x1E
+#define MPR121_TCH_REL_THRESHOLD 0x41
+#define MPR121_DEBOUNCE_REG 0x5B
+#define MPR121_AFE_CONFIG_1 0x5C
+#define MPR121_AFE_CONFIG_2 0x5D
+#define MPR121_ELECTRODE_CONFIG 0x5E
+#define MPR121_ELECTRODE_CURRENT_0 0x5F
+#define MPR121_CHARGE_TIME_0 0x6C
+#define MPR121_GPIO_CONTROL_0 0x73
+#define MPR121_GPIO_CONTROL_1 0x74
+#define MPR121_GPIO_DATA 0x75
+#define MPR121_GPIO_DIRECTION_0 0x76
+#define MPR121_GPIO_ENABLE 0x77
+#define MPR121_GPIO_DATA_SET 0x78
+#define MPR121_GPIO_DATA_CLEAR 0x79
+#define MPR121_GPIO_DATA_TOGGLE 0x7A
+#define MPR121_SOFT_RESET 0x80
+#define MPR121_SOFT_RESET_VALUE 0x63
+
+
+/**
+ * The MPR121IoAbstraction class provide a wide range of the capabilities of the MPR121 chip using the regular abstraction
+ * method such that they can be used with switches, LCDs, encoders, keyboards etc, similar to how you use device pins.
+ * For the additional functionality that is not directly provided, you can access the chips registers and set these
+ * particular extended functions up directly.
+ */
+class MPR121IoAbstraction : public Standard16BitDevice {
+private:
+    WireType wireImpl;
+    uint8_t i2cAddress;
+    pinid_t interruptPin;
+public:
+    /**
+     * create an instance of the AW9523 abstraction that communicates with the device and extends Arduino like functions
+     * for the pins on the device. This constructor takes the I2C address, and optionally an interrupt pin and wire
+     * implementation. Any interrupt pin provided will be set up on your behalf automatically.
+     *
+     * @param addr the address on the I2C bus of the device
+     * @param intPin optionally a pin on the board that the devices interrupt pin is connected to
+     * @param wirePtr optionally an alternative wire implementation, EG Wire1, or other non standard I2C device.
+     */
+    explicit MPR121IoAbstraction(uint8_t addr, pinid_t intPin = IO_PIN_NOT_DEFINED, WireType wirePtr = nullptr);
+    ~MPR121IoAbstraction() override = default;
+
+    /**
+     * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT, OUTPUT and
+     * AW9523_LED_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
+     * instead of digital write.
+     * @param pin the pin to set direction for on this device
+     * @param mode for this device, INPUT, OUTPUT or AW9523_LED_OUTPUT
+     */
+    void pinDirection(pinid_t pin, uint8_t mode) override;
+
+    /**
+     * Attaches an interrupt to the device and links it to the arduino pin. On the MCP23017 nearly all interrupt modes
+     * are supported, including CHANGE, RISING, FALLING and are selective both per port and by pin.
+     */
+    void attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) override;
+
+    /**
+     * updates settings on the board after changes
+     */
+    bool runLoop() override;
+
+    /**
+     * Set the electrode settings for a pin, should only ever be called once the pin is set as input, it will turn the
+     * pin into a touch pin. These take values in line with the datasheet, which should be consulted for the correct
+     * value ranges. This should be called before setting pin direction to input.
+     * @param pin
+     * @param current
+     * @param chargeTime
+     * @param touchThreshold
+     * @param releaseThreshold
+     */
+    void electrodeSettingsForPin(pinid_t pin, uint8_t current, uint8_t chargeTime, uint8_t touchThreshold, uint8_t releaseThreshold);
+
+    /**
+     * @return the current status of the Out Of Range register on the device. See the datasheet for more details.
+     */
+    uint16_t getOutOfRangeRegister();
+
+    /**
+     * Debounce configuration takes value for both touch and release and is in conformance with the datasheet.
+     * Each is a value between 0 and 7.
+     * @param debounceTouch
+     * @param debounceRelease
+     */
+    void configureDebounce(uint8_t debounceTouch, uint8_t debounceRelease);
+
+    /**
+     * Read the electrode filtered data, which is after the 2nd filter from the datasheet. This reads Electrode Data
+     * Registers 0x04-0x1D. See datasheet for more detail.
+     * @param pin the pin number
+     * @return the value from the registers
+     */
+    uint16_t read2ndFilteredData(uint8_t pin);
+
+    /**
+     * Read the baseline data, which is after the 3rd filter from the datasheet. This reads the Baseline 8-bit register
+     * Registers 0x1E-0x2A. See datasheet for more detail.
+     * @param pin the pin number
+     * @return the value from the registers
+     */
+    uint8_t read3rdFilteredData(uint8_t pin);
+
+    /**
+     * Enable or disable the LED controller mode of the pin, the power parameter is a value between 0 and 255 that
+     * represents the dimming level for that pin.
+     * @param pin the pin to control
+     * @param pwr the current to provide, based on the global control setting, default 0..37mA.
+     */
+    void setPinLedCurrent(pinid_t pin, uint8_t pwr);
+
+    /**
+     * Perform a software reset of the device. Make sure you've called sync at least once before calling.
+     */
+    void softwareReset();
+
+    void writeReg8(uint8_t reg, uint8_t data);
+    void writeReg16(uint8_t reg, uint16_t data);
+    uint8_t readReg8(uint8_t reg);
+    uint16_t readReg16(uint8_t reg);
 };
 
 // to remain compatible with old code

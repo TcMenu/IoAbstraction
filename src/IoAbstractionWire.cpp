@@ -506,3 +506,68 @@ void AW9523AnalogAbstraction::initPin(pinid_t pin, AnalogDirection direction) {
         serlogF2(SER_ERROR, "AW9523 No AnalogIn", pin);
     }
 }
+
+MPR121IoAbstraction::MPR121IoAbstraction(uint8_t addr, pinid_t intPin, WireType wirePtr) : Standard16BitDevice(),
+                                                                                           i2cAddress(addr), interruptPin(intPin) {
+    wireImpl = (wirePtr != nullptr) ? wirePtr : defaultWireTypePtr;
+}
+
+void MPR121IoAbstraction::softwareReset() {
+    wireWriteReg8(wireImpl, i2cAddress, MPR121_SOFT_RESET, MPR121_SOFT_RESET_VALUE);
+}
+
+void MPR121IoAbstraction::setPinLedCurrent(pinid_t pin, uint8_t pwr) {
+
+}
+
+void MPR121IoAbstraction::writeReg8(uint8_t reg, uint8_t data) {
+    wireWriteReg8(wireImpl, i2cAddress, reg, data);
+}
+
+void MPR121IoAbstraction::writeReg16(uint8_t reg, uint16_t data) {
+    wireWriteReg16(wireImpl, i2cAddress, reg, data);
+}
+
+uint8_t MPR121IoAbstraction::readReg8(uint8_t reg) {
+    return wireReadReg8(wireImpl, i2cAddress, reg);
+}
+
+uint16_t MPR121IoAbstraction::readReg16(uint8_t reg) {
+    return wireReadReg16(wireImpl, i2cAddress, reg);
+}
+
+void MPR121IoAbstraction::configureDebounce(uint8_t debounceTouch, uint8_t debounceRelease) {
+    uint8_t data = (debounceRelease << 4) | (debounceTouch & 0x7);
+    wireWriteReg8(wireImpl, i2cAddress, MPR121_DEBOUNCE_REG, data);
+}
+
+void MPR121IoAbstraction::electrodeSettingsForPin(pinid_t pin, uint8_t current, uint8_t chargeTime, uint8_t touchThreshold, uint8_t releaseThreshold) {
+    wireWriteReg8(wireImpl, i2cAddress, uint8_t(MPR121_ELECTRODE_CURRENT_0 + pin), current);
+    wireWriteReg8(wireImpl, i2cAddress, uint8_t(MPR121_CHARGE_TIME_0 + pin), chargeTime);
+    auto reg = MPR121_TCH_REL_THRESHOLD + (pin * 2);
+    wireWriteReg8(wireImpl, i2cAddress, reg, touchThreshold);
+    wireWriteReg8(wireImpl, i2cAddress, reg + 1, releaseThreshold);
+}
+
+uint16_t MPR121IoAbstraction::read2ndFilteredData(uint8_t pin) {
+    return wireReadReg16(wireImpl, i2cAddress, MPR121_ELECTRODE_DATA_2ND * 2);
+}
+
+uint8_t MPR121IoAbstraction::read3rdFilteredData(uint8_t pin) {
+    return wireReadReg16(wireImpl, i2cAddress, MPR121_BASELINE_DATA_3RD * 2);
+}
+
+uint16_t MPR121IoAbstraction::getOutOfRangeRegister() {
+    return wireReadReg16(wireImpl, i2cAddress, MPR121_OOR_STATUS_16);
+}
+
+void MPR121IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
+    if(mode == LED_CURRENT_OUTPUT || mode == OUTPUT) {
+        if(pin < 4) return;
+    } else if(mode == INPUT || mode == INPUT_PULLUP){
+
+    }
+
+
+
+}
