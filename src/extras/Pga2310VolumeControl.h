@@ -1,0 +1,16 @@
+//
+// Created by dave on 16/04/2023.
+//
+
+#ifndef TCLIBRARYDEV_PGA2310VOLUMECONTROL_H
+#define TCLIBRARYDEV_PGA2310VOLUMECONTROL_H
+
+
+
+class Pga2310VolumeControl {
+
+};
+
+
+
+#endif //TCLIBRARYDEV_PGA2310VOLUMECONTROL_H
