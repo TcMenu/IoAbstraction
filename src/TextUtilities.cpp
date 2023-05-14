@@ -3,6 +3,8 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
+#include <cstring>
+#include <locale>
 #include "TextUtilities.h"
 
 void appendChar(char* str, char val, int len) {
@@ -97,4 +99,38 @@ void fastftoa(char* sz, float fl, int dp, int strSize) {
     fastltoa(sz, whole, 9, NOT_PADDED, strSize);
     appendChar(sz, '.', strSize);
     fastltoa(sz, fraction, dp, '0', strSize);
+}
+
+char hexChar(uint8_t val) {
+    if(val < 10) return char(val + '0');
+    return char(val - 10) + 'A';
+}
+
+
+void intToHexString(char* buffer, size_t bufferSize, unsigned int input, int digits, bool with0x) {
+    if(with0x) {
+        buffer[0] = '0';
+        buffer[1] = 'x';
+        bufferSize -= 2;
+        buffer += 2;
+    }
+
+    if(digits >= bufferSize) {
+        digits = bufferSize - 1;
+    }
+
+    int i = 0;
+    while(bufferSize && i < digits) {
+        buffer[(digits-1) - i] = hexChar(input & 0x0f);
+        input = input >> 4;
+        i++;
+    }
+    buffer[i] = 0;
+}
+
+uint8_t hexValueOf(char val) {
+    if(val >= '0' && val <= '9') return val - '0';
+    val = (char)toupper(val);
+    if(val >= 'A' && val <= 'F') return val - ('A' - 10);
+    return 0;
 }
