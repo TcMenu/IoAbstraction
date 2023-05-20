@@ -135,6 +135,18 @@ bool wireWriteReg8(WireType wireType, uint8_t addr, uint8_t reg, uint8_t command
     return ioaWireWriteWithRetry(wireType, addr, data, sizeof data);
 }
 
+void toggleBitInRegister8(WireType wireType, uint8_t addr, uint8_t regAddr, uint8_t theBit, bool value) {
+    uint8_t reg = wireReadReg8(wireType, addr, regAddr);
+    bitWrite(reg, theBit, value);
+
+    // for debugging to see the commands being sent, uncomment below
+    serlogF4(SER_IOA_DEBUG, "toggle(regAddr, bit, toggle): ", regAddr, theBit, value);
+    serlogFHex(SER_IOA_DEBUG, "Value: ", reg);
+    // end debugging code
+
+    wireWriteReg8(wireType, addr, regAddr, reg);
+}
+
 void toggleBitInRegister16(WireType wireType, uint8_t addr, uint8_t regAddr, uint8_t theBit, bool value) {
     uint16_t reg = wireReadReg16(wireType, addr, regAddr);
     bitWrite(reg, theBit, value);
@@ -516,8 +528,24 @@ void MPR121IoAbstraction::softwareReset() {
     wireWriteReg8(wireImpl, i2cAddress, MPR121_SOFT_RESET, MPR121_SOFT_RESET_VALUE);
 }
 
-void MPR121IoAbstraction::setPinLedCurrent(pinid_t pin, uint8_t pwr) {
+void write4BitToReg8(WireType wireImpl, uint8_t i2cAddress, uint8_t reg, bool lowBits, uint8_t val) {
+    auto regVal = wireReadReg8(wireImpl, i2cAddress, reg);
+    if(lowBits) {
+        regVal = regVal & 0xF0;
+        regVal = regVal | val;
+    } else {
+        regVal = regVal & 0x0F;
+        regVal = regVal | (val << 4);
+    }
+    wireWriteReg8(wireImpl, i2cAddress, reg, regVal);
 
+}
+
+void MPR121IoAbstraction::setPinLedCurrent(pinid_t pin, uint8_t pwr) {
+    if(pin < 4 || pin > 11 || pwr > 15) return;
+    pin -= 4;
+    auto reg = MPR121_LED_PWM_0 + (pin / 2);
+    write4BitToReg8(wireImpl, i2cAddress, reg, pin % 1 == 0, pwr);
 }
 
 void MPR121IoAbstraction::writeReg8(uint8_t reg, uint8_t data) {
@@ -542,9 +570,12 @@ void MPR121IoAbstraction::configureDebounce(uint8_t debounceTouch, uint8_t debou
 }
 
 void MPR121IoAbstraction::electrodeSettingsForPin(pinid_t pin, uint8_t current, uint8_t chargeTime, uint8_t touchThreshold, uint8_t releaseThreshold) {
+    enableTouchSupportOnPin(pin);
     wireWriteReg8(wireImpl, i2cAddress, uint8_t(MPR121_ELECTRODE_CURRENT_0 + pin), current);
-    wireWriteReg8(wireImpl, i2cAddress, uint8_t(MPR121_CHARGE_TIME_0 + pin), chargeTime);
-    auto reg = MPR121_TCH_REL_THRESHOLD + (pin * 2);
+    auto reg = MPR121_CHARGE_TIME_0 + (pin / 2);
+    write4BitToReg8(wireImpl, i2cAddress, reg, pin % 1 == 0, chargeTime);
+
+    reg = MPR121_TCH_REL_THRESHOLD + (pin * 2);
     wireWriteReg8(wireImpl, i2cAddress, reg, touchThreshold);
     wireWriteReg8(wireImpl, i2cAddress, reg + 1, releaseThreshold);
 }
@@ -564,10 +595,64 @@ uint16_t MPR121IoAbstraction::getOutOfRangeRegister() {
 void MPR121IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
     if(mode == LED_CURRENT_OUTPUT || mode == OUTPUT) {
         if(pin < 4) return;
+        int gpioPinNo = pin - 4;
+        toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_ENABLE, gpioPinNo, true);
+        toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_DIRECTION_0, gpioPinNo, true);
+        toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_CONTROL_0, gpioPinNo, mode == LED_CURRENT_OUTPUT);
+        toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_CONTROL_1, gpioPinNo, mode == LED_CURRENT_OUTPUT);
     } else if(mode == INPUT || mode == INPUT_PULLUP){
-
+        // if the touch support has already been for our pin, there is nothing to do here. It is assumed that
+        // in this case you have already configured the touch parameters. 
+        if(maximumTouchPin < pin  && pin > 4) {
+            int gpioPinNo = pin - 4;
+            toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_ENABLE, gpioPinNo, true);
+            toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_DIRECTION_0, gpioPinNo, false);
+            toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_CONTROL_0, gpioPinNo, mode == INPUT_PULLUP);
+            toggleBitInRegister8(wireImpl, i2cAddress, MPR121_GPIO_CONTROL_1, gpioPinNo, mode == INPUT_PULLUP);
+        }
     }
+}
 
+void MPR121IoAbstraction::enableTouchSupportOnPin(pinid_t pin) {
+    writeReg8(MPR121_TOUCH_RUNMODE_EXTRA, MPR121_TOUCH_RUNMODE_EXTRA | (pin + 1));
+    maximumTouchPin = max(maximumTouchPin, pin);
+}
 
+bool MPR121IoAbstraction::runLoop() {
+    // is GPIO or touch on GPIO pins
+    if(maximumTouchPin != 0 && !isReadPortSet(0)) {
+        lastRead = readReg16(MPR121_TOUCH_STATUS_16);
+    } else if(isReadPortSet(0)) {
+        lastRead = readReg16(MPR121_TOUCH_STATUS_16);
+        
+        if(maximumTouchPin < 4) {
+            auto gpioRead = readReg8(MPR121_GPIO_DATA);
+            lastRead = lastRead | (gpioRead << 4);
+        } else {
+            auto gpioRead = readReg8(MPR121_GPIO_DATA);
+            int shiftAmt = maximumTouchPin - 4;
+            gpioRead = gpioRead >> shiftAmt;
+            lastRead = lastRead | (4 + shiftAmt);
+        }
+    }
+    
+    if(isWritePortSet(0)) {
+        writeReg8(MPR121_GPIO_DATA, toWrite);
+    }
+    clearChangeFlags();
+}
 
+void MPR121IoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) {
+    // if there's an interrupt pin set
+    if(interruptPin == 0xff) return;
+
+    internalDigitalDevice().pinMode(interruptPin, INPUT_PULLUP);
+    internalDigitalDevice().attachInterrupt(interruptPin, intHandler, FALLING);
+}
+
+void MPR121AnalogAbstraction::initPin(pinid_t pin, AnalogDirection direction) {
+    if(direction == DIR_PWM || direction == DIR_OUT) {
+        theAbstraction.pinMode(pin, AW9523_LED_OUTPUT);
+    }
+    // for input it is assumed that the user has already enabled touch
 }

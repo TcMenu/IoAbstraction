@@ -334,22 +334,34 @@ public:
 #define MPR121_GPIO_DATA_TOGGLE 0x7A
 #define MPR121_SOFT_RESET 0x80
 #define MPR121_SOFT_RESET_VALUE 0x63
+#define MPR121_LED_PWM_0 0x81
+#define MPR121_LED_PWM_1 0x82
+#define MPR121_LED_PWM_2 0x83
+#define MPR121_LED_PWM_3 0x84
 
+#ifndef MPR121_TOUCH_RUNMODE_EXTRA
+#define MPR121_TOUCH_RUNMODE_EXTRA 0x00
+#endif //MPR121_TOUCH_RUNMODE_EXTRA
 
 /**
  * The MPR121IoAbstraction class provide a wide range of the capabilities of the MPR121 chip using the regular abstraction
  * method such that they can be used with switches, LCDs, encoders, keyboards etc, similar to how you use device pins.
  * For the additional functionality that is not directly provided, you can access the chips registers and set these
  * particular extended functions up directly.
+ *
+ * To use in touch mode you need to setup the registers before calling pinMode to set directions up. There are some
+ * helper functions to do some of the legwork, but given the shear number of possible configurations many of the
+ * touch registers need to be set up manually.
  */
 class MPR121IoAbstraction : public Standard16BitDevice {
 private:
     WireType wireImpl;
     uint8_t i2cAddress;
     pinid_t interruptPin;
+    pinid_t maximumTouchPin = 0;
 public:
     /**
-     * create an instance of the AW9523 abstraction that communicates with the device and extends Arduino like functions
+     * create an instance of the abstraction that communicates with the device and extends Arduino like functions
      * for the pins on the device. This constructor takes the I2C address, and optionally an interrupt pin and wire
      * implementation. Any interrupt pin provided will be set up on your behalf automatically.
      *
@@ -362,7 +374,7 @@ public:
 
     /**
      * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT, OUTPUT and
-     * AW9523_LED_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
+     * LED_CURRENT_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
      * instead of digital write.
      * @param pin the pin to set direction for on this device
      * @param mode for this device, INPUT, OUTPUT or AW9523_LED_OUTPUT
@@ -370,8 +382,8 @@ public:
     void pinDirection(pinid_t pin, uint8_t mode) override;
 
     /**
-     * Attaches an interrupt to the device and links it to the arduino pin. On the MCP23017 nearly all interrupt modes
-     * are supported, including CHANGE, RISING, FALLING and are selective both per port and by pin.
+     * Attaches an interrupt to the device and links it to the arduino pin. On this device nearly all interrupt modes
+     * are supported, including CHANGE, RISING, FALLING and are selective.
      */
     void attachInterrupt(pinid_t pin, RawIntHandler intHandler, uint8_t mode) override;
 
@@ -438,6 +450,34 @@ public:
     void writeReg16(uint8_t reg, uint16_t data);
     uint8_t readReg8(uint8_t reg);
     uint16_t readReg16(uint8_t reg);
+protected:
+    void enableTouchSupportOnPin(pinid_t pin);
+};
+
+/**
+ * A wrapper for the AW9523IoAbstraction that provides the LED control analog functions as an AnalogDevice, this allows
+ * you to use this device with anything that already works with AnalogDevice objects for output. Simple construct giving
+ * a reference to the actual abstraction.
+ */
+class MPR121AnalogAbstraction : public AnalogDevice {
+private:
+    MPR121IoAbstraction& theAbstraction;
+public:
+    explicit MPR121AnalogAbstraction(AW9523IoAbstraction &abs): theAbstraction(abs) {}
+
+    int getMaximumRange(AnalogDirection direction, pinid_t pin) override { return 255; }
+
+    int getBitDepth(AnalogDirection direction, pinid_t pin) override { return 8; }
+
+    void initPin(pinid_t pin, AnalogDirection direction) override;
+
+    unsigned int getCurrentValue(pinid_t pin) override { return theAbstraction.read3rdFilteredData(pin); }
+
+    float getCurrentFloat(pinid_t pin) override { return theAbstraction.read3rdFilteredData(pin) / 255.0F; }
+
+    void setCurrentValue(pinid_t pin, unsigned int newValue) override { theAbstraction.setPinLedCurrent(pin, newValue >> 4); }
+
+    void setCurrentFloat(pinid_t pin, float newValue) override { theAbstraction.setPinLedCurrent(pin, (uint8_t)(newValue * 15.0F)); }
 };
 
 // to remain compatible with old code
