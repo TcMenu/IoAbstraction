@@ -317,6 +317,17 @@ public:
 #define MPR121_OOR_STATUS_16 0x02
 #define MPR121_ELECTRODE_DATA_2ND 0x04
 #define MPR121_BASELINE_DATA_3RD 0x1E
+#define MPR121_MHD_RISING 0x2B
+#define MPR121_NHD_RISING 0x2C
+#define MPR121_NCL_RISING 0x2D
+#define MPR121_FDL_RISING 0x2E
+#define MPR121_MHD_FALLING 0x2F
+#define MPR121_NHD_FALLING 0x30
+#define MPR121_NCL_FALLING 0x31
+#define MPR121_FDL_FALLING 0x32
+#define MPR121_NHD_TOUCHED 0x33
+#define MPR121_NCL_TOUCHED 0x34
+#define MPR121_FDL_TOUCHED 0x35
 #define MPR121_TCH_REL_THRESHOLD 0x41
 #define MPR121_DEBOUNCE_REG 0x5B
 #define MPR121_AFE_CONFIG_1 0x5C
@@ -332,6 +343,11 @@ public:
 #define MPR121_GPIO_DATA_SET 0x78
 #define MPR121_GPIO_DATA_CLEAR 0x79
 #define MPR121_GPIO_DATA_TOGGLE 0x7A
+#define MPR121_AUTO_CONFIG_0 0x7B
+#define MPR121_AUTO_CONFIG_1 0x7C
+#define MPR121_UPPER_LIMIT 0x7D
+#define MPR121_LOWER_LIMIT 0x7E
+#define MPR121_TARGET_LIMIT 0x7F
 #define MPR121_SOFT_RESET 0x80
 #define MPR121_SOFT_RESET_VALUE 0x63
 #define MPR121_LED_PWM_0 0x81
@@ -339,9 +355,10 @@ public:
 #define MPR121_LED_PWM_2 0x83
 #define MPR121_LED_PWM_3 0x84
 
-#ifndef MPR121_TOUCH_RUNMODE_EXTRA
-#define MPR121_TOUCH_RUNMODE_EXTRA 0x00
-#endif //MPR121_TOUCH_RUNMODE_EXTRA
+/**
+ * The MPR121 device touch configuration mode, either manual or auto as per datasheet
+ */
+enum MPR121ConfigType: uint8_t { MPR121_MANUAL_CONFIG, MPR121_AUTO_CONFIG };
 
 /**
  * The MPR121IoAbstraction class provide a wide range of the capabilities of the MPR121 chip using the regular abstraction
@@ -373,6 +390,18 @@ public:
     ~MPR121IoAbstraction() override = default;
 
     /**
+     * Call this to start the device, it will initialise the touch sensor up to maxTouchPin, and set basic configuration
+     * options, this should be largely compatible with the Adafruit library, and therefore should work with the shield
+     * without too many issues. Note that if you configure more than 4 touch pins you cannot use GPIO at the same time.
+     *
+     * @param maxTouchPin the maximum touch pin zero based
+     * @param configType either MPR121_MANUAL_CONFIG, MPR121_AUTO_CONFIG
+     * @param configReg1 optionally the first config register (default 0x10)
+     * @param configReg2 optionally the second config register (default 0x20)
+     */
+    void begin(int maxTouchPin, MPR121ConfigType configType, uint8_t configReg1 = 0x10, uint8_t configReg2 = 0x20);
+
+    /**
      * Sets the pin direction similar to pinMode, pin direction on this device supports INPUT, OUTPUT and
      * LED_CURRENT_OUTPUT which enables the onboard LED controller, and then you use the setPinLedCurrent to control
      * instead of digital write.
@@ -395,14 +424,15 @@ public:
     /**
      * Set the electrode settings for a pin, should only ever be called once the pin is set as input, it will turn the
      * pin into a touch pin. These take values in line with the datasheet, which should be consulted for the correct
-     * value ranges. This should be called before setting pin direction to input.
-     * @param pin
-     * @param current
-     * @param chargeTime
-     * @param touchThreshold
-     * @param releaseThreshold
+     * value ranges. This should be called before setting pin direction to input. It is assumed the device is in stop
+     * mode by calling softwareReset and before the begin call.
+     * @param pin the pin to configure for
+     * @param current the current to be used
+     * @param chargeTime the charge time to be used
+     * @param touchThreshold the touch threshold as per value determined from testing
+     * @param releaseThreshold the release threshold has per value determined from test.
      */
-    void electrodeSettingsForPin(pinid_t pin, uint8_t current, uint8_t chargeTime, uint8_t touchThreshold, uint8_t releaseThreshold);
+    void electrodeSettingsForPin(pinid_t pin, uint8_t touchThreshold, uint8_t releaseThreshold, uint8_t current=0, uint8_t chargeTime=0);
 
     /**
      * @return the current status of the Out Of Range register on the device. See the datasheet for more details.
@@ -411,7 +441,8 @@ public:
 
     /**
      * Debounce configuration takes value for both touch and release and is in conformance with the datasheet.
-     * Each is a value between 0 and 7.
+     * Each is a value between 0 and 7. It is assumed the device is in stop mode by calling softwareReset and before
+     * the begin call.
      * @param debounceTouch
      * @param debounceRelease
      */
@@ -426,14 +457,6 @@ public:
     uint16_t read2ndFilteredData(uint8_t pin);
 
     /**
-     * Read the baseline data, which is after the 3rd filter from the datasheet. This reads the Baseline 8-bit register
-     * Registers 0x1E-0x2A. See datasheet for more detail.
-     * @param pin the pin number
-     * @return the value from the registers
-     */
-    uint8_t read3rdFilteredData(uint8_t pin);
-
-    /**
      * Enable or disable the LED controller mode of the pin, the power parameter is a value between 0 and 255 that
      * represents the dimming level for that pin.
      * @param pin the pin to control
@@ -445,6 +468,7 @@ public:
      * Perform a software reset of the device. Make sure you've called sync at least once before calling.
      */
     void softwareReset();
+    void initDevice() override { /* ignored */ }
 
     void writeReg8(uint8_t reg, uint8_t data);
     void writeReg16(uint8_t reg, uint16_t data);
@@ -463,7 +487,7 @@ class MPR121AnalogAbstraction : public AnalogDevice {
 private:
     MPR121IoAbstraction& theAbstraction;
 public:
-    explicit MPR121AnalogAbstraction(AW9523IoAbstraction &abs): theAbstraction(abs) {}
+    explicit MPR121AnalogAbstraction(MPR121IoAbstraction &abs): theAbstraction(abs) {}
 
     int getMaximumRange(AnalogDirection direction, pinid_t pin) override { return 255; }
 
@@ -471,9 +495,9 @@ public:
 
     void initPin(pinid_t pin, AnalogDirection direction) override;
 
-    unsigned int getCurrentValue(pinid_t pin) override { return theAbstraction.read3rdFilteredData(pin); }
+    unsigned int getCurrentValue(pinid_t pin) override { return theAbstraction.read2ndFilteredData(pin) >> 2; }
 
-    float getCurrentFloat(pinid_t pin) override { return theAbstraction.read3rdFilteredData(pin) / 255.0F; }
+    float getCurrentFloat(pinid_t pin) override { return theAbstraction.read2ndFilteredData(pin) / 1024.0F; }
 
     void setCurrentValue(pinid_t pin, unsigned int newValue) override { theAbstraction.setPinLedCurrent(pin, newValue >> 4); }
 
