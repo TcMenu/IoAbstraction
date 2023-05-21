@@ -1,6 +1,6 @@
 //
 // An example of using the MPR121 device with IoAbstraction, using this device for GPIO does not need any special
-// calls, the library will initialise pins 4..11 for GPIO automatically as needed. Support configurations are either
+// calls, the library will initialise pins 4..11 for GPIO automatically as needed. Supported configurations are either
 // all 12 pins as capacitive touch or first 4 pins as capacitive touch and 8 GPIOs. Other variations are untested.
 //
 // However, to use the touch functions you will read the datasheet and understand the configuration properly. Most of
@@ -30,7 +30,7 @@
 
 // When in setup mode, this just prints the raw sensor outputs for sensors 0..3, you need to run this way first to
 // get the thresholds for touching and releasing.
-const bool setupMode = false;
+const bool setupMode = true;
 
 // MPR121 pin setup
 // this pin will be controlled using the LED controller
@@ -81,8 +81,8 @@ void setup() {
     Serial.begin(115200);
 
     // This is configured for ESP32 but choose the right version for your board
-    Wire.begin(17, 5); // configuring with SDA and SCL for ESP32
-    //Wire.begin(); // using the default Wire configuration.
+    //Wire.begin(17, 5); // configuring with SDA and SCL for ESP32
+    Wire.begin(); // using the default Wire configuration.
 
     serdebugF2("Starting MPR121 example setup mode = ", setupMode);
 
