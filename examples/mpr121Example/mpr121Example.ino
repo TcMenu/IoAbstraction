@@ -98,7 +98,6 @@ void setup() {
 
     // set up touch pins 0 and 1, most of the time, you may only need to provide the first parameter (the pin) as the
     // others can be configured to use the defaults. Signature is:
-    // electrodeSettingsForPin(pin, current=0, chargeTime=0, touchThreshold=0, releaseThreshold=0);
     mpr121.electrodeSettingsForPin(TOUCH_PIN_1, MY_TOUCH_THRESHOLD, MY_RELEASE_THRESHOLD);
     mpr121.electrodeSettingsForPin(TOUCH_PIN_2, MY_TOUCH_THRESHOLD, MY_RELEASE_THRESHOLD);
 
