@@ -30,7 +30,7 @@
 
 // When in setup mode, this just prints the raw sensor outputs for sensors 0..3, you need to run this way first to
 // get the thresholds for touching and releasing.
-const bool setupMode = false;
+const bool setupMode = true;
 
 // MPR121 pin setup
 // this pin will be controlled using the LED controller
@@ -81,8 +81,8 @@ void setup() {
     Serial.begin(115200);
 
     // This is configured for ESP32 but choose the right version for your board
-    Wire.begin(17, 5); // configuring with SDA and SCL for ESP32
-    //Wire.begin(); // using the default Wire configuration.
+    //Wire.begin(17, 5); // configuring with SDA and SCL for ESP32
+    Wire.begin(); // using the default Wire configuration.
 
     serdebugF2("Starting MPR121 example setup mode = ", setupMode);
 
@@ -96,9 +96,9 @@ void setup() {
     mpr121.softwareReset();
     delay(5);
 
-    // set up touch pins 0 and 1, most of the time, you may only need to provide the first parameter (the pin) as the
+    // set up touch pins 0 and 1, most of the time, you may only need to provide the three parameters as the
     // others can be configured to use the defaults. Signature is:
-    // electrodeSettingsForPin(pin, current=0, chargeTime=0, touchThreshold=0, releaseThreshold=0);
+    // electrodeSettingsForPin(pin, touchThreshold, releaseThreshold, current=0, chargeTime=0,);
     mpr121.electrodeSettingsForPin(TOUCH_PIN_1, MY_TOUCH_THRESHOLD, MY_RELEASE_THRESHOLD);
     mpr121.electrodeSettingsForPin(TOUCH_PIN_2, MY_TOUCH_THRESHOLD, MY_RELEASE_THRESHOLD);
 
