@@ -93,6 +93,31 @@ long dpToDivisor(int dp);
 long valueToSignificantPlaces(unsigned long value, bool negative);
 
 /**
+ * Get the hex equivalent of a single digit, input must be between 0 and 15
+ * @param val the input unsigned integer between 0 and 15
+ * @return a hex character from 0..F
+ */
+char hexChar(uint8_t val);
+
+/**
+ * Get the integer representation of a hex digit, between 0..F
+ * @param val the input character
+ * @return the numeric representation.
+ */
+uint8_t hexValueOf(char val);
+
+/**
+ * Get the hex string for a number to a given number of fixed places, EG 4 digits. You can optionally include the
+ * '0x' at the beginning.
+ * @param buffer the buffer to copy into
+ * @param bufferSize the size of the buffer
+ * @param input the input number
+ * @param digits the number of FIXED digits
+ * @param with0x if 0x should be included at the beginning
+ */
+void intToHexString(char* buffer, size_t bufferSize, unsigned int input, int digits, bool with0x);
+
+/**
  * Ensure that a float is always positive.
  * @param f1 the float that could be positive or negative
  * @return the positive version of the float.

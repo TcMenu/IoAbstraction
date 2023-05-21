@@ -40,3 +40,23 @@ test(testTcUtilIntegerConversions) {
         fastltoa_mv(szBuffer, 222222, 10000, NOT_PADDED, sizeof(szBuffer));
         assertStringEquals(szBuffer, "val = 2222");
 }
+
+test(testTcUtilHexCoversions) {
+    char szBuffer[20];
+    assertEquals('0', hexChar(0));
+    assertEquals('9', hexChar(9));
+    assertEquals('A', hexChar(10));
+    assertEquals('F', hexChar(15));
+
+    intToHexString(szBuffer, sizeof szBuffer, 0xfade, 4, true);
+    assertStringEquals("0xFADE", szBuffer);
+
+    intToHexString(szBuffer, sizeof szBuffer, 0x0000, 4, true);
+    assertStringEquals("0x0000", szBuffer);
+
+    intToHexString(szBuffer, 6, 0xFFFF, 4, true);
+    assertStringEquals("0xFFF", szBuffer);
+
+    intToHexString(szBuffer, 3, 0xFFFF, 4, false);
+    assertStringEquals("FF", szBuffer);
+}
