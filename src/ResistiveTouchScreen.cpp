@@ -27,12 +27,30 @@ namespace iotouch {
 
     float CalibrationHandler::calibrateX(float rawValue, bool isInverted) const {
         auto x = (calibrationOn) ? ((rawValue - minX) * (1.0F / (maxX - minX))) : rawValue;
-        return isInverted ? 1.0F - x : x;
+        auto ret = isInverted ? 1.0F - x : x;
+        //serdebugF4("Calibration ", rawValue, x, ret);
+        //serdebugF4("Calibration3 ", minX, maxX, isInverted);
+        return ret;
     }
 
     float CalibrationHandler::calibrateY(float rawValue, bool isInverted) const {
         auto y = (calibrationOn) ? ((rawValue - minY) * (1.0F / (maxY - minY))) : rawValue;
         return isInverted ? 1.0F - y : y;
+    }
+
+    void CalibrationHandler::setXPosition(float x, bool isMax) {
+        if(isMax) {
+            maxX = x;
+        } else {
+            minX = x;
+        }
+    }
+    void CalibrationHandler::setYPosition(float y, bool isMax) {
+        if(isMax) {
+            maxY = y;
+        } else {
+            minY = y;
+        }
     }
 
     void TouchScreenManager::exec() {

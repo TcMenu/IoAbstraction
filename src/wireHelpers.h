@@ -6,6 +6,7 @@
 #ifndef IOA_WIRE_HELPERS_H
 #define IOA_WIRE_HELPERS_H
 
+#include "IoAbstraction.h"
 #include "PlatformDetermination.h"
 #include "PlatformDeterminationWire.h"
 #include "IoLogging.h"

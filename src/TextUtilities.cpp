@@ -3,8 +3,6 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#include <cstring>
-#include <locale>
 #include "TextUtilities.h"
 
 void appendChar(char* str, char val, int len) {

@@ -108,6 +108,8 @@ namespace iotouch {
         float getMinY() const { return minY;}
         float getMaxX() const { return maxX;}
         float getMaxY() const { return maxY;}
+        void setXPosition(float x, bool isMax);
+        void setYPosition(float y, bool isMax);
     };
 
     /** records the current state of the touch panel, IE not touched, touched, held or debouncing. */
