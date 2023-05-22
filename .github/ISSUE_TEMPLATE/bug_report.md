@@ -10,9 +10,6 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**Commerical or personal/community use**
-You must declare if you are a commercial entity using tcMenu in a business capacity.
-
 **To Reproduce**
 Steps to reproduce the behavior, if it is more than trival to set up the test for this, please include a sketch that recreates the problem.
 
