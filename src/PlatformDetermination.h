@@ -45,7 +45,8 @@ typedef uint8_t pinid_t;
     defined(ARDUINO_EDGE_CONTROL) || \
     defined(ARDUINO_NICLA) || \
     defined(ARDUINO_NICLA_VISION) || \
-    defined(TMIOA_FORCE_ARDUINO_MBED)
+    defined(TMIOA_FORCE_ARDUINO_MBED) || \
+    defined(ARDUINO_ARCH_MBED)
 // here we're in a hybrid of mbed and Arduino basically. We treat all abstractions as Arduino though.
 #include <Arduino.h>
 # define IOA_USE_ARDUINO
