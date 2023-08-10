@@ -103,7 +103,7 @@ namespace SimpleTest {
     }
 
     void TestManager::runLoop() {
-        if(currentIndex < testsRecorded.count()) {
+        if((bsize_t)currentIndex < testsRecorded.count()) {
             auto t = testsRecorded.itemAtIndex(currentIndex);
             if (t->getTest()->getTestStatus() != IGNORED && (filterPredicate == nullptr || filterPredicate(t->getTest()))) {
                 t->getTest()->exec();
