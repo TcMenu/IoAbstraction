@@ -151,9 +151,9 @@ void SwitchInput::init(IoAbstractionRef device, SwitchInterruptMode mode, bool d
 		});
 	} else if(mode == SWITCHES_POLL_EVERYTHING) {
         serlogF(SER_IOA_INFO, "Switches polling for everything");
-		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL / 4, [] {
+		taskManager.scheduleFixedRate(SWITCH_POLL_INTERVAL / 8, [] {
             static uint8_t counter = 0;
-            if(++counter % 4 == 3) {
+            if(++counter % 8 == 7) {
                 switches.runLoop();
             }
 			onSwitchesInterrupt(-1);
@@ -337,16 +337,16 @@ void RotaryEncoder::increment(int8_t incVal) {
 }
 
 HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode,
-                                             EncoderType encoderType) : RotaryEncoder(callback) {
+                                             EncoderType encoderType) : AbstractHwRotaryEncoder(callback) {
     initialise(pinA, pinB, accelerationMode, encoderType);
 }
 
 HardwareRotaryEncoder::HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode,
-                                             EncoderType encoderType) : RotaryEncoder(listener) {
+                                             EncoderType encoderType) : AbstractHwRotaryEncoder(listener) {
     initialise(pinA, pinB, accelerationMode, encoderType);
 }
 
-void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType encoderType) {
+void AbstractHwRotaryEncoder::initialiseBase(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType encoderType) {
     this->pinA = pinA;
 	this->pinB = pinB;
 	this->lastChange = micros();
@@ -360,8 +360,6 @@ void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAcceleratio
 	// read back the initial values.
     bool lastSyncOK = switches.getIoAbstraction()->sync();
 	bitWrite(flags, LAST_SYNC_STATUS, lastSyncOK);
-	this->aLast = switches.getIoAbstraction()->digitalRead(pinA);
-	this->cleanFromB = switches.getIoAbstraction()->digitalRead(pinB);
 
 	if(!switches.isEncoderPollingEnabled()) {
 		registerInterrupt(pinA);
@@ -406,7 +404,7 @@ void SwitchInput::resetAllSwitches() {
     }
 }
 
-int HardwareRotaryEncoder::amountFromChange(unsigned long change) {
+int AbstractHwRotaryEncoder::amountFromChange(unsigned long change) {
 	if(change > 250000 || maximumValue < ONE_TURN_OF_ENCODER) return stepSize;
 
     if(accelerationMode == HWACCEL_NONE) {
@@ -457,7 +455,13 @@ void HardwareRotaryEncoder::encoderChanged() {
 	}
 }
 
-void HardwareRotaryEncoder::handleChangeRaw(bool increase) {
+void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType et) {
+    this->aLast = switches.getIoAbstraction()->digitalRead(pinA);
+    this->cleanFromB = switches.getIoAbstraction()->digitalRead(pinB);
+    initialiseBase(pinA, pinB, accelerationMode, et);
+}
+
+void AbstractHwRotaryEncoder::handleChangeRaw(bool increase) {
     // was the last direction up?
     bool lastDirectionUp = bitRead(flags, LAST_ENCODER_DIRECTION_UP);
 
@@ -536,6 +540,95 @@ void EncoderUpDownButtons::onReleased(pinid_t pin, bool held) {
     }
 }
 
+
+enum EsWhenToOutput : uint8_t {
+    OUTPUT_NEVER, OUTPUT_ALWAYS, OUTPUT_ONLY_QUARTER
+};
+
+struct EncoderState {
+    uint8_t expectedBitPattern;
+    EsWhenToOutput whenToOutput;
+};
+
+#define MAX_ENCODER_STATES 4
+
+const EncoderState bitPatternStateMachine[] PROGMEM = {
+        { 0b00, OUTPUT_ALWAYS },
+        { 0b10, OUTPUT_NEVER },
+        { 0b11, OUTPUT_ONLY_QUARTER },
+        { 0b01, OUTPUT_NEVER },
+};
+
+#define bitPatternFrom(a, b) ( ((a) << 1) | (b) )
+
+inline int8_t stateLimit(int x) {
+    // never allow the array to be outside the range, it is effectively a circular buffer that keeps wrapping.
+    if(x < 0) return MAX_ENCODER_STATES - 1;
+    if(x >= MAX_ENCODER_STATES) return 0;
+    return (int8_t)x;
+}
+
+int8_t HwStateRotaryEncoder::stateFor(uint8_t bits) {
+    for(int i=0; i < MAX_ENCODER_STATES; i++) {
+        if(bitPatternStateMachine[i].expectedBitPattern == bits) return i;
+    }
+    return 0;
+}
+
+void HwStateRotaryEncoder::encoderChanged() {
+    bool lastSyncStatus = switches.getIoAbstraction()->sync();
+    bitWrite(flags, LAST_SYNC_STATUS, lastSyncStatus);
+
+    // get the current bit pattern on a and b
+    uint8_t a = switches.getIoAbstraction()->digitalRead(pinA);
+    uint8_t b = switches.getIoAbstraction()->digitalRead(pinB);
+
+    if(currentEncoderState == -1) {
+        if(a == 0 && b == 0) {
+            currentEncoderState = 0;
+        } else {
+            return;
+        }
+    }
+
+    // if the bit pattern is unchanged, do nothing.
+    uint8_t bits = bitPatternFrom(a, b);
+    const EncoderState& same =  bitPatternStateMachine[currentEncoderState];
+    if(same.expectedBitPattern == bits) return; // unchanged.
+
+    // check if we've gone up or down
+    const EncoderState& prev =  bitPatternStateMachine[stateLimit(currentEncoderState + 1)];
+    const EncoderState& next =  bitPatternStateMachine[stateLimit(currentEncoderState - 1)];
+    int dir;
+    if(prev.expectedBitPattern == bits) {
+        currentEncoderState = stateLimit(currentEncoderState + 1);
+        dir = false; // going down
+    } else if(next.expectedBitPattern == bits) {
+        currentEncoderState = stateLimit(currentEncoderState - 1);
+        dir = true; // going up
+    } else {
+        currentEncoderState = -1; // mark invalid, do not output anything
+        return;
+    }
+
+    // output the state change if needed
+    auto whenToOutput = bitPatternStateMachine[currentEncoderState].whenToOutput;
+    if(whenToOutput == OUTPUT_ALWAYS || (whenToOutput == OUTPUT_ONLY_QUARTER && encoderType != FULL_CYCLE)) {
+        handleChangeRaw(dir);
+    }
+}
+
+HwStateRotaryEncoder::HwStateRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode,
+                                           EncoderType encoderType) : AbstractHwRotaryEncoder(callback) {
+    initialiseBase(pinA, pinB, accelerationMode, encoderType);
+}
+
+HwStateRotaryEncoder::HwStateRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode,
+                                           EncoderType encoderType) : AbstractHwRotaryEncoder(listener) {
+    initialiseBase(pinA, pinB, accelerationMode, encoderType);
+}
+
+
 /******** ENCODER SETUP METHODS ***********/
 
 void setupUpDownButtonEncoder(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, int speed) {
@@ -573,11 +666,19 @@ void registerInterrupt(pinid_t pin) {
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) {
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
+#ifdef TC_LEGACY_ENCODER
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
+#else
+    switches.setEncoder(new HwStateRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
+#endif
 }
 
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode, EncoderType encoderType) {
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
 
+#ifdef TC_LEGACY_ENCODER
 	switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, listener, accelerationMode, encoderType));
+#else
+    switches.setEncoder(new HwStateRotaryEncoder(pinA, pinB, listener, accelerationMode, encoderType));
+#endif
 }

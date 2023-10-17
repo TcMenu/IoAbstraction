@@ -317,22 +317,47 @@ enum EncoderType : uint8_t {
     FULL_CYCLE
 };
 
+class AbstractHwRotaryEncoder : public RotaryEncoder {
+protected:
+    unsigned long lastChange;
+    pinid_t pinA;
+    pinid_t pinB;
+    HWAccelerationMode accelerationMode;
+    EncoderType encoderType;
+
+public:
+    explicit AbstractHwRotaryEncoder(EncoderCallbackFn callback) : RotaryEncoder(callback) {}
+    explicit AbstractHwRotaryEncoder(EncoderListener* listener) : RotaryEncoder(listener) {}
+
+    /**
+     * Allows for changes in the acceleration mode at runtime
+     * @param mode the new acceleration mode
+     */
+    void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
+
+    /**
+     * Allows for changes in encoder type at runtime
+     * @param encoderType change in encoder type
+     */
+    void setEncoderType(EncoderType et) { encoderType =  et; }
+
+protected:
+    void initialiseBase(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType);
+    int amountFromChange(unsigned long change);
+    void handleChangeRaw(bool increase);
+};
+
 /**
  * An implementation of RotaryEncoder that supports the most common types of rotary encoder, needed no additional hardware
- * in most cases. The A input must be an interrupt pin. For single encoders registered with switches see the helper method
- * below.
+ * in most cases. For single encoders registered with switches see the helper method. This is now only used by switches
+ * helper functions when legacy mode is enabled using TC_LEGACY_ENCODER.
+ * For all new cases we recommend using HwStateRotaryEncoder instead.
  * @see setupRotaryEncoderWithInterrupt
  */  
-class HardwareRotaryEncoder : public RotaryEncoder {
+class HardwareRotaryEncoder : public AbstractHwRotaryEncoder {
 private:
-	unsigned long lastChange;
-	pinid_t pinA;
-    pinid_t pinB;
 	uint8_t aLast;
 	uint8_t cleanFromB;
-    HWAccelerationMode accelerationMode;
-	EncoderType encoderType;
-	
 public:
     /**
      * Create an instance of a hardware rotary encoder specifying the A and B pin, the acceleration parameters and encoder type.
@@ -355,21 +380,46 @@ public:
      */
 	HardwareRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType = FULL_CYCLE);
 	void encoderChanged() override;
-    /**
-     * Allows for changes in the acceleration mode at runtime
-     * @param mode the new acceleration mode
-     */
-    void setAccelerationMode(HWAccelerationMode mode) { accelerationMode =  mode; }
-    /**
-     * Allows for changes in encoder type at runtime
-     * @param encoderType change in encoder type
-     */
-    void setEncoderType(EncoderType encoderType) { encoderType =  encoderType; }
 private:
-    void initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType);
-    int amountFromChange(unsigned long change);
-    void handleChangeRaw(bool increase);
+    void initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType et);
 };
+
+/**
+ * An implementation of RotaryEncoder that supports the most common types of rotary encoder, needed no additional hardware
+ * in most cases. It is based on a state machine of valid possible states, and should handle quarter turn encoders properly.
+ * Interrupt mode is not mandatory, but be aware that without interrupts the polling is approximately every 2 milliseconds.
+ * @see setupRotaryEncoderWithInterrupt
+ */
+class HwStateRotaryEncoder : public AbstractHwRotaryEncoder {
+private:
+    int8_t currentEncoderState = 0;
+public:
+    /**
+     * Create an instance of a hardware rotary encoder specifying the A and B pin, the acceleration parameters and encoder type.
+     * It is your responsibility to register this encoder with switches using setEncoder(n, encoderPtr) if you use the constructor.
+     * @param pinA the A pin of the encoder
+     * @param pinB the B pin of the encoder
+     * @param callback the function callback to be called when triggered
+     * @param accelerationMode the amount of acceleration to use
+     */
+    HwStateRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType = FULL_CYCLE);
+
+    /**
+     * Create an instance of a hardware rotary encoder specifiying the A and B pin, the acceleration parameters and encoder type.
+     * It is your responsibility to register this encoder with switches using setEncoder(n, encoderPtr) if you use the constructor.
+     * This constructor takes an OO listener instead of a callback function, the listener implements EncoderListener.
+     * @param pinA the A pin of the encoder
+     * @param pinB the B pin of the encoder
+     * @param listener the OO listener extending from EncoderListener
+     * @param accelerationMode the amount of acceleration to use
+     */
+    HwStateRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType = FULL_CYCLE);
+
+    void encoderChanged() override;
+private:
+    int8_t stateFor(uint8_t bits);
+};
+
 
 /**
  * An emulation of a rotary encoder using switches for up and down.
@@ -576,7 +626,7 @@ public:
 	void setEncoder(RotaryEncoder* encoder) { this->encoder[0] = encoder; };
 
 	/**
-	 * Use this method if you want to work with serveral encoders. This lib defaults to 4 (value of MAX_ROTARY_ENCODERS)
+* Use this method if you want to work with serveral encoders. This lib defaults to 4 (value of MAX_ROTARY_ENCODERS)
 	 * encoders, but the actual number of encoders depends on the hardware you are using and the value of that define. If your port 
 	 * expander is 8-bit it supports up to 4 rotary encoders. To use more than 4, you set MAX_ROTARY_ENCODERS to the value you need and
 	 * use a 16-bit encoder.
