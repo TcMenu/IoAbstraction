@@ -16,7 +16,7 @@
 
 #ifdef IOA_USE_MBED
 #include <mbed.h>
-#else
+#elif !defined(BUILD_FOR_PICO_CMAKE)
 #include <Arduino.h>
 #endif
 

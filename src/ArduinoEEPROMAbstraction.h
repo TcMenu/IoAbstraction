@@ -3,7 +3,7 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#if !defined(_ARDUNIO_EEPROM_ABS_H) && !defined(__MBED__)
+#if !defined(_ARDUNIO_EEPROM_ABS_H) && !defined(__MBED__) && !defined(BUILD_FOR_PICO_CMAKE)
 #define _ARDUNIO_EEPROM_ABS_H
 
 #include <Arduino.h>

@@ -363,6 +363,7 @@ void AbstractHwRotaryEncoder::initialiseBase(pinid_t pinA, pinid_t pinB, HWAccel
 
 	if(!switches.isEncoderPollingEnabled()) {
 		registerInterrupt(pinA);
+		registerInterrupt(pinB);
 	}
 }
 

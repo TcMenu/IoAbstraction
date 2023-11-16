@@ -89,6 +89,8 @@ public:
 # include "esp32/ESP32AnalogDevice.h"
 #elif defined(IOA_USE_ARDUINO)
 #include "arduino/ArduinoAnalogDevice.h"
+#elif defined(BUILD_FOR_PICO_CMAKE)
+#include "pico/picoAnalogDevice.h"
 #endif
 
 /**

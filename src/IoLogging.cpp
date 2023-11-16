@@ -77,4 +77,8 @@ void startTaskManagerLogDelegate() {
     });
 }
 
+#ifdef BUILD_FOR_PICO_CMAKE
+PrintfLogger LoggingPort;
+#endif
+
 #endif

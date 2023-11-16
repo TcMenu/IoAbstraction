@@ -19,6 +19,8 @@
 # include "mbed/MbedDigitalIO.h"
 #elif defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
 # include "esp32/ESP32DigitalIO.h"
+#elif defined(BUILD_FOR_PICO_CMAKE)
+# include "pico/PicoDigitalIO.h"
 #else
 # include <Arduino.h>
 #endif //IOA_USE_MBED
@@ -136,7 +138,7 @@ public:
 	 * @param intHandler a void function with no parameters, used to handle interrupts. THIS IS A RAW INTERRUPT AND NOT MARSHALLED
 	 * @param mode standard Arduino interrupt modes: CHANGE, RISING, FALLING
 	 */
-	void attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode) override;
+	virtual void attachInterrupt(pinid_t pin, RawIntHandler interruptHandler, uint8_t mode);
 
 	/**
 	 * This method is not needed on Arduino pins, but for most serial implementations it causes the device and abstraction to be synced.

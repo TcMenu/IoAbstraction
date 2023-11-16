@@ -9,8 +9,10 @@
 
 #define LATCH_TIME 5
 
-#ifdef IOA_USE_MBED
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE)
+#if defined(IOA_USE_MBED)
 #include <mbed.h>
+#endif // only for mbed
 
 uint8_t shiftIn(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder) {
     uint8_t value = 0;

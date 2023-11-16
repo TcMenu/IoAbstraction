@@ -126,7 +126,7 @@ inline float tcFltAbs(float f1) {
     return f1 > 0.0F ? f1 : -f1;
 }
 
-#ifdef IOA_USE_MBED
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE)
 #define strcmp_P(x,y) strcmp(x,y)
 #define strncpy_P(x,y,z) strncpy(x,y,z)
 #define strcpy_P(x,y) strcpy(x,y)
@@ -134,7 +134,7 @@ inline float tcFltAbs(float f1) {
 #define highByte(x) ((x) >> 8)
 #define lowByte(x) ((x) & 0xff)
 #define ltoa(a,b,c) itoa(a,b,c)
-# ifndef TCMENU_MBED_NO_MINMAX
+# ifndef min
 # define min(x, y) (((x) < (y))?(x):(y))
 # define max(x, y) (((x) > (y))?(x):(y))
 # endif //TCMENU_MBED_NO_MINMAX

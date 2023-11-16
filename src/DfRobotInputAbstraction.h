@@ -35,8 +35,9 @@ struct DfRobotAnalogRanges {
 #define ALLOWABLE_RANGE 0.01F
 #endif // ALLOWABLE_RANGE
 
-#ifdef IOA_USE_MBED
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE)
 #define pgmAsFloat(x) ((float)(*x))
+#define A0 26
 #else
 #define pgmAsFloat(x) ((float)pgm_read_float_near(x))
 #endif

@@ -22,6 +22,12 @@ class AvrTwiManager;
 typedef AvrTwiManager* WireType;
 extern WireType AvrTwi;
 void ioaWireBegin();
+#elif defined(BUILD_FOR_PICO_CMAKE)
+#define IOA_USE_PICOSDK_I2C
+#include "pico/i2cWrapper.h"
+class PicoI2cWrapper;
+typedef PicoI2cWrapper* WireType;
+void ioaWireBegin(i2c_inst_t* toUse);
 #else
 # define IOA_USE_ARDUINO_WIRE
 #include <Wire.h>

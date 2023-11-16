@@ -29,7 +29,9 @@ public:
     explicit Pga2310VolumeControl(SPIWithSettings& spi) : spiBus(spi) {}
     int getMaximumRange(AnalogDirection direction, pinid_t pin) override { return 255; }
     int getBitDepth(AnalogDirection direction, pinid_t pin) override { return 8; }
-    void initPin(pinid_t pin, AnalogDirection direction) override {}
+    void initPin(pinid_t pin, AnalogDirection direction) override {
+        spiBus.init();
+    }
     unsigned int getCurrentValue(pinid_t pin) override { return pin == 0 ? leftCache : rightCache; }
     float getCurrentFloat(pinid_t pin) override { return float(getCurrentValue(pin)) / 255.0F; }
     void setCurrentValue(pinid_t pin, unsigned int newValue) override {

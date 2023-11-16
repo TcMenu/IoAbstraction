@@ -16,7 +16,7 @@
 #endif // has include "io_local_definitions"
 
 // when not on mbed, we need to load Arduino.h to get the right defines for some boards.
-#ifndef __MBED__
+#if !defined(__MBED__) && !defined(BUILD_FOR_PICO_CMAKE)
 #include <Arduino.h>
 #endif
 
@@ -59,6 +59,13 @@ typedef uint32_t pinid_t;
 # define IOA_USE_MBED
 #include <mbed.h>
 typedef uint32_t pinid_t;
+#elif defined(BUILD_FOR_PICO_CMAKE)
+#include <pico/stdlib.h>
+#include <cstring>
+#include <cctype>
+#include <valarray>
+typedef uint8_t pinid_t;
+#define pgm_read_byte_near(x) (*(x))
 #else
 // here we are in full arduino mode (AVR, MKR, ESP etc).
 # define IOA_USE_ARDUINO

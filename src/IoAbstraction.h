@@ -18,8 +18,10 @@
 
 #define SHIFT_REGISTER_OUTPUT_CUTOVER 32
 
-#ifdef IOA_USE_MBED
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE)
+#if defined(IOA_USE_MBED)
 #include <mbed.h>
+#endif
 enum ShiftBitOrder { MSBFIRST, LSBFIRST };
 uint8_t shiftIn(pinid_t dataPin, pinid_t clockPin, ShiftBitOrder bitOrder);
 #else
