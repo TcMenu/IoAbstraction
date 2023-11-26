@@ -297,5 +297,4 @@ vs-readme.txt
 # Arduino and platform io directories and files that should not be committed
 **/.pio
 .development
-CMakeLists*
 cmake-build-*
