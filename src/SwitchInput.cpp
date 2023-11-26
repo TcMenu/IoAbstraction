@@ -608,8 +608,15 @@ void HwStateRotaryEncoder::encoderChanged() {
         currentEncoderState = stateLimit(currentEncoderState - 1);
         dir = true; // going up
     } else {
-        currentEncoderState = -1; // mark invalid, do not output anything
-        return;
+        if(switches.isEncoderPollingEnabled()) {
+            currentEncoderState = -1; // mark invalid, do not output anything
+            return;
+        } else {
+            // here we know that the encoder must go into the next valid state eventually, so we wait
+            // for it to happen, it can either go back or fwd. But given this is interrupt based the
+            // result will be very noisy in-between as the contacts bounce.
+            return;
+        }
     }
 
     // output the state change if needed
