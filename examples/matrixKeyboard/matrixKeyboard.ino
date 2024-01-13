@@ -10,7 +10,7 @@
  *
  * Documentation and reference:
  *
- * https://www.thecoderscorner.com/products/arduino-downloads/io-abstraction/
+ * https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/matrix-keyboard-keypad-manager/
  * https://www.thecoderscorner.com/ref-docs/ioabstraction/html/index.html
  */
 
