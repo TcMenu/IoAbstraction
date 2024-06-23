@@ -1,9 +1,9 @@
 #######################################
-# Syntax Coloring Map For Test
+#qSyntaxqColoringqMapqForqTest
 #######################################
 
 #######################################
-# Datatypes (KEYWORD1)
+#qDatatypesq(KEYWORD1)
 #######################################
 BasicIoAbstraction	KEYWORD1
 IoAbstractionRef	KEYWORD1
@@ -18,9 +18,12 @@ AvrEeprom	KEYWORD1
 Executable	KEYWORD1
 AnalogDevice	KEYWORD1
 ArduinoAnalogDevice	KEYWORD1
+# NEW jerryg 2024-06-23
+MCP23017IoAbstraction	KEYWORD1
+PCF8574IoAbstraction	KEYWORD1
 
 #######################################
-# Methods and Functions (KEYWORD2)
+#qMethodsqandqFunctionsq(KEYWORD2)
 #######################################
 ioDevicePinMode	KEYWORD2
 ioDeviceDigitalReadPort	KEYWORD2
@@ -70,14 +73,14 @@ serdebugFHex2	KEYWORD2
 serdebugHexDump KEYWORD2
 
 #######################################
-# Instances (KEYWORD2)
+# Instancesq(KEYWORD2)
 #######################################
 
-taskManager
-switches
+taskManager	KEYWORD2
+switches	KEYWORD2
 
 #######################################
-# Constants (LITERAL1)
+# Constantsq(LITERAL1)
 #######################################
 TIME_MICROS	LITERAL1
 TIME_MILLIS	LITERAL1
@@ -95,4 +98,5 @@ DF_KEY_RIGHT	LITERAL1
 DF_KEY_SELECT	LITERAL1
 DIR_IN	LITERAL1
 DIR_OUT	LITERAL1
-
+# NEW jerryg 2024-06-23
+IO_PIN_NOT_DEFINED	LITERAL1
