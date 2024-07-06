@@ -17,16 +17,9 @@ PCF8574IoAbstraction::PCF8574IoAbstraction(uint8_t addr, uint8_t interruptPin, W
 }
 
 void PCF8574IoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
-	bool invertedLogic = bitRead(flags, INVERTED_LOGIC);
-
-	/*
-	 When inverted logic is set to true, we do the inversion in the runLoop().
-	 However, inputs need to be always set to HIGH in order the read to work.
-	 So it is necessary to flip the value here.
-	 */
 	if (mode == INPUT || mode == INPUT_PULLUP) {
 		overrideReadFlag();
-		writeValue(pin, !invertedLogic ? HIGH : LOW);
+		writeValue(pin, HIGH);
 	}
 	else {
 		writeValue(pin, LOW);
