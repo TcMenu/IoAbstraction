@@ -32,6 +32,11 @@
 // to make life easier, probably define each expander
 #define EXPANDER1 100
 
+// Make sure the code builds.
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 1
+#endif
+
 // create a multi Io that allocates the first 100 pins to arduino pins
 MultiIoAbstraction multiIo(EXPANDER1);
 PCF8574IoAbstraction io8574(0x20, IO_PIN_NOT_DEFINED);

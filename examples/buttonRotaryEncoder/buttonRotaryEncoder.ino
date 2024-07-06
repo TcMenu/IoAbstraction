@@ -13,6 +13,11 @@
 #include<IoAbstraction.h>
 #include <TaskManagerIO.h>
 
+// Make sure the code builds.
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 1
+#endif
+
 // The pin onto which we connected the rotary encoders switch
 const pinid_t spinwheelClickPin = 7;
 

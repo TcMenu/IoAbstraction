@@ -2,8 +2,8 @@
  * IoAbstraction Extras are additional analog and SPI components that are not directly in the core. You can see the
  * intended way to use such a class here and build it into your own application.
  */
-#include <extras/Pga2310VolumeControl.h>
 #include <SPI.h>
+#include <extras/Pga2310VolumeControl.h>
 
 #define VOLUME_CS_PIN 14
 

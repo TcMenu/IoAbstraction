@@ -1,4 +1,9 @@
 # IoAbstraction for Arduino and mbed summary
+[![PlatformIO](https://github.com/davetcc/IoAbstraction/actions/workflows/platformio.yml/badge.svg)](https://github.com/davetcc/IoAbstraction/actions/workflows/platformio.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/davetcc/IoAbstraction/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/davetcc/IoAbstraction.svg?maxAge=3600)](https://github.com/davetcc/IoAbstraction/releases)
+[![davetcc](https://img.shields.io/badge/davetcc-dev-blue.svg)](https://github.com/davetcc)
+[![JSC electronics](https://img.shields.io/badge/JSC-electronics-green.svg)](https://github.com/jsc-electronics)
 
 Dave Cherry / TheCodersCorner.com made this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
 
