@@ -18,6 +18,9 @@ AvrEeprom	KEYWORD1
 Executable	KEYWORD1
 AnalogDevice	KEYWORD1
 ArduinoAnalogDevice	KEYWORD1
+#NEW jerryg 2024-06-23
+MCP23017IoAbstraction	KEYWORD1
+PCF8574IoAbstraction	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -73,8 +76,8 @@ serdebugHexDump KEYWORD2
 # Instances (KEYWORD2)
 #######################################
 
-taskManager
-switches
+taskManager	KEYWORD2
+switches	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -95,4 +98,5 @@ DF_KEY_RIGHT	LITERAL1
 DF_KEY_SELECT	LITERAL1
 DIR_IN	LITERAL1
 DIR_OUT	LITERAL1
-
+#NEW jerryg 2024-06-23
+IO_PIN_NOT_DEFINED	LITERAL1
