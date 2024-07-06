@@ -1,0 +1,78 @@
+name: PlatformIO CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example:
+          - examples/abstractingPinsPCF8574/abstractingPinsPCF8574.ino
+          - examples/analogExample/analogExample.ino
+          - examples/aw9523Example/aw9523Example.ino
+          - examples/buttonRotaryEncoder/buttonRotaryEncoder.ino
+          - examples/dfRobotAnalogInSwitches/dfRobotAnalogInSwitches.ino
+          - examples/dfRobotRotaryEncoder/dfRobotRotaryEncoder.ino
+          - examples/directionOnlyEncoder/directionOnlyEncoder.ino
+          - examples/exampleShiftReg/exampleShiftReg.ino
+          - examples/i2cEepromExample/i2cEepromExample.ino
+          - examples/interruptSwitchEncoder8574/interruptSwitchEncoder8574.ino
+          - examples/ioLogging/ioLogging.ino
+          - examples/joystickRotaryEncoder/joystickRotaryEncoder.ino
+          - examples/matrixKeyboard/matrixKeyboard.ino
+          # MBED
+          # - examples/mbed/mbedExample
+          # - examples/mbed/mbedShiftReg
+          - examples/mpr121Example/mpr121Example.ino
+          - examples/multiIoExample/multiIoExample.ino
+          - examples/rotaryEncoderLed23017/rotaryEncoderLed23017.ino
+          # FIXME: Unknown type HardwareSPI
+          # - examples/spiAndExtras/spiAndExtras.ino
+          # STM
+          # - examples/stm32HalTestRom/stm32HalTestRom.cpp
+          - examples/timedBlink/timedBlink.ino
+          - examples/touchScreen/touchScreen.ino
+        include:
+          # AVR
+          - example: examples/avrEepromExample/avrEepromExample.ino
+            board: megaatmega2560
+          # ESP
+          - example: examples/arduinoEEPROMExample/arduinoEEPROMExample.ino
+            board: [esp32dev, esp01_1m]
+          - example: examples/esp32touchSwitches/esp32touchSwitches.ino
+            board: esp32dev
+          - example: examples/touchScreenFT6206Lib/touchScreenFT6206Lib.ino
+            board: [esp32dev, esp01_1m]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Set Board Environment Variables
+        run: |
+          if [ -n "${{ matrix.board }}" ] && [ "${{ matrix.board }}" != "null" ]; then
+            BOARD_ENVS=""
+            if [ "${{ matrix.board }}" = "Array" ]; then
+              # If matrix.board is an array
+              for board in $(echo '${{ toJSON(matrix.board) }}' | jq -r '.[]'); do
+                BOARD_ENVS="$BOARD_ENVS --environment $board"
+              done
+            else
+              # If matrix.board is a single value
+              BOARD_ENVS="--environment ${{ matrix.board }}"
+            fi
+            echo "BOARD_ENVS=$BOARD_ENVS" >> $GITHUB_ENV
+          fi
+        shell: bash
+      - name: Build PlatformIO examples
+        run: pio ci --lib "." --project-conf=platformio.ini $BOARD_ENVS
+        env:
+          PLATFORMIO_CI_SRC: ${{ matrix.example }}

@@ -18,6 +18,11 @@ add.
 #include<IoAbstraction.h>
 #include<TaskManagerIO.h>
 
+// Make sure the code builds.
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 1
+#endif
+
 // constant for the pin we will use
 const int ledPin = LED_BUILTIN;
 
