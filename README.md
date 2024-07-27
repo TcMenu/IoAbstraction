@@ -1,9 +1,9 @@
 # IoAbstraction for Arduino and mbed summary
-[![PlatformIO](https://github.com/davetcc/IoAbstraction/actions/workflows/platformio.yml/badge.svg)](https://github.com/davetcc/IoAbstraction/actions/workflows/platformio.yml)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/davetcc/IoAbstraction/blob/master/LICENSE)
-[![GitHub release](https://img.shields.io/github/release/davetcc/IoAbstraction.svg?maxAge=3600)](https://github.com/davetcc/IoAbstraction/releases)
+[![PlatformIO](https://github.com/TcMenu/IoAbstraction/actions/workflows/platformio.yml/badge.svg)](https://github.com/TcMenu/IoAbstraction/actions/workflows/platformio.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/TcMenu/IoAbstraction/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/TcMenu/IoAbstraction.svg?maxAge=3600)](https://github.com/TcMenu/IoAbstraction/releases)
 [![davetcc](https://img.shields.io/badge/davetcc-dev-blue.svg)](https://github.com/davetcc)
-[![JSC electronics](https://img.shields.io/badge/JSC-electronics-green.svg)](https://github.com/jsc-electronics)
+[![JSC TechMinds](https://img.shields.io/badge/JSC-TechMinds-green.svg)](https://www.jsctm.cz)
 
 Dave Cherry / TheCodersCorner.com made this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
 
@@ -20,13 +20,13 @@ Community questions can be asked in the discussions section of this repo, or usi
 
 <a href="https://www.buymeacoffee.com/davetcc" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-* [discussions section of the IoAbstraction repo](https://github.com/davetcc/IoAbstraction/discussions)
+* [discussions section of the IoAbstraction repo](https://github.com/TcMenu/IoAbstraction/discussions)
 * [Arduino discussion forum](https://forum.arduino.cc/) where questions can be asked, please tag me using `@davetcc`.
 * [Legacy discussion forum probably to be made read only soon](https://www.thecoderscorner.com/jforum/).
 
 ## Installation for Arduino IDE
 
-This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependencies, [TaskManagerIO](https://github.com/davetcc/TaskManagerIO) and [SimpleCollections](https://github.com/davetcc/SimpleCollections). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
+This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependencies, [TaskManagerIO](https://github.com/TcMenu/TaskManagerIO) and [SimpleCollections](https://github.com/TcMenu/SimpleCollections). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
 
 ## Installation for PlatformIO (Arduino or mbed)
 
@@ -34,9 +34,9 @@ Use the platformIO library manager to get the library. It's called 'IoAbstractio
 
 ## This library is based on TaskManagerIO and SimpleCollections
 
-Take a look at the [TaskManagerIO repo](https://github.com/davetcc/TaskManagerIO) for more information about how task manager works, this library relies heavily on task manager.
+Take a look at the [TaskManagerIO repo](https://github.com/TcMenu/TaskManagerIO) for more information about how task manager works, this library relies heavily on task manager.
 
-Also, this library uses [SimpleCollections](https://github.com/davetcc/SimpleCollections) within switches and a few other areas.
+Also, this library uses [SimpleCollections](https://github.com/TcMenu/SimpleCollections) within switches and a few other areas.
 
 ## BasicIoAbstraction - Arduino like interface to pins, PCF8574, PCF8575, MCP23017, AW9523 and shift registers.
 
@@ -283,4 +283,4 @@ On ESP32 we are slowly adding support for direct IDF, as it's been requested by 
 
 ## Making changes to IoAbstraction
 
-We welcome people rolling up their sleeves and helping out, but please do reach out to us before starting any work, so we can ensure it's in sync with our development. We use platformIO for development and have a specific project available to help you get started, along with tests that check many elements still work as expected. See [https://github.com/davetcc/tcLibraryDev]
+We welcome people rolling up their sleeves and helping out, but please do reach out to us before starting any work, so we can ensure it's in sync with our development. We use platformIO for development and have a specific project available to help you get started, along with tests that check many elements still work as expected. See [https://github.com/TcMenu/tcLibraryDev]
