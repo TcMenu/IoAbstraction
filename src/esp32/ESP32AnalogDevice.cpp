@@ -10,7 +10,7 @@
 #include "ESP32AnalogDevice.h"
 #include "IoLogging.h"
 #include <SimpleCollections.h>
-#ifndef CONFIG_IDF_TARGET_ESP32S3
+#if __has_include(<driver/dac.h>)
 #include <driver/dac.h>
 #define ESP_HAS_DAC
 #else
