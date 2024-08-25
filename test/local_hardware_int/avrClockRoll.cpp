@@ -1,8 +1,6 @@
 
 #include <TaskManagerIO.h>
-#include <testing/SimpleTest.h>
-
-using namespace SimpleTest;
+#include <unity.h>
 
 #if defined(__AVR__)
 
@@ -39,7 +37,7 @@ int avrCount2 = 0;
 //
 // this test only runs on AVR - it sets the timer near to overflow and schedules some tasks
 //
-test(testClockRollover) {
+void testClockRollover() {
     avrCount1 = avrCount2 = 0;
 
     // set the clock so that it will roll
@@ -55,7 +53,7 @@ test(testClockRollover) {
     }, TIME_MICROS);
 
     // make sure it's still to wrap.
-    assertTrue(millis() > 100000000UL);
+    TEST_ASSERT_TRUE(millis() > 100000000UL);
 
     // now run the loop
     dumpTaskTiming();
@@ -67,31 +65,19 @@ test(testClockRollover) {
     dumpTaskTiming();
 
     // the one second task should have executed exactly once.
-    assertEquals(avrCount1, 1);
+    TEST_ASSERT_EQUAL(avrCount1, 1);
     assertMoreThan(1000, avrCount2);
 
     // make sure millis has wrapped now.
-    assertTrue(millis() < 10000UL);
+    TEST_ASSERT_TRUE(millis() < 10000UL);
 
     // and make sure the microsecond job is still going..
     int avrCount2Then = avrCount2;
     taskManager.yieldForMicros(10000);
-    assertTrue(avrCount2Then != avrCount2);
+    TEST_ASSERT_TRUE(avrCount2Then != avrCount2);
 
     // reset the millisecond timer where it was before.
     setMillis(oldMillis);
-}
-
-test(legacyCheckIoDevice) {
-    auto systemDevice = internalDigitalIo();
-    ioDevicePinMode(systemDevice, LED_BUILTIN, OUTPUT);
-    ioDevicePinMode(systemDevice, 2, INPUT);
-    ioDeviceDigitalWrite(systemDevice, LED_BUILTIN, HIGH);
-    ioDeviceSync(systemDevice);
-    ioDeviceDigitalRead(systemDevice, 2);
-    delay(250);
-    ioDeviceDigitalWriteS(systemDevice, LED_BUILTIN, LOW);
-    ioDeviceDigitalReadS(systemDevice, 2);
 }
 
 #endif // __AVR__

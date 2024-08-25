@@ -1,0 +1,62 @@
+name: Test
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-2.0-0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Set up QEMU
+        id: setup-qemu
+        run: |
+          if [[ "$(uname -m)" == "x86_64" ]]; then
+            QEMU_URL="https://github.com/espressif/qemu/releases/download/esp-develop-8.2.0-20240122/qemu-xtensa-softmmu-esp_develop_8.2.0_20240122-x86_64-linux-gnu.tar.xz"
+          elif [[ "$(uname -m)" == "aarch64" ]]; then
+            QEMU_URL="https://github.com/espressif/qemu/releases/download/esp-develop-8.2.0-20240122/qemu-xtensa-softmmu-esp_develop_8.2.0_20240122-aarch64-linux-gnu.tar.xz"
+          else
+            echo "Unsupported architecture: $(uname -m)"
+            exit 1
+          fi
+          wget $QEMU_URL -O qemu.tar.xz
+          mkdir -p qemu
+          tar -xf qemu.tar.xz -C qemu --strip-components=1
+          sudo mv qemu /usr/local/qemu
+  
+      - name: Add QEMU to PATH
+        run: echo "/usr/local/qemu/bin" >> $GITHUB_PATH
+  
+      - name: Run unit tests
+        run: pio test --without-uploading --project-conf=platformio-test.ini
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Run static analysis
+        run: pio check

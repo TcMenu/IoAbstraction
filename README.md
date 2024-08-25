@@ -1,11 +1,12 @@
 # IoAbstraction for Arduino and mbed summary
 [![PlatformIO](https://github.com/TcMenu/IoAbstraction/actions/workflows/platformio.yml/badge.svg)](https://github.com/TcMenu/IoAbstraction/actions/workflows/platformio.yml)
+[![Test](https://github.com/TcMenu/IoAbstraction/actions/workflows/test.yml/badge.svg)](https://github.com/TcMenu/IoAbstraction/actions/workflows/test.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/TcMenu/IoAbstraction/blob/main/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/TcMenu/IoAbstraction.svg?maxAge=3600)](https://github.com/TcMenu/IoAbstraction/releases)
 [![davetcc](https://img.shields.io/badge/davetcc-dev-blue.svg)](https://github.com/davetcc)
 [![JSC TechMinds](https://img.shields.io/badge/JSC-TechMinds-green.svg)](https://www.jsctm.cz)
 
-Dave Cherry / TheCodersCorner.com made this library available for you to use. It takes me significant effort to keep all my libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
+TcMenu organisation made this framework available for you to use. It takes significant effort to keep all our libraries current and working on a wide range of boards. Please consider making at least a one off donation via the sponsor button if you find it useful. In forks, please keep text to here intact.
 
 This library provides several useful extensions that make programming Arduino / mbed for non-trivial apps simpler. There are many different practical and familiar examples packaged with it in the `examples` folder. Below I cover each of the main functions briefly with a link to more detailed documentation. The API is almost identical between Arduino and mbed making it easier to port between the two. 
 
