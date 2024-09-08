@@ -14,7 +14,7 @@ This library provides several useful extensions that make programming Arduino / 
 
 Along with ths quick start guide and the examples also see:
 
-* [IoAbstraction documentation pages](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/)
+* [IoAbstraction documentation pages](https://tcmenu.github.io/documentation/arduino-libraries/io-abstraction/)
 * [IoAbstraction reference documentation](https://www.thecoderscorner.com/ref-docs/ioabstraction/html)
 
 Community questions can be asked in the discussions section of this repo, or using the Arduino forum. We generally answer most community questions but the responses will not be timely. Before posting into the community make sure you've recreated the problem in a simple sketch, and please consider making at least a one time donation (see links further up):
@@ -272,11 +272,11 @@ Note that although the Arduino constructor allows the bit depth to be set, it on
 
 You can create matrix keyboards with any arrangement of keys, but the two most common cases of 3x4 and 4x4 layout number pads have ready-made layouts. There is an example showing usage in detail in both polling and interrupt mode on device pins and an I2C IoExpander.
 
-Alongside the example, there is comprehensive documentation describing the use of [matrix keyboards on Arduino](https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/matrix-keyboard-keypad-manager/).  
+Alongside the example, there is comprehensive documentation describing the use of [matrix keyboards on Arduino](https://tcmenu.github.io/documenation/arduino-libraries/io-abstraction/matrix-keyboard-keypad-manager/).  
 
-## Inbuilt Unit testing framework and mocking
+## Unit testing and mocking
 
-IoAbstraction has a very simple unit test framework built into it, it works on a very wide range of boards, more or less everything in our supported list. In addition to this there are mock versions of some components to make testing your code easier. See https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/simple-test-unit-test-arduino-mbed/
+There are mock versions of some components to make testing your code easier. Consult the source and documentation for more detail.
 
 ## ESP32 extras mode
 
