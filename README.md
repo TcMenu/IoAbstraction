@@ -15,7 +15,7 @@ This library provides several useful extensions that make programming Arduino / 
 Along with ths quick start guide and the examples also see:
 
 * [IoAbstraction documentation pages](https://tcmenu.github.io/documentation/arduino-libraries/io-abstraction/)
-* [IoAbstraction reference documentation](https://www.thecoderscorner.com/ref-docs/ioabstraction/html)
+* [IoAbstraction reference documentation](https://tcmenu.github.io/documentation/ref-docs/ioabstraction/html)
 
 Community questions can be asked in the discussions section of this repo, or using the Arduino forum. We generally answer most community questions but the responses will not be timely. Before posting into the community make sure you've recreated the problem in a simple sketch, and please consider making at least a one time donation (see links further up):
 
