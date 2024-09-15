@@ -61,9 +61,6 @@ typedef uint32_t pinid_t;
 typedef uint32_t pinid_t;
 #elif defined(BUILD_FOR_PICO_CMAKE)
 #include <pico/stdlib.h>
-#include <cstring>
-#include <cctype>
-#include <valarray>
 typedef uint8_t pinid_t;
 #define pgm_read_byte_near(x) (*(x))
 #else

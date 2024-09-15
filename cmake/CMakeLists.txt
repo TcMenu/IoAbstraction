@@ -3,11 +3,9 @@ add_library(IoAbstraction
         ../src/EepromAbstractionWire.cpp
         ../src/IoAbstraction.cpp
         ../src/IoAbstractionWire.cpp
-        ../src/IoLogging.cpp
         ../src/KeyboardManager.cpp
         ../src/ResistiveTouchScreen.cpp
         ../src/SwitchInput.cpp
-        ../src/TextUtilities.cpp
         ../src/wireHelpers.cpp
         ../src/pico/PicoDigitalIO.cpp
         ../src/pico/i2cWrapper.cpp
@@ -19,7 +17,7 @@ target_compile_definitions(IoAbstraction
 )
 
 target_include_directories(IoAbstraction PUBLIC
-        ${PROJECT_SOURCE_DIR}/IoAbstraction/src
+        ${PROJECT_SOURCE_DIR}/lib/IoAbstraction/src
 )
 
 target_link_libraries(IoAbstraction PUBLIC
