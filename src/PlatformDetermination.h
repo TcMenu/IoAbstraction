@@ -79,6 +79,9 @@ typedef uint8_t pinid_t;
 #elif defined(ESP8266)
 # define IOA_ANALOGIN_RES 10
 # define IOA_ANALOGOUT_RES 10
+#elif defined(ARDUINO_ARCH_RENESAS_UNO) && !defined(IO_MKR_FORCE_LOWRES_ANALOG)
+#define IOA_ANALOGIN_RES 14
+#define IOA_ANALOGOUT_RES 12
 #else
 # define IOA_ANALOGIN_RES 10
 # define IOA_ANALOGOUT_RES 8
