@@ -67,11 +67,11 @@ uint8_t I2cAt24Eeprom::findMaximumInPage(uint16_t destEeprom, uint8_t len) const
 	// We can read/write in bulk, but do no exceed the page size or we will read / write
 	// the wrong bytes
 	uint16_t offs = destEeprom % pageSize;
-    uint16_t currentGo = min((uint16_t)pageSize, uint16_t(offs + len)) - offs;
+    uint16_t currentGo = internal_min((uint16_t)pageSize, uint16_t(offs + len)) - offs;
 
 	// dont exceed the buffer length of the  wire library
     auto absoluteMax = MAX_BUFFER_SIZE_TO_USE - 2;
-	return min(currentGo, (uint16_t) absoluteMax);
+	return internal_min(currentGo, (uint16_t) absoluteMax);
 }
 
 uint8_t I2cAt24Eeprom::read8(EepromPosition position) {
