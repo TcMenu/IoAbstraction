@@ -23,9 +23,12 @@
     },
     {
       "name": "TaskManagerIO"
+    },
+    {
+      "name": "TcMenuLog"
     }
   ],
-  "version": "4.3.0",
+  "version": "4.4.0",
   "license": "Apache-2.0",
   "frameworks": "arduino, mbed",
   "platforms": "*",

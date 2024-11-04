@@ -11,7 +11,7 @@ namespace iotouch {
         }
         if (ticks++ > accel) {
             ticks = 0;
-            accel = max(minTicks, uint8_t(accel / 2U));
+            accel = internal_max(minTicks, uint8_t(accel / 2U));
             return true;
         }
         return false;

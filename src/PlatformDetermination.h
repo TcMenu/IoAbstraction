@@ -61,9 +61,6 @@ typedef uint32_t pinid_t;
 typedef uint32_t pinid_t;
 #elif defined(BUILD_FOR_PICO_CMAKE)
 #include <pico/stdlib.h>
-#include <cstring>
-#include <cctype>
-#include <valarray>
 typedef uint8_t pinid_t;
 #define pgm_read_byte_near(x) (*(x))
 #else
@@ -82,6 +79,9 @@ typedef uint8_t pinid_t;
 #elif defined(ESP8266)
 # define IOA_ANALOGIN_RES 10
 # define IOA_ANALOGOUT_RES 10
+#elif defined(ARDUINO_ARCH_RENESAS_UNO) && !defined(IO_MKR_FORCE_LOWRES_ANALOG)
+#define IOA_ANALOGIN_RES 14
+#define IOA_ANALOGOUT_RES 12
 #else
 # define IOA_ANALOGIN_RES 10
 # define IOA_ANALOGOUT_RES 8

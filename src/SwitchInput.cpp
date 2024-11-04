@@ -100,7 +100,7 @@ void KeyboardItem::checkAndTrigger(uint8_t buttonState){
 		else if (getState() == BUTTON_HELD && repeatInterval != NO_REPEAT && notify.callback != nullptr) {
 			counter = counter + (acceleration >> SWITCHES_ACCELERATION_DIVISOR) + 1;
 			if (counter > repeatInterval) {
-				acceleration = min(255, acceleration + 1);
+				acceleration = internal_min(255, acceleration + 1);
 				trigger(true);
 				counter = 0;
 			}
@@ -326,7 +326,7 @@ void RotaryEncoder::increment(int8_t incVal) {
 			currentReading = (currentReading + incVal);
 			if (currentReading > maximumValue) currentReading = currentReading - maximumValue - 1;
         } else {
-			currentReading = min((uint16_t)(currentReading + incVal), maximumValue);
+			currentReading = internal_min((uint16_t)(currentReading + incVal), maximumValue);
 		}
 	} else if(currentReading < abs(incVal)) {
 		currentReading = rollover? maximumValue - safeAbs(incVal) + 1 : 0;
