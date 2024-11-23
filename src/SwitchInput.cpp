@@ -426,35 +426,86 @@ int AbstractHwRotaryEncoder::amountFromChange(unsigned long change) {
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
-	bool lastSyncStatus = switches.getIoAbstraction()->sync();
-    bitWrite(flags, LAST_SYNC_STATUS, lastSyncStatus);
+    static uint8_t state = 0;        // Current state of the encoder
+    static uint8_t pulseCounter = 0; // Pulse counter for FULL_CYCLE and HALF_CYCLE modes
 
-	uint8_t a = switches.getIoAbstraction()->digitalRead(pinA);
-	uint8_t b = switches.getIoAbstraction()->digitalRead(pinB);
+    // Read the current states of pins A and B
+    uint8_t a = digitalRead(pinA);
+    uint8_t b = digitalRead(pinB);
 
-	if(encoderType == QUARTER_CYCLE){
-		if((a != aLast) || (b != cleanFromB)) {
-			aLast = a;
-			if((a != aLast) || (b != cleanFromB)) {
-				cleanFromB = b;
-				if((a || cleanFromB) || (a == 0 && b == 0)) {
-                    handleChangeRaw(a && b);
-                }
-			}
-		}		
-	}
-	else {
-		if(a != aLast) {
-			aLast = a;
-			if(b != cleanFromB) {
-				cleanFromB = b;
-				if(a) {
-                    handleChangeRaw(b);
-				}
-			}
-		}	
-	}
+    /**
+     * Calculate the new state from signals A and B.
+     * 
+     * Signal A and B form a quadrature signal pattern like this:
+     * 
+     * Signal A: __|¯¯|__|¯¯|__    (HIGH/LOW alternating)
+     * Signal B: _|¯¯|__|¯¯|__|_   (90 degrees phase-shifted from A)
+     * 
+     * Each combination of A and B represents one of four states:
+     * - State 0: A=0, B=0  --> Binary: 00
+     * - State 1: A=1, B=0  --> Binary: 10
+     * - State 2: A=1, B=1  --> Binary: 11
+     * - State 3: A=0, B=1  --> Binary: 01
+     * 
+     * Transitions between these states determine the direction of rotation:
+     * - Clockwise (CW):        0 -> 1 -> 3 -> 2 -> 0
+     * - Counterclockwise (CCW): 0 -> 2 -> 3 -> 1 -> 0
+     * 
+     * The new state is calculated by combining the values of signals A and B:
+     * - newState = (A << 1) | B
+     */
+    uint8_t newState = (a << 1) | b;
+
+    // Determine rotation direction (CW or CCW) based on state transitions
+    bool directionUp = false;
+    if ((state == 0 && newState == 1) || 
+        (state == 1 && newState == 3) || 
+        (state == 3 && newState == 2) || 
+        (state == 2 && newState == 0)) {
+        directionUp = true;
+    } 
+    else if ((state == 0 && newState == 2) || 
+             (state == 2 && newState == 3) || 
+             (state == 3 && newState == 1) || 
+             (state == 1 && newState == 0)) {
+        directionUp = false;
+    } 
+    else {
+        // Invalid transition, return early
+        return;
+    }
+
+    // Logic for different modes
+    pulseCounter++;
+    bool validTransition = false;
+    switch (encoderType) {
+        case FULL_CYCLE:
+            if (pulseCounter >= 4) { // Count 4 transitions for one cycle
+                validTransition = true;
+                pulseCounter = 0;
+            }
+            break;
+        case HALF_CYCLE:
+            if (pulseCounter >= 2) { // Count 2 transitions for one step
+                validTransition = true;
+                pulseCounter = 0;
+            }
+            break;
+        case QUARTER_CYCLE:
+            validTransition = true; // Every transition is valid
+            pulseCounter = 0;
+            break;
+    }
+
+    // If the transition is valid, call handleChangeRaw
+    if (validTransition) {
+        handleChangeRaw(directionUp);
+    }
+
+    // Update the current state
+    state = newState;
 }
+
 
 void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType et) {
     this->aLast = switches.getIoAbstraction()->digitalRead(pinA);
@@ -463,26 +514,28 @@ void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAcceleratio
 }
 
 void AbstractHwRotaryEncoder::handleChangeRaw(bool increase) {
-    // was the last direction up?
-    bool lastDirectionUp = bitRead(flags, LAST_ENCODER_DIRECTION_UP);
+    // Calculate the time delta in microseconds
+    unsigned long currentMicros = micros();
+    unsigned long deltaMicros = currentMicros - lastChange;
 
-    // get the amount of change and direction. Also keep a copy of the time until later for acceleration purposes
-    unsigned long timeNow = micros();
-    unsigned long deltaMillis = timeNow - lastChange;
-    int amt = amountFromChange(deltaMillis);
+    // Ignore all pulses below the reject threshold (debounce logic)
+    if (deltaMicros < REJECT_DIRECTION_CHANGE_THRESHOLD) {
+        return;
+    }
 
-    // update the last change time now to ensure always set
-    lastChange = timeNow;
+    // Get the amount of change based on the time delta
+    int amount = amountFromChange(deltaMicros);
 
-    // direction changes within the reject change threshold would not result in an encoder change, part of the debounce
-    // logic to prevent spurious updates. Within this period direction must be the both now and previously.
-    //serlogF4(SER_DEBUG, "delta ", deltaMillis, increase, lastDirectionUp);
-    if(deltaMillis < REJECT_DIRECTION_CHANGE_THRESHOLD && increase != lastDirectionUp) return;
+    // Update the last change time
+    lastChange = currentMicros;
 
-    // now we make the change and register the last change direction (as we accepted it)
-    increment((int8_t) (increase ? amt : -amt));
+    // Apply the increment or decrement based on the direction
+    increment((int8_t)(increase ? amount : -amount));
+
+    // Update the last direction in the flags
     bitWrite(flags, LAST_ENCODER_DIRECTION_UP, increase);
 }
+
 
 EncoderUpDownButtons::EncoderUpDownButtons(pinid_t pinUp, pinid_t pinDown, EncoderCallbackFn callback, uint8_t speed)
         : RotaryEncoder(callback), upPin(pinUp), downPin(pinDown), backPin(-1), nextPin(-1), passThroughListener(nullptr),

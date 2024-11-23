@@ -61,7 +61,7 @@
  * quick to change direction in 1/10th of a second, but it is configurable in case.
  */
 #ifndef REJECT_DIRECTION_CHANGE_THRESHOLD
-#define REJECT_DIRECTION_CHANGE_THRESHOLD 100000
+#define REJECT_DIRECTION_CHANGE_THRESHOLD 10000
 #endif //REJECT_DIRECTION_CHANGE_THRESHOLD
 
 // END user adjustable section
