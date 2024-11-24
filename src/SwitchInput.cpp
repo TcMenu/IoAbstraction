@@ -426,9 +426,6 @@ int AbstractHwRotaryEncoder::amountFromChange(unsigned long change) {
 }
 
 void HardwareRotaryEncoder::encoderChanged() {
-    static uint8_t state = 0;        // Current state of the encoder
-    static uint8_t pulseCounter = 0; // Pulse counter for FULL_CYCLE and HALF_CYCLE modes
-
     // Read the current states of pins A and B
     uint8_t a = digitalRead(pinA);
     uint8_t b = digitalRead(pinB);
@@ -508,8 +505,6 @@ void HardwareRotaryEncoder::encoderChanged() {
 
 
 void HardwareRotaryEncoder::initialise(pinid_t pinA, pinid_t pinB, HWAccelerationMode accelerationMode, EncoderType et) {
-    this->aLast = switches.getIoAbstraction()->digitalRead(pinA);
-    this->cleanFromB = switches.getIoAbstraction()->digitalRead(pinB);
     initialiseBase(pinA, pinB, accelerationMode, et);
 }
 

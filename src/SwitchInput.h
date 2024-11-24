@@ -356,8 +356,8 @@ protected:
  */  
 class HardwareRotaryEncoder : public AbstractHwRotaryEncoder {
 private:
-	uint8_t aLast;
-	uint8_t cleanFromB;
+    uint8_t state = 0;        // Current state of the encoder
+    uint8_t pulseCounter = 0; // Pulse counter for FULL_CYCLE and HALF_CYCLE modes
 public:
     /**
      * Create an instance of a hardware rotary encoder specifying the A and B pin, the acceleration parameters and encoder type.
