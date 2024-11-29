@@ -117,7 +117,7 @@ typedef void(*KeyCallbackFn)(pinid_t key, bool heldDown);
  * instead to receive updates.
  * @param newValue the value of the rotary encoder
  */
-typedef void(*EncoderCallbackFn)(int newValue);
+typedef bool(*EncoderCallbackFn)(int newValue);
 
 /**
  * An internal class that represents the state of a single key being managed by switches.
