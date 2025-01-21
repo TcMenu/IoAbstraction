@@ -1,5 +1,5 @@
 #include "ResistiveTouchScreen.h"
-#include "SwitchInput.h>"
+#include "SwitchInput.h"
 
 namespace iotouch {
 
