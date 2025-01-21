@@ -13,7 +13,7 @@
 
 #include "PlatformDeterminationWire.h"
 #include "EepromAbstraction.h"
-#include <TaskManager.h>
+#include "TaskManager.h"
 
 /**
  * Defines all the variants of the chip that we can pass to the I2cAt24Eeprom constructor. From this we can determine

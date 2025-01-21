@@ -9,7 +9,7 @@
 #include "IoAbstraction.h"
 #include "PlatformDetermination.h"
 #include "PlatformDeterminationWire.h"
-#include "IoLogging.h"
+#include <IoLogging.h>
 
 /**
  * @file wireHelpers.h

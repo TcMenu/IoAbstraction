@@ -4,8 +4,8 @@
  */
 
 #include "PlatformDetermination.h"
-#include "IoLogging.h"
-#include <EepromAbstractionWire.h>
+#include <IoLogging.h>
+#include "EepromAbstractionWire.h"
 
 #ifdef WIRE_BUFFER_SIZE
 # define MAX_BUFFER_SIZE_TO_USE WIRE_BUFFER_SIZE
