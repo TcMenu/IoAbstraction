@@ -11,9 +11,9 @@
  * @brief This file contains events that are associated with the device, such as the Analog Device.
  */
 
-#include "TaskManagerIO.h"
-#include "PlatformDetermination.h"
-#include "AnalogDeviceAbstraction.h"
+#include <TaskManagerIO.h>
+#include <PlatformDetermination.h>
+#include <AnalogDeviceAbstraction.h>
 
 /**
  * An event that triggers when a certain analog condition is reached, based on a made and a threshold. It can either

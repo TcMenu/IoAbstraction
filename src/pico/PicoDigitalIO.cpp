@@ -1,7 +1,7 @@
 
 #include "PicoDigitalIO.h"
-#include "../IoAbstraction.h"
-#include <SimpleCollections.h>
+#include "IoAbstraction.h"
+#include "SimpleCollections.h"
 
 #ifdef BUILD_FOR_PICO_CMAKE
 

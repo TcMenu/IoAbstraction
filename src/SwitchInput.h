@@ -14,8 +14,8 @@
 #ifndef _SWITCHINPUT_H
 #define _SWITCHINPUT_H
 
-#include <IoAbstraction.h>
-#include <TaskManager.h>
+#include "IoAbstraction.h"
+#include "TaskManager.h"
 #include <SimpleCollections.h>
 
 // START user adjustable section

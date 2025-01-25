@@ -5,6 +5,7 @@
 
 #include <inttypes.h>
 #include "SwitchInput.h"
+#include "BasicIoAbstraction.h"
 
 #define ONE_TURN_OF_ENCODER 32
 
@@ -427,8 +428,8 @@ int AbstractHwRotaryEncoder::amountFromChange(unsigned long change) {
 
 void HardwareRotaryEncoder::encoderChanged() {
     // Read the current states of pins A and B
-    uint8_t a = digitalRead(pinA);
-    uint8_t b = digitalRead(pinB);
+    uint8_t a = switches.getIoAbstraction()->digitalRead(pinA);
+    uint8_t b = switches.getIoAbstraction()->digitalRead(pinB);
 
     /**
      * Calculate the new state from signals A and B.

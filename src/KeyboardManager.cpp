@@ -7,7 +7,7 @@
  */
 
 #include "KeyboardManager.h"
-#include "IoLogging.h"
+#include <IoLogging.h>
 
 MatrixKeyboardManager* MatrixKeyboardManager::INSTANCE = nullptr;
 

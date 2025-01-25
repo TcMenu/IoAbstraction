@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.13)
+
 add_library(IoAbstraction
         ../src/EepromAbstraction.cpp
         ../src/EepromAbstractionWire.cpp
@@ -17,7 +19,7 @@ target_compile_definitions(IoAbstraction
 )
 
 target_include_directories(IoAbstraction PUBLIC
-        ${PROJECT_SOURCE_DIR}/lib/IoAbstraction/src
+        ../src
 )
 
 target_link_libraries(IoAbstraction PUBLIC
