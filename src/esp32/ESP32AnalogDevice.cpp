@@ -95,9 +95,13 @@ EspAnalogOutputMode::EspAnalogOutputMode(const EspAnalogOutputMode& other)  {
 
 void EspAnalogOutputMode::pinSetup() {
     if(!isDac()) {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+        ledcAttach(pin, pwmWidth, 8);
+#else // older version of Arduino framework
         // for other than the dac ports, we need to set up PWM
         ledcSetup(pwmChannel, pwmWidth, 8);
         ledcAttachPin(pin, pwmChannel);
+#endif
     }
     else {
 #ifdef ESP_HAS_DAC
