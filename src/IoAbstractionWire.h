@@ -479,8 +479,8 @@ protected:
 };
 
 /**
- * A wrapper for the AW9523IoAbstraction that provides the LED control analog functions as an AnalogDevice, this allows
- * you to use this device with anything that already works with AnalogDevice objects for output. Simple construct giving
+ * A wrapper for the MPR121IoAbstraction that provides the LED control analog functions as an AnalogDevice, this allows
+ * you to use this device with anything that already works with AnalogDevice objects for output. Simply construct giving
  * a reference to the actual abstraction.
  */
 class MPR121AnalogAbstraction : public AnalogDevice {
