@@ -175,6 +175,13 @@ bool SwitchInput::addSwitchListener(pinid_t pin, SwitchListener* listener, uint8
     return keys.add(KeyboardItem(pin, listener, repeat, invertLogic));
 }
 
+void SwitchInput::setRepeatInterval(pinid_t pin, uint8_t interval) {
+	auto keyItem = keys.getByKey(pin);
+	if(keyItem) {
+		keyItem->setRepeatInterval(interval);
+	}
+}
+
 bool SwitchInput::internalAddSwitch(pinid_t pin, bool invertLogic) {
 	if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
 

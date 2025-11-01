@@ -163,6 +163,8 @@ public:
 
 	void changeOnPressed(KeyCallbackFn pFunction);
 	void changeListener(SwitchListener* listener);
+
+	void setRepeatInterval(uint8_t newInterval) { repeatInterval = newInterval;}
 };
 
 /**
@@ -739,6 +741,14 @@ public:
     bool removeSwitch(pinid_t pin) {
         return keys.removeByKey(pin);
     }
+
+	/**
+	 * Allows for reconfiguration of the repeat key at runtime,
+	 * it uses the same repeat interval as when adding a switch.
+	 * @param pin the pin to reconfigure
+	 * @param interval the new interval - see add switch
+	 */
+	void setRepeatInterval(pinid_t pin, uint8_t interval);
 
 private:
     bool internalAddSwitch(pinid_t pin, bool invertLogic);
