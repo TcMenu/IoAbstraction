@@ -13,6 +13,9 @@
 
 #ifdef IOA_USE_ARDUINO
 #include <SPI.h>
+#ifdef ESP32
+#define HardwareSPI SPIClass
+#endif
 class SPIWithSettings {
 private:
     HardwareSPI* spiBus;
@@ -26,8 +29,8 @@ public:
     SPIWithSettings& operator=(const SPIWithSettings&)=default;
 
     void init() {
-        internalDigitalDevice().pinMode(cs, OUTPUT);
-        internalDigitalDevice().digitalWrite(cs, HIGH);
+        internalDigitalDevice().pinMode(csPin, OUTPUT);
+        internalDigitalDevice().digitalWrite(csPin, HIGH);
     }
 
     bool transferSPI(uint8_t* rdwr, size_t len) {
