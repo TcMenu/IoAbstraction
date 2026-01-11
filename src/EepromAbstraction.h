@@ -93,6 +93,28 @@ public:
 	 * @param len the length of the array
 	 */
 	virtual void writeArrayToRom(EepromPosition romDest, const uint8_t* memSrc, uint8_t len) = 0;
+
+	/**
+	 * Helper function that calls into `writeArrayToRom` but wraps it to take `char*` instead.
+	 * @see writeArrayToRom
+	 * @param romDest the position in the ROM to write at
+	 * @param memSrc the memory location to copy from
+	 * @param len the length of the copy
+	 */
+	void writeCharArrToRom(EepromPosition romDest, const char* memSrc, uint8_t len) {
+		writeArrayToRom(romDest, reinterpret_cast<const uint8_t *>(memSrc), len);
+	}
+
+	/**
+	 * Helper function that calls into `readIntoMemArray` but wraps it to take `char*` instead.
+	 * @see readIntoMemArray
+	 * @param memDest the memory destination where the EEPROM data should be copied to
+	 * @param romSrc the source position in EEPROM storage to read from
+	 * @param len the length of the array to read
+	 */
+	void readCharArrIntoMemArray(char* memDest, EepromPosition romSrc, uint8_t len) {
+		readIntoMemArray(reinterpret_cast<uint8_t *>(memDest), romSrc, len);
+	}
 };
 
 // only include the atmel AVR support if it's available on this platform.

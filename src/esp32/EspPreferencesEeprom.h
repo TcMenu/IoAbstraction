@@ -34,22 +34,35 @@ private:
     size_t storeSize;
     bool prefsOk = true;
     bool changed = false;
+    char romNamespaceStr[20];
 
 public:
+    /**
+     * Construct the preferences based eeprom, ready to be initialised and used later.
+     * @param romNameSpace the namespace to use, up to 20 characters in length
+     * @param size the size of the storage area to create.
+     */
     EspPreferencesEeprom(const char* romNameSpace, size_t size) {
         menuStore = new uint8_t[size];
         storeSize = size;
-        prefs.begin(romNameSpace, false);
-        if (!prefs.isKey(IOA_STORE_KEY)) {
+        strncpy(romNamespaceStr, romNameSpace, sizeof(romNamespaceStr) - 1);
+        romNamespaceStr[sizeof(romNamespaceStr) - 1] = 0;
+    }
+
+    /**
+     * Initialize the Preferences API with the namespace and size provided in the constructor
+     * @return true on success, otherwise false
+     */
+    bool init() {
+        prefs.begin(romNamespaceStr, false);
+        // Make sure the store can be loaded and the sizes match. Otherwise, we don't load it.
+        if (!prefs.isKey(IOA_STORE_KEY) || prefs.getBytesLength(IOA_STORE_KEY) != storeSize) {
             serlogF2(SER_IOA_INFO, "New prefs ", IOA_STORE_KEY);
-            memset(menuStore, 0, size);
+            memset(menuStore, 0, storeSize);
         } else {
-            serlogF2(SER_IOA_INFO, "Load prefs ", IOA_STORE_KEY);
+            reload();
         }
-        if (prefs.getBytes(IOA_STORE_KEY, menuStore, size) != size) {
-            serlogF3(SER_ERROR, "Prefs start failed ", romNameSpace, size);
-            prefsOk = false;
-        }
+        return prefsOk;
     }
 
     ~EspPreferencesEeprom() override {
@@ -58,7 +71,11 @@ public:
         prefsOk = false;
     }
 
-    bool hasErrorOccurred() override { return prefsOk; }
+    /**
+     * Check if an error has occurred during any operation
+     * @return true in the event an error was recorded, otherwise false
+     */
+    bool hasErrorOccurred() override { return !prefsOk; }
 
     uint8_t read8(EepromPosition position) override {
         if (position >= storeSize || !prefsOk) {
@@ -117,9 +134,23 @@ public:
     void commit() {
         if (changed) {
             serlogF2(SER_IOA_INFO, "Prefs written to ", IOA_STORE_KEY);
-            prefs.putBytes(IOA_STORE_KEY, menuStore, sizeof(menuStore));
+            prefs.putBytes(IOA_STORE_KEY, menuStore, storeSize);
         }
         changed = false;
+    }
+
+    /**
+     * Reload the contents of the ROM back into memory, overwriting what's in memory and resetting
+     * the OK flag.
+     */
+    void reload() {
+        serlogF2(SER_IOA_INFO, "Load prefs ", IOA_STORE_KEY);
+        if (prefs.getBytes(IOA_STORE_KEY, menuStore, storeSize) != storeSize) {
+            serlogF3(SER_ERROR, "Prefs load failed ", IOA_STORE_KEY, storeSize);
+            prefsOk = false;
+        } else {
+            prefsOk = true;
+        }
     }
 };
 
