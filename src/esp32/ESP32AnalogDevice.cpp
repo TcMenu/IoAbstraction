@@ -19,7 +19,7 @@
 
 #include <AnalogDeviceAbstraction.h>
 
-EspAnalogInputMode::EspAnalogInputMode(pinid_t pin) : onAdc1(false), adcChannelNum(0xff), pin(pin), attenuation(ADC_ATTEN_DB_11) {}
+EspAnalogInputMode::EspAnalogInputMode(pinid_t pin) : onAdc1(false), adcChannelNum(0xff), pin(pin), attenuation(ADC_ATTEN_DB_12) {}
 
 EspAnalogInputMode::EspAnalogInputMode(const EspAnalogInputMode& other) = default;
 
@@ -49,7 +49,7 @@ void EspAnalogInputMode::pinSetup() {
     // there's a chance that this GPIO may have previously been registered as output, we should
     // ensure that it's initialised as input with no pull up/down.
     if(adcChannelNum != 0xff) {
-        alterPinAttenuation(ADC_ATTEN_DB_11);
+        alterPinAttenuation(ADC_ATTEN_DB_12);
         gpio_config_t config;
         config.intr_type = GPIO_INTR_DISABLE;
         config.mode = GPIO_MODE_INPUT;
