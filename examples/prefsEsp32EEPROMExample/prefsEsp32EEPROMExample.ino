@@ -15,8 +15,8 @@
  *
  * Documentation and reference:
  *
- * https://tcmenu.github.io/documentation/
- * https://tcmenu.github.io/documentation/arduino-libraries/io-abstraction/eeprom-impl-seamless-8-and-32-bit/
+ * hhttps://www.thecoderscorner.com/products/arduino-libraries/
+ * https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/eeprom-impl-seamless-8-and-32-bit/
  */
 
 #include <EepromAbstraction.h>
