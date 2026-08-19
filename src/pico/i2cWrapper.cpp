@@ -38,4 +38,18 @@ bool ioaWireWriteWithRetry(WireType wire, int address, const uint8_t* buffer, si
     return wire->wireWrite(address, buffer, len, retriesAllowed, sendStop);
 }
 
+void SPIWithSettings::waitAndActiveCS() {
+    if(!initializedYet) {
+        init();
+    }
+    int retries = 50;
+    while(spi_is_busy(spiBus) && retries > 0) {
+        retries--;
+        serlogF2(SER_IOA_DEBUG, "SPI busy retries=", retries);
+    }
+
+    internalDigitalDevice().digitalWrite(csPin, LOW);
+    waitABit();
+}
+
 #endif

@@ -21,6 +21,8 @@
 # include "esp32/ESP32DigitalIO.h"
 #elif defined(BUILD_FOR_PICO_CMAKE)
 # include "pico/PicoDigitalIO.h"
+#elif defined(BUILD_FOR_STM32CUBE_CMAKE)
+# include "stmCube/StmCubeDigital.h"
 #else
 # include <Arduino.h>
 #endif //IOA_USE_MBED

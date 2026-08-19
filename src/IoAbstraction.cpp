@@ -9,7 +9,7 @@
 
 #define LATCH_TIME 5
 
-#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE)
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE) || defined(BUILD_FOR_STM32CUBE_CMAKE)
 #if defined(IOA_USE_MBED)
 #include <mbed.h>
 #endif // only for mbed
