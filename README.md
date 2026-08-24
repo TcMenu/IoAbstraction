@@ -27,17 +27,15 @@ Community questions can be asked in the discussions section of this repo, or usi
 
 ## Installation for Arduino IDE
 
-This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependencies, [TaskManagerIO](https://github.com/TcMenu/TaskManagerIO) and [SimpleCollections](https://github.com/TcMenu/SimpleCollections). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
+This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependencies, [TaskManagerIO](https://github.com/TcMenu/TaskManagerIO). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
 
 ## Installation for PlatformIO (Arduino or mbed)
 
-Use the platformIO library manager to get the library. It's called 'IoAbstraction'. It should automatically include "TaskManagerIO" and "SimpleCollections" as it's a dependency.
+Use the platformIO library manager to get the library. It's called 'IoAbstraction'. It should automatically include "TaskManagerIO" as it's a dependency.
 
-## This library is based on TaskManagerIO and SimpleCollections
+## This library is based on TaskManagerIO and TcMenuLog
 
 Take a look at the [TaskManagerIO repo](https://github.com/TcMenu/TaskManagerIO) for more information about how task manager works, this library relies heavily on task manager.
-
-Also, this library uses [SimpleCollections](https://github.com/TcMenu/SimpleCollections) within switches and a few other areas.
 
 ## BasicIoAbstraction - Arduino like interface to pins, PCF8574, PCF8575, MCP23017, AW9523 and shift registers.
 

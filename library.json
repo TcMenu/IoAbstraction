@@ -19,16 +19,13 @@
       "frameworks": "arduino"
     },
     {
-      "name": "SimpleCollections"
-    },
-    {
       "name": "TaskManagerIO"
     },
     {
       "name": "TcMenuLog"
     }
   ],
-  "version": "4.5.3",
+  "version": "5.0.0",
   "license": "Apache-2.0",
   "frameworks": "arduino, mbed",
   "platforms": "*",

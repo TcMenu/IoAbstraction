@@ -3,7 +3,7 @@
  * This product is licensed under an Apache license, see the LICENSE file in the top-level directory.
  */
 
-#ifdef IOA_ENABLE_STM32_HAL_EXTRAS
+#if defined(IOA_ENABLE_STM32_HAL_EXTRAS) || defined(BUILD_FOR_STM32CUBE_CMAKE)
 
 #include <IoLogging.h>
 #include "HalStm32EepromAbstraction.h"

@@ -14,6 +14,7 @@ add_library(IoAbstraction
         ../src/pico/picoAnalogDevice.cpp
         ../src/stmCube/CubeI2cWrapper.cpp
         ../src/stmCube/StmCubeDigital.cpp
+        ../src/mbed/HalStm32EepromAbstraction.cpp
 )
 
 if (BUILD_FOR_STM32CUBE)
@@ -30,8 +31,7 @@ target_include_directories(IoAbstraction PUBLIC
         ../src
 )
 
-target_link_libraries(IoAbstraction PUBLIC
-        SimpleCollections TaskManagerIO)
+target_link_libraries(IoAbstraction PUBLIC TaskManagerIO)
 
 
 # only bring in pico libs when compiling for PicoSDK

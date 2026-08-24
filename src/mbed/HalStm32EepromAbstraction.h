@@ -13,7 +13,7 @@
  *
  * @file HalStm32EepromAbstraction.h
  */
-#if !defined(IOA_HALSTM32EEPROMABSTRACTION_H) && defined(IOA_ENABLE_STM32_HAL_EXTRAS)
+#if !defined(IOA_HALSTM32EEPROMABSTRACTION_H) && (defined(IOA_ENABLE_STM32_HAL_EXTRAS) || defined(BUILD_FOR_STM32CUBE_CMAKE))
 #define IOA_HALSTM32EEPROMABSTRACTION_H
 
 #include "EepromAbstraction.h"
