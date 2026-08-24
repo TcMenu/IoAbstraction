@@ -49,7 +49,7 @@ public:
     StmGpioDesc(StmGpioDesc &&other) = default;
     StmGpioDesc& operator=(const StmGpioDesc &other) = default;
 
-    [[nodiscard]] uint16_t getIoaPin() const { return pinNum; }
+    [[nodiscard]] uint16_t getIoaPin() const { return ioaPin; }
     [[nodiscard]] uint16_t getGpioPin() const { return pinNum; }
     [[nodiscard]] GPIO_TypeDef* getPort() const { return port; }
 

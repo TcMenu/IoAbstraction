@@ -133,6 +133,7 @@ namespace iotouch {
      */
     class TouchInterrogator {
     public:
+        virtual ~TouchInterrogator() = default;
         /**
          * called by the touch screen manager to get the latest touch information.
          * @param ptrX a pointer to be populated with the X position between 0 and 1
