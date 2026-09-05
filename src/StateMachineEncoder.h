@@ -188,7 +188,7 @@ public:
      * register it with switches and taskmanager.
      * @return true if the encoder was successfully built, false otherwise
      */
-    [[nodiscard]] bool build() const;
+    bool build() const; // NOLINT(*-use-nodiscard) because it is not a getter it is optional error handling.
 };
 
 /**
