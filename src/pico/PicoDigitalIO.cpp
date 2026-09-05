@@ -8,7 +8,9 @@
 void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
     gpio_init(pin);
     if(mode == INPUT || mode == INPUT_PULLUP) {
+        
         gpio_set_dir(pin, GPIO_IN);
+        gpio_set_input_hysteresis_enabled(pin, true);
         if(mode == INPUT_PULLUP) gpio_pull_up(pin);
     } else {
         gpio_set_dir(pin, GPIO_OUT);

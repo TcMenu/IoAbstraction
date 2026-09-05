@@ -8,6 +8,7 @@ add_library(IoAbstraction
         ../src/KeyboardManager.cpp
         ../src/ResistiveTouchScreen.cpp
         ../src/SwitchInput.cpp
+        ../src/StateMachineEncoder.cpp
         ../src/wireHelpers.cpp
         ../src/pico/PicoDigitalIO.cpp
         ../src/pico/i2cWrapper.cpp

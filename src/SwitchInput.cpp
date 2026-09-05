@@ -664,15 +664,8 @@ void HwStateRotaryEncoder::encoderChanged() {
         currentEncoderState = stateLimit(currentEncoderState - 1);
         dir = true; // going up
     } else {
-        if(switches.isEncoderPollingEnabled()) {
-            currentEncoderState = -1; // mark invalid, do not output anything
-            return;
-        } else {
-            // here we know that the encoder must go into the next valid state eventually, so we wait
-            // for it to happen, it can either go back or fwd. But given this is interrupt based the
-            // result will be very noisy in-between as the contacts bounce.
-            return;
-        }
+        currentEncoderState = -1; // mark invalid, do not output anything
+        return;
     }
 
     // output the state change if needed
@@ -727,23 +720,24 @@ void registerInterrupt(pinid_t pin) {
 	taskManager.addInterrupt(switches.getIoAbstraction(), pin, CHANGE);
 }
 
+static bool tm_switchUseHwSmEnc = true;
+void switchesDoNotUseStateMachineEncoder() {
+    tm_switchUseHwSmEnc = false;
+}
+
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) {
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
-    switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
+    if (switches.getIoAbstraction() == internalDigitalIo() && tm_switchUseHwSmEnc) {
+        serlogF3(SER_IOA_INFO, "Create statemachine encoder", pinA, pinB);
+        switches.setEncoder(new HwStateRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
+    } else {
+        serlogF3(SER_IOA_INFO, "Create fallback hardware encoder", pinA, pinB);
+        switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
+    }
 }
 
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode, EncoderType encoderType) {
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
     switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, listener, accelerationMode, encoderType));
-}
-
-void setupStateMachineRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) {
-    if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
-    switches.setEncoder(new HwStateRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
-}
-
-void setupStateMachineRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode, EncoderType encoderType) {
-    if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
-    switches.setEncoder(new HwStateRotaryEncoder(pinA, pinB, listener, accelerationMode, encoderType));
 }
 

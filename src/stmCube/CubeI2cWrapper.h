@@ -6,6 +6,8 @@
 #include <IoAbstraction.h>
 #define TC_TIMEOUT_UINT_MS 1000
 
+#ifndef IO_DISABLE_STMI2C
+
 class CubeI2cWrapper {
 private:
     I2C_HandleTypeDef* i2cHandle = nullptr;
@@ -17,6 +19,17 @@ public:
     bool wireRead(uint8_t addr, uint8_t *dst, size_t len) const;
     bool wireWrite(uint8_t addr, const uint8_t *dst, size_t len, int retries, bool sendStop) const;
 };
+
+typedef CubeI2cWrapper* WireType;
+void ioaWireBegin(I2C_HandleTypeDef* handleI2c);
+#else
+
+typedef void* WireType;
+void ioaWireBegin(WireType* handleI2c);
+
+#endif
+
+#ifndef IO_DISABLE_STMSPI
 
 class SPIWithSettings {
 private:
@@ -60,15 +73,6 @@ public:
     }
 };
 
-void SPIWithSettings::waitAndActiveCS() {
-    int retries = 50;
-    while(HAL_SPI_GetState(spiBus) != HAL_SPI_STATE_READY && retries > 0) {
-        retries--;
-        serlogF2(SER_IOA_DEBUG, "SPI busy retries=", retries);
-    }
-
-    internalDigitalDevice().digitalWrite(csPin, LOW);
-    waitABit();
-}
+#endif
 
 #endif

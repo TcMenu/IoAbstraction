@@ -82,6 +82,12 @@ enum KeyPressState : uint8_t {
 #define KEY_LOGIC_IS_INVERTED 6
 
 /**
+ * If you don't want to use the hardware state machine encoder (mainly if you see issues with it in testing) then
+ * call this function before calling setupRotaryEncoderWithInterrupt(...) or setupRotaryEncoderWithStateMachine(...)
+ */
+void switchesDoNotUseStateMachineEncoder();
+
+/**
  * Used to register a class that has an interest in the state of a switch.
  * Implement the two virtual functions that will be called back
  * instead of the KeyCallbackFn callback function. This is generally passed
@@ -760,40 +766,6 @@ private:
  * This is the global switch input variable. Do not create other instances of this class.
  */
 extern SwitchInput switches;
-
-/**
- * Initialise a hardware rotary encoder on the pins passed in, when the value changes the callback function
- * will be called. This library will set pinA and pinB to INPUT_PULLUP, and debounces internally. In most
- * cases no additional components are needed. This function automatically adds the encoder to the global
- * switches instance. This uses the state machine encoder, which is presently in BETA at best.
- *
- * @param pinA the first pin of the encoder, this pin must handle interrupts.
- * @param pinB the third pin of the encoder, the middle pin goes to ground.
- * @param callback the function that will receive the new state of the encoder on changes.
- * @param accelerationMode the mode of acceleration to use
- * @param encoderType the type of encoder being used
- */
-void setupStateMachineRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
-
-/**
- * Initialise a hardware rotary encoder on the pins passed in, when the value changes the OO listener
- * will be invoked. This library will set pinA and pinB to INPUT_PULLUP, and debounces internally. In most
- * cases no additional components are needed. This function automatically adds the encoder to the global
- * switches instance. This uses the state machine encoder, which is presently in BETA at best.
- *
- * Essentially this does:
- *
- * 	    auto* enc = new EncoderUpDownButtons(pinUp, pinDown, callback);
- *	    switches.setEncoder(0, enc);
- *
- * @param pinA the first pin of the encoder, this pin must handle interrupts.
- * @param pinB the third pin of the encoder, the middle pin goes to ground.
- * @param listener the function that will receive the new state of the encoder on changes.
- * @param accelerationMode the mode of acceleration to use
- * @param encoderType the type of encoder being used
- */
-void setupStateMachineRotaryEncoder(pinid_t pinA, pinid_t pinB, EncoderListener* listener, HWAccelerationMode accelerationMode = HWACCEL_REGULAR, EncoderType encoderType = FULL_CYCLE);
-
 
 /**
  * Initialise a hardware rotary encoder on the pins passed in, when the value changes the callback function
