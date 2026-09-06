@@ -15,8 +15,14 @@
 #ifndef IOA_STATEMACHINE_ENCODER_H
 #define IOA_STATEMACHINE_ENCODER_H
 
+#include <TaskPlatformDeps.h>
 #include "PlatformDetermination.h"
 #include "SwitchInput.h"
+
+//
+// DO NOT REMOVE THE ISR_ATTR and DRAM_ATTR ANNOTATIONS
+//
+
 
 /**
  * The supported interrupt modes, note that `NONE` is not supported and a form of interrupt must be provided.
@@ -36,7 +42,7 @@ enum class EncoderInterruptMode {
  * When in timer mode, IE you're responsible for configuring the timer interrupt (or regular interrupts on pins A and B)
  * then you must call this method from your timer interrupt handler.
  */
-void encoderInterruptHandler();
+ISR_ATTR void encoderInterruptHandler();
 
 /**
  * Builder class for configuring a state machine based rotary encoder with various options such as pins, callbacks,

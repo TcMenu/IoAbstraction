@@ -1,5 +1,9 @@
 #include "StateMachineEncoder.h"
 
+//
+// DO NOT REMOVE THE ISR_ATTR and DRAM_ATTR ANNOTATIONS
+//
+
 using namespace tm_internal;
 
 #ifndef STANDARD_DELAY_BETWEEN_CHECKS
@@ -9,8 +13,12 @@ using namespace tm_internal;
 namespace {
     // 16-element Gray code state transition table
     // Maps 4-bit index ((oldState << 2) | newState) to -1 (CCW), 0 (invalid/no-change), +1 (CW)
+#if defined(ESP32) || defined(ESP8266)
+    static const DRAM_ATTR int8_t encoderTable[16] = {
+#else
     constexpr int8_t encoderTable[16] = {
-         0, -1,  1,  0,
+#endif
+        0, -1,  1,  0,
          1,  0,  0, -1,
         -1,  0,  0,  1,
          0,  1, -1,  0
@@ -59,7 +67,7 @@ namespace {
     public:
         explicit FastPinReader(pinid_t p) : pin(p) {}
 
-        inline uint8_t operator*() const {
+        inline ISR_ATTR uint8_t operator*() const {
 #if defined(TEENSYDUINO)
             return digitalReadFast(pin);
 #elif defined(PICO_SDK_VERSION_MAJOR) || defined(BUILD_FOR_PICO_CMAKE)
@@ -115,7 +123,7 @@ namespace {
         InterruptSafeStateRotaryEncoder(const InterruptSafeStateRotaryEncoder&&) = delete;
         InterruptSafeStateRotaryEncoder& operator=(const InterruptSafeStateRotaryEncoder&) = delete;
 
-        void interruptCallback();
+        ISR_ATTR void interruptCallback();
 
         void exec() override {
             // get the most recent value and make sure the encoder is not currently turning.
@@ -141,7 +149,7 @@ namespace {
          }
     };
 
-    void InterruptSafeStateRotaryEncoder::interruptCallback() {
+    ISR_ATTR void InterruptSafeStateRotaryEncoder::interruptCallback() {
         const uint8_t a = *pinA;
         const uint8_t b = *pinB;
         const uint8_t newState = ((a << 1) | b) & 0x03;
@@ -177,7 +185,7 @@ namespace {
 
 static InterruptSafeStateRotaryEncoder* pEncoderIntSafe = nullptr;
 
-void encoderInterruptHandler() {
+ISR_ATTR void encoderInterruptHandler() {
     if (pEncoderIntSafe != nullptr) {
         pEncoderIntSafe->interruptCallback();
     }
