@@ -96,16 +96,17 @@ namespace {
         int8_t subStepCount = 0;
         uint8_t lastRawState = 0;
         EncoderType encoderType = EncoderType::FULL_CYCLE;
-        position_t interruptValue = 0;
+        position_t interruptValue;
 
     public:
         InterruptSafeStateRotaryEncoder(const pinid_t pinA, const pinid_t pinB, EncoderType encType, EncoderCallbackFn cb)
-                : encoder(cb), pinA(pinA), pinB(pinB), encoderType(encType) {
+                : encoder(cb), pinA(pinA), pinB(pinB), encoderType(encType), interruptValue(0) {
             lastRawState = ((*this->pinA << 1) | *this->pinB) & 0x03;
+
         }
 
         InterruptSafeStateRotaryEncoder(const pinid_t pinA, const pinid_t pinB, EncoderType encType, EncoderListener* ls)
-                : encoder(ls), pinA(pinA), pinB(pinB), encoderType(encType) {
+                : encoder(ls), pinA(pinA), pinB(pinB), encoderType(encType), interruptValue(0) {
             lastRawState = ((*this->pinA << 1) | *this->pinB) & 0x03;
         }
 
@@ -119,7 +120,7 @@ namespace {
         void exec() override {
             // get the most recent value and make sure the encoder is not currently turning.
             auto intVal = static_cast<int32_t>(atomicRead32(&interruptValue));
-            while (!atomicSwap32(&interruptValue, intVal, 0)) {
+            while (!atomicSwap32(&interruptValue, static_cast<uint32_t>(intVal), static_cast<uint32_t>(0))) {
                 intVal = static_cast<int32_t>(atomicRead32(&interruptValue));
             }
 
@@ -158,14 +159,14 @@ namespace {
             if (subStepCount >= requiredSubSteps) {
                 subStepCount = 0;
                 auto intVal = static_cast<int32_t>(atomicRead32(&interruptValue));
-                while (!atomicSwap32(&interruptValue, intVal, intVal + 1)) {
+                while (!atomicSwap32(&interruptValue, static_cast<uint32_t>(intVal), static_cast<uint32_t>(intVal) + 1)) {
                     intVal = static_cast<int32_t>(atomicRead32(&interruptValue));
                 }
                 markTriggeredAndNotify();
             } else if (subStepCount <= -requiredSubSteps) {
                 subStepCount = 0;
                 auto intVal = static_cast<int32_t>(atomicRead32(&interruptValue));
-                while (!atomicSwap32(&interruptValue, intVal, intVal - 1)) {
+                while (!atomicSwap32(&interruptValue, static_cast<uint32_t>(intVal), static_cast<uint32_t>(intVal) - 1)) {
                     intVal = static_cast<int32_t>(atomicRead32(&interruptValue));
                 }
                 markTriggeredAndNotify();
