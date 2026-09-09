@@ -16,7 +16,7 @@
 #endif // has include "io_local_definitions"
 
 // when not on mbed, we need to load Arduino.h to get the right defines for some boards.
-#if !defined(__MBED__) && !defined(BUILD_FOR_PICO_CMAKE) && !defined(BUILD_FOR_STM32CUBE_CMAKE)
+#if !defined(__MBED__) && !defined(BUILD_FOR_PICO_CMAKE) && !defined(BUILD_FOR_STM32CUBE_CMAKE) && !defined(BUILD_FOR_NATIVE_PLATFORM)
 #include <Arduino.h>
 #endif
 
@@ -64,6 +64,10 @@ typedef uint32_t pinid_t;
 typedef uint8_t pinid_t;
 #define pgm_read_byte_near(x) (*(x))
 #elif defined(BUILD_FOR_STM32CUBE_CMAKE)
+#include <TaskPlatformDeps.h>
+typedef uint32_t pinid_t;
+#define pgm_read_byte_near(x) (*(x))
+#elif defined (BUILD_FOR_NATIVE_PLATFORM)
 #include <TaskPlatformDeps.h>
 typedef uint32_t pinid_t;
 #define pgm_read_byte_near(x) (*(x))

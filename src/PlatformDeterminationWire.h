@@ -30,6 +30,8 @@ typedef PicoI2cWrapper* WireType;
 void ioaWireBegin(i2c_inst_t* toUse);
 #elif defined(BUILD_FOR_STM32CUBE_CMAKE)
 #include "stmCube/CubeI2cWrapper.h"
+#elif defined(BUILD_FOR_NATIVE_PLATFORM)
+#include "testing/TestWire.h"
 #else
 # define IOA_USE_ARDUINO_WIRE
 #include <Wire.h>

@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <unity.h>
 
 void testMockEeprom();
@@ -13,9 +12,16 @@ void testChangingCallbacks();
 void testChangingFromCallbackToListener();
 void testChangingFromListenerToCallback();
 
-void setup() {
-    Serial.begin(115200);
 
+void setUp() {
+
+}
+
+void tearDown() {
+
+}
+
+int main(int argc, char* argv[]) {
     UNITY_BEGIN();
 
     RUN_TEST(testMockEeprom);
@@ -31,9 +37,5 @@ void setup() {
     RUN_TEST(testChangingFromCallbackToListener);
     RUN_TEST(testChangingFromListenerToCallback);
 
-    UNITY_END();
-}
-
-void loop () {
-
+    return UNITY_END();
 }

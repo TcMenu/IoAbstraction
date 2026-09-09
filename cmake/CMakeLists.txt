@@ -16,11 +16,16 @@ add_library(IoAbstraction
         ../src/stmCube/CubeI2cWrapper.cpp
         ../src/stmCube/StmCubeDigital.cpp
         ../src/mbed/HalStm32EepromAbstraction.cpp
+        ../src/testing/TestDigitalIO.cpp
 )
 
 if (BUILD_FOR_STM32CUBE)
     target_compile_definitions(IoAbstraction
             PUBLIC BUILD_FOR_STM32CUBE_CMAKE=1 IO_LOGGING_DEBUG=1
+    )
+elseif (BUILD_NATIVE_TESTS)
+    target_compile_definitions(IoAbstraction
+            PUBLIC BUILD_FOR_NATIVE_PLATFORM=1 IO_LOGGING_DEBUG=1
     )
 else ()
     target_compile_definitions(IoAbstraction
@@ -43,3 +48,18 @@ elseif (TARGET stm32cubemx)
     message("IoAbstraction Build is stm32cube adding stm32cubemx")
     target_link_libraries(IoAbstraction PUBLIC stm32cubemx)
 endif()
+
+if (BUILD_NATIVE_TESTS)
+    get_unity_if_needed()
+    add_executable(test_ioa_core
+            ../test/test_ioa_core/ioaCoreTests.cpp
+            ../test/test_ioa_core/ioDeviceTests.cpp
+            ../test/test_ioa_core/negatingIoAbstractionTests.cpp
+            ../test/test_ioa_core/switchesTests.cpp
+            ../test/test_ioa_core/test_main.cpp
+    )
+
+    target_link_libraries(IoAbstraction PUBLIC)
+    target_link_libraries(test_ioa_core PRIVATE unity TcMenuLog TaskManagerIO IoAbstraction)
+    add_test(NAME test_ioa_core COMMAND test_ioa_core)
+endif ()

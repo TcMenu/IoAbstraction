@@ -18,7 +18,7 @@
 
 #define SHIFT_REGISTER_OUTPUT_CUTOVER 32
 
-#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE) || defined(BUILD_FOR_STM32CUBE_CMAKE)
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE) || defined(BUILD_FOR_STM32CUBE_CMAKE) || defined(BUILD_FOR_NATIVE_PLATFORM)
 #if defined(IOA_USE_MBED)
 #include <mbed.h>
 #endif
@@ -219,6 +219,8 @@ typedef uint8_t (*ExpanderOpFn)(IoAbstractionRef ref, uint8_t pin, uint8_t val);
  * and append the additional IO devices during setup. In order to pass such a varable to
  * the ioDevice functions, such as ioDeviceDigitalRead you must put an ampersand in front
  * of the variable to make it into a pointer.
+ *
+ * Note that it is your responsibility to clean up the delegates added to the MultiIoAbstraction.
  */
 class MultiIoAbstraction : public BasicIoAbstraction {
 private:
@@ -227,7 +229,7 @@ private:
 	uint8_t numDelegates;
 public:
 	explicit MultiIoAbstraction(pinid_t arduinoPinsNeeded = 100);
-	~MultiIoAbstraction() override;
+	~MultiIoAbstraction() =default;
 	void addIoExpander(IoAbstractionRef expander, pinid_t numOfPinsNeeded);
 	void addIoDevice(BasicIoAbstraction& expander, pinid_t pinsNeeded) { addIoExpander(&expander, pinsNeeded);}
 

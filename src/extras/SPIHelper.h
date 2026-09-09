@@ -51,6 +51,8 @@ public:
 #include "../stmCube/CubeI2cWrapper.h"
 #elif __MBED__
 #include "../mbed/mbedSpi.h"
+#elif BUILD_FOR_NATIVE_PLATFORM
+#include "../testing/TestWire.h"
 #else
 #error "Not implemented yet for chosen platform"
 #endif

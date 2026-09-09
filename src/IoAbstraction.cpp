@@ -9,7 +9,7 @@
 
 #define LATCH_TIME 5
 
-#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE) || defined(BUILD_FOR_STM32CUBE_CMAKE)
+#if defined(IOA_USE_MBED) || defined(BUILD_FOR_PICO_CMAKE) || defined(BUILD_FOR_STM32CUBE_CMAKE) || defined(BUILD_FOR_NATIVE_PLATFORM)
 #if defined(IOA_USE_MBED)
 #include <mbed.h>
 #endif // only for mbed
@@ -291,13 +291,6 @@ MultiIoAbstraction::MultiIoAbstraction(pinid_t arduinoPinsNeeded) {
 	limits[0] = arduinoPinsNeeded;
 	delegates[0] = internalDigitalIo();
 	numDelegates = 1;
-}
-
-MultiIoAbstraction::~MultiIoAbstraction() {
-	// delegates added are our responsibility to clean up
-	for(uint8_t i=0; i<numDelegates; ++i) {
-		delete delegates[i];
-	}
 }
 
 void MultiIoAbstraction::addIoExpander(IoAbstractionRef expander, pinid_t numOfPinsNeeded) {
