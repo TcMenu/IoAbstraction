@@ -1,4 +1,8 @@
 
+#ifndef IOA_TEST_WIRE_H
+#define IOA_TEST_WIRE_H
+#include <vector>
+
 struct DataPacket {
     char data[32] = {};
     size_t len;
@@ -48,3 +52,5 @@ public:
     }
 };
 typedef MockI2cWrapper* WireType;
+
+#endif
