@@ -2,6 +2,7 @@
 #ifndef IOA_TEST_WIRE_H
 #define IOA_TEST_WIRE_H
 #include <vector>
+#include <cstring>
 
 struct DataPacket {
     char data[32] = {};
