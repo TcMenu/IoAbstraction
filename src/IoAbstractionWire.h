@@ -21,6 +21,7 @@
 #include "PlatformDeterminationWire.h"
 #include "IoAbstraction.h"
 #include "AnalogDeviceAbstraction.h"
+#include <math.h>
 
 /**
  * An implementation of BasicIoAbstraction that supports the PCF8574/PCF8575 i2c IO chip. Providing all possible capabilities
