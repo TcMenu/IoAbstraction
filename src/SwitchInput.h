@@ -82,10 +82,11 @@ enum KeyPressState : uint8_t {
 #define KEY_LOGIC_IS_INVERTED 6
 
 /**
- * If you don't want to use the hardware state machine encoder (mainly if you see issues with it in testing) then
- * call this function before calling setupRotaryEncoderWithInterrupt(...) or setupRotaryEncoderWithStateMachine(...)
+ * We recommend the newer interrupt based state machine encoder for all new designs, but you can also
+ * enable a half way house if you have interrupts at least on pin A. It is not enabled by default because
+ * if you have an interrupt pin the newer state machine encoder is preferred.
  */
-void switchesDoNotUseStateMachineEncoder();
+void switchesEnableLegacyStateEncoder();
 
 /**
  * Used to register a class that has an interest in the state of a switch.

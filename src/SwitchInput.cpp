@@ -720,18 +720,20 @@ void registerInterrupt(pinid_t pin) {
 	taskManager.addInterrupt(switches.getIoAbstraction(), pin, CHANGE);
 }
 
-static bool tm_switchUseHwSmEnc = true;
-void switchesDoNotUseStateMachineEncoder() {
-    tm_switchUseHwSmEnc = false;
+static bool tm_switchUseHwSmEnc = false;
+void switchesEnableLegacyStateEncoder() {
+    tm_switchUseHwSmEnc = true;
 }
 
 void setupRotaryEncoderWithInterrupt(pinid_t pinA, pinid_t pinB, EncoderCallbackFn callback, HWAccelerationMode accelerationMode, EncoderType encoderType) {
 	if (switches.getIoAbstraction() == nullptr) switches.init(internalDigitalIo(), SWITCHES_POLL_EVERYTHING, true);
-    if (switches.getIoAbstraction() == internalDigitalIo() && tm_switchUseHwSmEnc) {
-        serlogF3(SER_IOA_INFO, "Create statemachine encoder", pinA, pinB);
+    bool pollingEncoder = switches.isEncoderPollingEnabled();
+    // to use the state based encoder we must have interrupts enabled, be on internal IO, and turned it on.
+    if (switches.getIoAbstraction() == internalDigitalIo() && tm_switchUseHwSmEnc && !pollingEncoder) {
+        serlogF3(SER_IOA_INFO, "Statemachine encoder", pinA, pinB);
         switches.setEncoder(new HwStateRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
     } else {
-        serlogF3(SER_IOA_INFO, "Create fallback hardware encoder", pinA, pinB);
+        serlogF3(SER_IOA_INFO, "Fallback encoder", pinA, pinB);
         switches.setEncoder(new HardwareRotaryEncoder(pinA, pinB, callback, accelerationMode, encoderType));
     }
 }
