@@ -61,6 +61,9 @@ void onSwitchPressed(uint8_t key, bool held) {
 // traditional arduino setup function
 //
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Wire.begin();
     Serial.begin(115200);
 

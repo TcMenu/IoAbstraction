@@ -72,6 +72,9 @@ void onEncoderChange(int encoderValue) {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     // This example logs using IoLogging, see the following guide to enable
     // https://www.thecoderscorner.com/products/arduino-libraries/io-abstraction/arduino-logging-with-io-logging/
     IOLOG_START_SERIAL

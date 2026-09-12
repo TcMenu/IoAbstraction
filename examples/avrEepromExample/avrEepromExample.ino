@@ -34,6 +34,9 @@ ArduinoEEPROMAbstraction eepromWrapper(&EEPROM);
 const char strData[15] = { "Hello EEPROM"};
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
 	Serial.begin(115200);
 	while(!Serial);
 

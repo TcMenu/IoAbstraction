@@ -78,6 +78,9 @@ void keyReleased(pinid_t key, bool held) {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
 
     // This is configured for ESP32 but choose the right version for your board

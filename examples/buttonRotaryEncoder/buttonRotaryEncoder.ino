@@ -62,6 +62,8 @@ void onEncoderChange(int newValue) {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
 
     Serial.begin(115200);
     Serial.println("Starting rotary encoder example");

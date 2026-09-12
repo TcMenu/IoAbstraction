@@ -114,6 +114,9 @@ public:
 
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     // do an initial painting
     paintEvent.markTriggeredAndNotify();
 

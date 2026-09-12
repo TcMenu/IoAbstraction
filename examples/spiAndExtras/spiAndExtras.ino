@@ -11,6 +11,9 @@ SPIWithSettings spiWithSettings(&SPI, VOLUME_CS_PIN);
 Pga2310VolumeControl volumeControl(spiWithSettings);
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
     volumeControl.initPin(0, DIR_OUT);
     volumeControl.initPin(1, DIR_OUT);

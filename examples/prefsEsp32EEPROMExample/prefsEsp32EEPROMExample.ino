@@ -34,6 +34,9 @@ void printErrorState() {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
 
     Serial.println("Prefs Eeprom example starting");

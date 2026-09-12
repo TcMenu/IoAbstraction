@@ -32,6 +32,9 @@ int ledOn = LOW;
 // create an IO abstraction, so later we could put the led on a shift register or i2c.
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
     Serial.println("1");
 	// set the pin we are to use as output using the io abstraction

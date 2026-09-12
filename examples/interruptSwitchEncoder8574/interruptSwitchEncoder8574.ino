@@ -119,6 +119,9 @@ public:
 } encoderChangeListener;
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.println("Starting interrupt switch PCF8574 example now");
 
     // Before doing anything else, we must initialise the wire and serial libraries, as we are using both.

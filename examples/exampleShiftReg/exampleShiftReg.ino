@@ -27,6 +27,9 @@ ShiftRegisterIoAbstraction shiftRegister(
 //ShiftRegisterIoAbstraction165In shiftIn74hc165(ShiftRegConfig(READ_CLOCK_PIN, READ_DATA_PIN, READ_LATCH_PIN, 1));
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
 	// although not technically needed for the shift register we should always call pinDirection
 	// as it makes it possible to switch in future to either use arduino direct or IO expander.
 

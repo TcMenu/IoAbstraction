@@ -95,6 +95,9 @@ void initialiseKeyboard3X4ForPollingDevicePins() {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     while(!Serial);
     Serial.begin(115200);
 

@@ -34,6 +34,9 @@ I2cAt24Eeprom anEeprom(0x50, PAGESIZE_AT24C128);
 const char strData[100] = { "This is a quite long string that should need to be handled in many parts with wait states"};
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
 	Serial.begin(115200);
 	while(!Serial);
 

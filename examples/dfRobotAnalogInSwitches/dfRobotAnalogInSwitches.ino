@@ -60,6 +60,9 @@ public:
 MyKeyListener selectKeyListener("SELECT");
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     // start up the serial port in a way compatible with 32 bit boards.
     while(!Serial);
     Serial.begin(115200);

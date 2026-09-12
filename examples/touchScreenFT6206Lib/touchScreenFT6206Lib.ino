@@ -85,6 +85,9 @@ public:
 ValueStoringResistiveTouchScreen touchScreen(interrogator, TouchOrientationSettings(false, true, true));
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
 
     // depending on your board, adjust as needed.

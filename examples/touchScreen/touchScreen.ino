@@ -46,6 +46,9 @@ Adafruit_ILI9341 gfx(MY_CS, MY_DC);
 int oldX = 0, oldY = 0;
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
     // step 1. run with calibration off and get the actual min and max values if corrections need to be made
     // step 2. put the corrections into the value below, xmin, xmax, ymin, ymax and try the program again.

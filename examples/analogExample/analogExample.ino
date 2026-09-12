@@ -47,6 +47,9 @@ float ledCycleAdj = 0.01;
 
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
 
     // set up the device pin directions upfront.

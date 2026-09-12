@@ -32,6 +32,9 @@ void onEncoderChange(int newValue) {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
 
     // MKR boards require the line below to wait for the serial port, uncomment if needed

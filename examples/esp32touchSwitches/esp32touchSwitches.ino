@@ -101,6 +101,9 @@ void setupForEncoder() {
 }
 
 void setup() {
+    // always initialise the task manager atomics before anything else.
+    tmInitAtomics();
+
     Serial.begin(115200);
     touchKeys.setTouchTriggerMode(TOUCH_TRIGGER_BELOW);
 
