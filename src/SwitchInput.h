@@ -756,6 +756,7 @@ public:
 	 * @param interval the new interval - see add switch
 	 */
 	void setRepeatInterval(pinid_t pin, uint8_t interval);
+    void ensureInitialized();
 
 private:
     bool internalAddSwitch(pinid_t pin, bool invertLogic);

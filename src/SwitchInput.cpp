@@ -182,8 +182,12 @@ void SwitchInput::setRepeatInterval(pinid_t pin, uint8_t interval) {
 	}
 }
 
+void SwitchInput::ensureInitialized() {
+    if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
+}
+
 bool SwitchInput::internalAddSwitch(pinid_t pin, bool invertLogic) {
-	if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
+	ensureInitialized();
 
 	ioDevice->pinMode(pin, isPullupLogic(invertLogic) ? INPUT_PULLUP : INPUT);
 
@@ -195,7 +199,7 @@ bool SwitchInput::internalAddSwitch(pinid_t pin, bool invertLogic) {
 }
 
 void SwitchInput::onRelease(pinid_t pin, KeyCallbackFn callbackOnRelease) {
-	if (ioDevice == nullptr) initialise(internalDigitalIo(), true);
+	ensureInitialized();
 
 	auto keyItem = keys.getByKey(pin);
 	if(keyItem) {
