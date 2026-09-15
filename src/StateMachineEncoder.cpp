@@ -13,8 +13,10 @@ using namespace tm_internal;
 namespace {
     // 16-element Gray code state transition table
     // Maps 4-bit index ((oldState << 2) | newState) to -1 (CCW), 0 (invalid/no-change), +1 (CW)
-#if defined(ESP32) || defined(ESP8266)
+#if defined(ESP32)
     static const DRAM_ATTR int8_t encoderTable[16] = {
+#elif defined(ESP8266)
+    static const int8_t encoderTable[16] = {
 #else
     constexpr int8_t encoderTable[16] = {
 #endif
