@@ -9,7 +9,7 @@
 
 #include "ESP32AnalogDevice.h"
 #include "IoLogging.h"
-#include <SimpleCollections.h>
+
 #if __has_include(<driver/dac.h>)
 #include <driver/dac.h>
 #define ESP_HAS_DAC
