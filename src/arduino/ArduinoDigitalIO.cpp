@@ -32,13 +32,13 @@ void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHan
 
 
 void BasicIoAbstraction::writePort(pinid_t port, uint8_t portVal) {
-#ifndef IOA_ARDUINO_MBED
+#if !defined(IOA_ARDUINO_MBED) && !defined(__ZEPHYR__)
 	*portOutputRegister(digitalPinToPort(port)) = portVal;
 #endif
 }
 
 uint8_t BasicIoAbstraction::readPort(pinid_t port) {
-#ifndef IOA_ARDUINO_MBED
+#if !defined(IOA_ARDUINO_MBED) && !defined(__ZEPHYR__)
 	return *portInputRegister(digitalPinToPort(port));
 #else
     return 0;

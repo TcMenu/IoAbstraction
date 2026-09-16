@@ -37,7 +37,7 @@
 # define IOA_ANALOGIN_RES 12
 # define IOA_ANALOGOUT_RES 10
 typedef uint8_t pinid_t;
-#elif defined(ARDUINO_NANO_RP2040_CONNECT) || \
+#elif (defined(__MBED__) || defined(ARDUINO_ARCH_MBED) || defined(TMIOA_FORCE_ARDUINO_MBED)) && (defined(ARDUINO_NANO_RP2040_CONNECT) || \
     defined(ARDUINO_ARDUINO_NANO33BLE) || \
     defined(ARDUINO_RASPBERRY_PI_PICO) || \
     defined(ARDUINO_PORTENTA_H7_M7) || \
@@ -46,7 +46,7 @@ typedef uint8_t pinid_t;
     defined(ARDUINO_NICLA) || \
     defined(ARDUINO_NICLA_VISION) || \
     defined(TMIOA_FORCE_ARDUINO_MBED) || \
-    defined(ARDUINO_ARCH_MBED)
+    defined(ARDUINO_ARCH_MBED))
 // here we're in a hybrid of mbed and Arduino basically. We treat all abstractions as Arduino though.
 #include <Arduino.h>
 # define IOA_USE_ARDUINO

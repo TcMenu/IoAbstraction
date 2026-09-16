@@ -78,10 +78,11 @@ namespace {
             return (pin < 32)
                        ? ((REG_READ(GPIO_IN_REG) >> pin) & 0x1)
                        : ((REG_READ(GPIO_IN1_REG) >> (pin - 32)) & 0x1);
-#elif !defined(__MBED__)
+#elif !defined(IOA_USE_MBED)
             // on STM32Cube and R4 this is highly optimized, but this works everywhere as well.
             return internalDigitalIo()->readValue(pin);
 #else
+#warning "Hardware rotary encoder not implemented for this platform."
             return 0; // not supported on MBED
 #endif
         }
