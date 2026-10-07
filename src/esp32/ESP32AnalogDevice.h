@@ -6,7 +6,7 @@
 #if !defined(IOA_ESP32ANALOGDEVICE_H) && defined(ESP32)
 #define IOA_ESP32ANALOGDEVICE_H
 
-#include <BtreeList.h>
+#include <BTreeList.h>
 #include <AnalogDeviceAbstraction.h>
 #include <driver/adc.h>
 

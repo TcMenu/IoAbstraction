@@ -20,16 +20,9 @@ jobs:
           - examples/ioLogging/ioLogging.ino
           - examples/joystickRotaryEncoder/joystickRotaryEncoder.ino
           - examples/matrixKeyboard/matrixKeyboard.ino
-          # MBED
-          # - examples/mbed/mbedExample
-          # - examples/mbed/mbedShiftReg
           - examples/mpr121Example/mpr121Example.ino
           - examples/multiIoExample/multiIoExample.ino
           - examples/rotaryEncoderLed23017/rotaryEncoderLed23017.ino
-          # FIXME: Unknown type HardwareSPI
-          # - examples/spiAndExtras/spiAndExtras.ino
-          # STM
-          # - examples/stm32HalTestRom/stm32HalTestRom.cpp
           - examples/timedBlink/timedBlink.ino
           - examples/touchScreen/touchScreen.ino
         include:
