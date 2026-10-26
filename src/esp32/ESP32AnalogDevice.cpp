@@ -169,7 +169,7 @@ volatile int espTouchIntCount = 0;
 
 void esp32TouchKeyInterruptHandler(void* touchAbsAsVoid) {
     TaskManager::markInterrupted(0);
-    espTouchIntCount++;
+    espTouchIntCount = espTouchIntCount + 1;
 }
 
 #endif

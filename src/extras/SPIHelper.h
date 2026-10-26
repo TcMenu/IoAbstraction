@@ -45,6 +45,8 @@ public:
         return true;
     }
 };
+#elif BUILD_FOR_ESP32_IDF
+#include "../esp32/ESP32I2cSpi.h"
 #elif BUILD_FOR_PICO_CMAKE
 #include "../pico/i2cWrapper.h"
 #elif BUILD_FOR_STM32CUBE_CMAKE

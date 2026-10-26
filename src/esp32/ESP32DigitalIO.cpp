@@ -7,8 +7,11 @@
 #include "PlatformDetermination.h"
 #include "BasicIoAbstraction.h"
 
-#if defined(IOA_USE_ARDUINO) && defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
+#if (defined(IOA_USE_ARDUINO) && defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)) || defined(BUILD_FOR_ESP32_IDF)
 
+#if defined(BUILD_FOR_ESP32_IDF)
+#include "driver/gpio.h"
+#endif
 
 BasicIoAbstraction internalIoAbstraction;
 
@@ -58,10 +61,10 @@ void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHan
         const auto defaultFlags = 0;
         if(ESP_OK == gpio_install_isr_service(defaultFlags)) {
             esp32InterruptDriverLoaded = true;
-            serlogF(SER_IOA_INFO, "Interrupt driver loaded");
+            serlogF(SER_IOA_INFO, "INTdrv OK");
         }
         else {
-            serlogF(SER_ERROR, "Interrupt driver did not load");
+            serlogF(SER_ERROR, "!INTdrv");
         }
     }
     auto gpioRef = static_cast<gpio_num_t>(pin);
@@ -69,8 +72,7 @@ void BasicIoAbstraction::attachInterrupt(pinid_t pin, RawIntHandler interruptHan
     bool ok = gpio_set_intr_type(gpioRef, espIntMode) == ESP_OK;
     ok = ok && gpio_isr_handler_add(gpioRef, rawCbHandler, (void*)interruptHandler) == ESP_OK;
 
-    serlogF4(SER_ERROR, "Interrupt add for pin ", pin, mode, ok);
-    serlogF2(SER_ERROR, "reg ", (long)interruptHandler);
+    serlogF4(SER_IOA_DEBUG, "INTadd pin ", pin, mode, ok);
 
 }
 

@@ -17,7 +17,7 @@
 
 #if defined(IOA_USE_MBED)
 # include "mbed/MbedDigitalIO.h"
-#elif defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS)
+#elif defined(ESP32) && defined(IOA_USE_ESP32_EXTRAS) || defined(BUILD_FOR_ESP32_IDF)
 # include "esp32/ESP32DigitalIO.h"
 #elif defined(BUILD_FOR_PICO_CMAKE)
 # include "pico/PicoDigitalIO.h"

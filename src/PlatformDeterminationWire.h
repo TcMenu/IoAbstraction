@@ -32,6 +32,10 @@ void ioaWireBegin(i2c_inst_t* toUse);
 #include "stmCube/CubeI2cWrapper.h"
 #elif defined(BUILD_FOR_NATIVE_PLATFORM)
 #include "testing/TestWire.h"
+#elif defined(BUILD_FOR_ESP32_IDF)
+#include "esp32/ESP32I2cSpi.h"
+class Esp32IdfI2CWrapper;
+typedef Esp32IdfI2CWrapper* WireType;
 #else
 # define IOA_USE_ARDUINO_WIRE
 #include <Wire.h>
