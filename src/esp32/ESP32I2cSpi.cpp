@@ -1,13 +1,10 @@
-#include "ESP32I2cSpi.h"
-#include "../extras/SPIHelper.h"
-
 #include "PlatformDeterminationWire.h"
 
 #if defined(BUILD_FOR_ESP32_IDF)
 
+#include "ESP32I2cSpi.h"
+#include "../extras/SPIHelper.h"
 
-
-#endif
 bool Esp32IdfI2CWrapper::begin(gpio_num_t sdaPin, gpio_num_t sclPin, uint32_t frequency, i2c_port_t i2cPort, bool enablePullups) {
     port = i2cPort;
 
@@ -113,3 +110,4 @@ void SPIWithSettings::waitAndActiveCS() {
     gpio_set_level(static_cast<gpio_num_t>(csPin), 0);
     waitABit();
 }
+#endif

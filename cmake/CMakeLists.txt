@@ -15,6 +15,9 @@ add_library(IoAbstraction
         ../src/pico/picoAnalogDevice.cpp
         ../src/stmCube/CubeI2cWrapper.cpp
         ../src/stmCube/StmCubeDigital.cpp
+        ../src/esp32/ESP32AnalogDevice.cpp
+        ../src/esp32/ESP32DigitalIO.cpp
+        ../src/esp32/ESP32I2cSpi.cpp
         ../src/mbed/HalStm32EepromAbstraction.cpp
         ../src/testing/TestDigitalIO.cpp
 )
