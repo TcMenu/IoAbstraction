@@ -107,7 +107,9 @@ void SPIWithSettings::waitAndActiveCS() {
     if(!initializedYet) {
         init();
     }
-    gpio_set_level(static_cast<gpio_num_t>(csPin), 0);
-    waitABit();
+    if (csPin != 0xFF && csPin != (pinid_t)-1) {
+        gpio_set_level(static_cast<gpio_num_t>(csPin), 0);
+        waitABit();
+    }
 }
 #endif

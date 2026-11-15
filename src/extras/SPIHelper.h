@@ -44,6 +44,24 @@ public:
         internalDigitalDevice().digitalWrite(csPin, HIGH);
         return true;
     }
+
+    bool write(const uint8_t* data, size_t len) {
+        if(!initializedYet) {
+            init();
+        }
+        internalDigitalDevice().digitalWrite(csPin, LOW);
+        spiBus->beginTransaction(settings);
+#if defined(ESP32) || defined(ARDUINO_ARCH_RP2040)
+        spiBus->writeBytes(data, len);
+#else
+        for(size_t i=0; i<len; ++i) {
+            spiBus->transfer(data[i]);
+        }
+#endif
+        spiBus->endTransaction();
+        internalDigitalDevice().digitalWrite(csPin, HIGH);
+        return true;
+    }
 };
 #elif BUILD_FOR_ESP32_IDF
 #include "../esp32/ESP32I2cSpi.h"

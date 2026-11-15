@@ -19,6 +19,12 @@ IoAbstractionRef ioUsingArduino() {
     return &internalIoAbstraction;
 }
 
+IoAbstractionRef internalDigitalIo() {
+    return &internalIoAbstraction;
+}
+
+
+
 volatile bool esp32InterruptDriverLoaded = false;
 
 gpio_mode_t toEsp32Mode(uint8_t mode) {
@@ -32,7 +38,7 @@ void BasicIoAbstraction::pinDirection(pinid_t pin, uint8_t mode) {
         mode = INPUT;
     }
 
-    gpio_config_t config;
+    gpio_config_t config = {};
     config.pin_bit_mask = uint64_t(1U) << uint64_t(pin);
     config.mode = toEsp32Mode(mode);
     config.pull_up_en = (mode == INPUT_PULLUP) ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE;

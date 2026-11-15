@@ -39,9 +39,15 @@ public:
     SPIWithSettings& operator=(const SPIWithSettings&)=default;
 
     void init() {
-        gpio_set_direction(static_cast<gpio_num_t>(csPin), GPIO_MODE_OUTPUT);
+        gpio_config_t config = {};
+        config.pin_bit_mask = 1ULL << csPin;
+        config.mode = GPIO_MODE_OUTPUT;
+        config.pull_up_en = GPIO_PULLUP_DISABLE;
+        config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+        config.intr_type = GPIO_INTR_DISABLE;
+        gpio_config(&config);
         gpio_set_level(static_cast<gpio_num_t>(csPin), 1);
-        initializedYet=true;
+        initializedYet = true;
     }
 
     void waitABit() {
@@ -51,9 +57,11 @@ public:
     void waitAndActiveCS();
 
     void waitAndDeactivateCS() {
-        waitABit();
-        gpio_set_level(static_cast<gpio_num_t>(csPin), 1);
-        waitABit();
+        if (csPin != 0xFF && csPin != (pinid_t)-1) {
+            waitABit();
+            gpio_set_level(static_cast<gpio_num_t>(csPin), 1);
+            waitABit();
+        }
     }
 
     bool write(const uint8_t* data, size_t size) {
@@ -61,7 +69,12 @@ public:
         waitAndActiveCS();
         spi_transaction_t transaction = {};
         transaction.length = size * 8;
-        transaction.tx_buffer = data;
+        if (size <= 4) {
+            transaction.flags = SPI_TRANS_USE_TXDATA;
+            memcpy(transaction.tx_data, data, size);
+        } else {
+            transaction.tx_buffer = data;
+        }
         esp_err_t result = spi_device_polling_transmit(spiBus, &transaction);
         waitAndDeactivateCS();
         return result == ESP_OK;
@@ -72,11 +85,22 @@ public:
         waitAndActiveCS();
         spi_transaction_t transaction = {};
         transaction.length = len * 8;
-        transaction.tx_buffer = rdwr;
-        transaction.rx_buffer = rdwr;
-        esp_err_t result = spi_device_polling_transmit(spiBus, &transaction);
-        waitAndDeactivateCS();
-        return result == ESP_OK;
+        if (len <= 4) {
+            transaction.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+            memcpy(transaction.tx_data, rdwr, len);
+            esp_err_t result = spi_device_polling_transmit(spiBus, &transaction);
+            if (result == ESP_OK) {
+                memcpy(rdwr, transaction.rx_data, len);
+            }
+            waitAndDeactivateCS();
+            return result == ESP_OK;
+        } else {
+            transaction.tx_buffer = rdwr;
+            transaction.rx_buffer = rdwr;
+            esp_err_t result = spi_device_polling_transmit(spiBus, &transaction);
+            waitAndDeactivateCS();
+            return result == ESP_OK;
+        }
     }
 };
 
