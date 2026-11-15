@@ -1,4 +1,4 @@
-# IoAbstraction for Arduino and mbed summary
+# IoAbstraction layer for Arduino, PicoSDK, ESP32-IDF, STM32Cube and mbed6.
 [![PlatformIO](https://github.com/TcMenu/IoAbstraction/actions/workflows/platformio.yml/badge.svg)](https://github.com/TcMenu/IoAbstraction/actions/workflows/platformio.yml)
 [![Native C++ Tests](https://github.com/TcMenu/tcLibraryDev/actions/workflows/native-tests.yml/badge.svg)](https://github.com/TcMenu/tcLibraryDev/actions/workflows/native-tests.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/TcMenu/IoAbstraction/blob/main/LICENSE)
@@ -29,7 +29,7 @@ Community questions can be asked in the discussions section of this repo, or usi
 
 This library is available in library manager on both Arduino and PlatformIO, this is the best choice for most people. It should automatically install the dependencies, [TaskManagerIO](https://github.com/TcMenu/TaskManagerIO). If for some reason it does not install the dependency, please also install it manually. It is highly recommended that you install the libraries using your library manager.
 
-## Installation for PlatformIO (Arduino or mbed)
+## Installation for PlatformIO, mbed and CMake environments
 
 Use the platformIO library manager to get the library. It's called 'IoAbstraction'. It should automatically include "TaskManagerIO" as it's a dependency.
 
